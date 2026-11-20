@@ -16,6 +16,16 @@ nav.t=1790;
 w=struct('nav',nav,'t',nav.t);
 blocked=uavpriority.acquire_safe_reference(w,2,c,1800);
 assert(~blocked.accepted && contains(blocked.reason,'BUDGET') && isempty(blocked.steps));
+repair=uavpriority.repair_departure_reference(w,1,c,1800);
+assert(~repair.accepted && contains(repair.reason,'BUDGET') && repair.end_s==w.t);
+nav.t=0;original=nav;
+short=uavmvp.reference_recovery_plan(nav,1,c,1800);
+assert(short.available && short.prediction.arrived && short.pixel_margin>=0);
+assert(isequaln(nav,original)); % screening never credits a hypothetical image
+none=uavmvp.reference_recovery_plan(nav,1,c,0);
+assert(~none.available);
+none=uavmvp.reference_recovery_plan(nav,1,c,1800,true(4,1));
+assert(~none.available);
 out=struct('all_passed',true,'mission_count',0,'no_motion_when_return_unreserved',true, ...
     'explicit_observation_deadline',true,'future_visual_update_not_credited',true);
 end

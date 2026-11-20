@@ -40,6 +40,9 @@ try
                 'minimum_transaction_s',point_budget.minimum_total_s,'reserved_transaction_s',point_budget.total_s, ...
                 'block_cap',point_budget.block_cap,'return_reserve_s',point_budget.return_s));
             if ~ready
+                if strcmp(why,'DEPARTURE_REFERENCE_UNRECOVERED')
+                    reason=why;break;
+                end
                 if strcmp(why,'RETURN_RESOURCE') || contains(why,'BUDGET')
                     reason='RETURN_RESOURCE_RESERVED';break;
                 end
@@ -154,7 +157,15 @@ end
 % more events. The reserved outcome records whether the actual return worked.
 if launched
     try
-        w.prune([]);returning=uavmvp.return_via_references(w,cfg,deadline);
+        w.prune([]);departure_return_repair=[];
+        if isfinite(w.nav.last_reference_id)
+            return_plan=uavmvp.reference_return_plan(w.nav,cfg,w.nav.last_reference_id);
+            if ~return_plan.available && ~strcmp(reason,'DEPARTURE_REFERENCE_UNRECOVERED')
+                departure_return_repair=uavpriority.repair_departure_reference(w,w.nav.last_reference_id,cfg,deadline);
+            end
+        end
+        returning=uavmvp.return_via_references(w,cfg,deadline);
+        returning.departure_repair=departure_return_repair;
     catch problem
         returning=struct('arrived',false,'reason','RETURN_EXCEPTION');
         if isempty(exception),exception=bounded_exception(problem);end
@@ -241,10 +252,11 @@ out=struct('reason',reason,'exception',exception,'count',count,'policy',rule, ..
                 p_got=uavpriority.observe_onsite(w,ref,cfg,deadline);
             else
                 p_got=uavpriority.acquire_safe_reference(w,ref,cfg,deadline);
+                if ~isempty(p_got.departure_repair),emit('DEPARTURE_REPAIR',p_got.departure_repair);end
             end
             if ~p_got.accepted
                 why=p_got.reason;
-                if contains(why,'BUDGET'),return;end
+                if contains(why,'BUDGET') || strcmp(why,'DEPARTURE_REFERENCE_UNRECOVERED'),return;end
                 continue;
             end
             p_back=uavmvp.reference_return_plan(w.nav,cfg,ref);
