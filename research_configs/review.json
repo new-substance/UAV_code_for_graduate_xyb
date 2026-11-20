@@ -1,11 +1,14 @@
 {
   "status": "not_approved_for_simulation",
   "specification": "论文总纲.md",
-  "specification_sha256": "08091bd95f5b3bb6d08e435845f5a457561feb02bcc9a29cf3fd0d1984a42d04",
+  "specification_sha256": "d45a09a0f13c3def4b9b8ff1611ae9847af44a5c59fb49a7f81bfbdb7ec01c7d",
   "research_scope": {
-    "core": "C3",
-    "foundation": "C2",
-    "engineering_support": "C1"
+    "delivery_priority": "end_to_end_wake_discover_localize_position_feedback_routing_and_return",
+    "mandatory_independent_module_innovations": false,
+    "C1": "conventional_engineering_support",
+    "C2": "required_position_and_heldout_foundation",
+    "C3": "required_position_feedback_routing_not_mandatory_novel_planner",
+    "candidate_improvement": "position_and_stage_feedback_for_useful_next_service_point"
   },
   "configuration": "research_configs/baseline.json",
   "configuration_sha256": "f51f286eb0c1d17f4919fb2d6755f32baa9f2f23019f0141bc2e9a94a22bed5a",
@@ -27,7 +30,7 @@
     },
     {
       "id": "PLANNER",
-      "item": "Define the finite candidate/phase/shared-cost C3 rule and no-action handling before its scoped experiments"
+      "item": "Define the minimal position/phase feedback interface, feasible next-point selection and bounded no-action handling; no independent global planner required"
     }
   ],
   "removed_from_required_scope": [

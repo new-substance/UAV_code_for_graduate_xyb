@@ -1,6 +1,7 @@
 # Local research data/history are retained on disk, outside the published source tree.
 /archive/
 /results/
+**/results/
 /tmp/
 /priority_stage/
 /single_terminal_stage/
