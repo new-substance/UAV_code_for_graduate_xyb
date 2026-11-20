@@ -10,7 +10,7 @@ for id=1:count,histories{id}=uavmvp.radio_history_init(cfg);macros{id}={};end
 deadline=cfg.stage.platform_resource_s;r=uavpriority.reservation(cfg);
 nr=size(cfg.scene.reference_centers_xy_m,1);attempts=zeros(2*nr,count);
 extra_fit=zeros(1,count);extra_verify=zeros(1,count);feedback_count=0;
-feedback_delivered=0;coverage_fit_plans=0;
+feedback_delivered=0;coverage_fit_plans=0;feedback_phase_entered=false;
 cover=cfg.stage.route_xy_m;cover_index=0;last_extra=false;reason='ROUTE_EXHAUSTED';
 exception=[];launched=false;returning=struct('arrived',false,'reason','NOT_LAUNCHED');
 try
@@ -88,7 +88,7 @@ try
                 [children,report]=serve(id,ref,service_budget);emit('SPATIAL_SERVICE',report);
                 got=uavpriority.observe_onsite(w,ref,cfg,deadline);
                 if ~got.accepted
-                    recovery=uavpriority.acquire_safe_reference(w,ref,cfg,deadline);
+                    recovery=reacquire_reference(ref);
                     if ~recovery.accepted,reason='POST_SERVICE_REFERENCE_FAILED';break;end
                     emit('SERVICE_SKIPPED',struct('address',id,'reason','POST_SERVICE_IMAGE_FAILED'));prune();continue;
                 end
@@ -104,7 +104,7 @@ try
                 compute_retreat=uavpriority.retreat_gate(w.nav,compute_window,ref,cfg);
                 recentered=false;
                 if ~nav_gate.accepted || ~compute_retreat.accepted
-                    recovery=uavpriority.acquire_safe_reference(w,ref,cfg,deadline);
+                    recovery=reacquire_reference(ref);
                     if ~recovery.accepted,reason='COMPUTE_NAVIGATION_NOT_ADMITTED';break;end
                     recentered=true;
                     nav_gate=uavpriority.navigation_gate(w.nav,compute_window,cfg);
@@ -206,7 +206,13 @@ out=struct('reason',reason,'exception',exception,'count',count,'policy',rule, ..
     'end_to_end_success',all([nodes.online_completed]) && ~any([nodes.false_accept]) && ...
         all([nodes.stop_ack]) && all([nodes.deep_sleep]) && returned);
     function [q,ref,owner,choice]=next_point()
-        q=[];ref=NaN;owner=0;choice=[];n_coverage_left=cover_index<size(cover,1);
+        q=[];ref=NaN;owner=0;choice=[];n_coverage_pending=cover_index<size(cover,1);
+        n_feedback_ready=uavpriority.service_phase_ready(book.nodes,states);
+        if n_feedback_ready && ~feedback_phase_entered
+            feedback_phase_entered=true;
+            emit('PHASE_CHANGE',struct('phase','POSITION_FEEDBACK_SERVICE','coverage_vertices_remaining',size(cover,1)-cover_index));
+        end
+        n_coverage_left=n_coverage_pending && ~n_feedback_ready;
         if ~n_coverage_left || ~last_extra
             n_choices=cell(1,count);
             for n_address=1:count
@@ -229,7 +235,7 @@ out=struct('reason',reason,'exception',exception,'count',count,'policy',rule, ..
                 return;
             end
         end
-        if n_coverage_left
+        if n_coverage_pending
             cover_index=cover_index+1;q=cover(cover_index,:);
             [~,ref]=min(vecnorm(cfg.scene.reference_centers_xy_m-q,2,2));last_extra=false;
         end
@@ -251,8 +257,7 @@ out=struct('reason',reason,'exception',exception,'count',count,'policy',rule, ..
                 end
                 p_got=uavpriority.observe_onsite(w,ref,cfg,deadline);
             else
-                p_got=uavpriority.acquire_safe_reference(w,ref,cfg,deadline);
-                if ~isempty(p_got.departure_repair),emit('DEPARTURE_REPAIR',p_got.departure_repair);end
+                p_got=reacquire_reference(ref);
             end
             if ~p_got.accepted
                 why=p_got.reason;
@@ -262,7 +267,7 @@ out=struct('reason',reason,'exception',exception,'count',count,'policy',rule, ..
             p_back=uavmvp.reference_return_plan(w.nav,cfg,ref);
             if ~p_back.available || w.t+p_minimum.minimum_total_s+p_back.reserve_s>deadline,why='RETURN_RESOURCE';continue;end
             if ~p_at_point && norm(p_q-p_center)>.01
-                p_escape=uavmvp.predict_service_visit(w.nav,p_q,ref,cfg, ...
+                p_escape=uavmvp.predict_service_visit(uavmvp.nav_prune(w.nav,[]),p_q,ref,cfg, ...
                     cfg.navigation_candidate.reference_max_attempts_per_visit*cfg.navigation_candidate.reference_observation_s);
                 p_escape_return=uavmvp.reference_return_plan(p_escape.dwell.nav,cfg,ref);
                 p_outward_allowance=p_escape.outward.duration_s+2+ ...
@@ -324,6 +329,10 @@ out=struct('reason',reason,'exception',exception,'count',count,'policy',rule, ..
             end
         end
         w.prune(unique(pr_keep));
+    end
+    function rs_got=reacquire_reference(rs_ref)
+        rs_got=uavpriority.acquire_safe_reference(w,rs_ref,cfg,deadline);
+        if ~isempty(rs_got.departure_repair),emit('DEPARTURE_REPAIR',rs_got.departure_repair);end
     end
     function emit(kind,payload)
         writer.event(kind,w.t,payload);

@@ -1,54 +1,11 @@
 {
   "status": "approved_for_bounded_development",
+  "mission_enabled": true,
   "specification": "论文总纲.md",
-  "specification_sha256": "fefa103a21109f58f1a723f2d446415564dad21abf4512d65e9c6159a5138a83",
-  "research_scope": {
-    "delivery_priority": "end_to_end_wake_discover_localize_position_feedback_routing_and_return",
-    "mandatory_independent_module_innovations": false,
-    "C1": "conventional_engineering_support",
-    "C2": "required_position_and_heldout_foundation",
-    "C3": "required_position_feedback_routing_not_mandatory_novel_planner",
-    "candidate_improvement": "position_and_stage_feedback_for_useful_next_service_point"
-  },
+  "specification_sha256": "71739e942af67eb7f3f8b34f5ef2f5e049041608e608d1f540c4a0a0c87b9d93",
   "configuration": "research_configs/baseline.json",
   "configuration_sha256": "0c69438c6495c395e75e5d9c06bf04a0f41bc756c6e1d1ec14efbe1b3d7b4343",
-  "configuration_identity": "342 numerical values unchanged from V8 nominal; explicit quality_method=grid_conditional changes quality/heldout model. Old empirical coverage does not transfer.",
-  "allowed_now": [
-    "deterministic algebra/component checks",
-    "one registered known-failure development regression in a new output directory",
-    "saved-output analysis; no independent performance claim"
-  ],
-  "mission_enabled": true,
-  "open_items": [
-    {
-      "id": "DEPARTURE_RECOVERY",
-      "item": "Regress actual visual departure recovery on the known ten-terminal failure, then inspect task closure. Deterministic checks alone do not demonstrate physical return or full completion."
-    },
-    {
-      "id": "DEV-MULTI",
-      "item": "After single-terminal integration checks, review and enable shared-flight 5/10-terminal development; keep all unfinished/error cases."
-    },
-    {
-      "id": "EVALUATION",
-      "item": "Freeze tested code/config and unseen evaluation seeds; compare same candidates/resources and audit requirement-level completion."
-    }
-  ],
-  "removed_from_required_scope": [
-    "new navigation algorithm",
-    "physical-layer waveform research",
-    "strict sequential simultaneous coverage",
-    "continuous-domain global outer bound",
-    "KKT sensitivity theorem",
-    "global-optimal/chance-constrained planner or LP tail-bound proof"
-  ],
-  "budgets_bytes": {
-    "development_batch": 52428800,
-    "formal_batch": 262144000,
-    "default_case": 5242880,
-    "active_new_results": 1073741824
-  },
-  "historical_review_note": "Kept only in the original local workspace; not required by the published deterministic checks",
-  "source_sha256": "e272b1e5fc76e7515eb0f0b6719e8742a3ba5583ea736d386e15857789132803",
+  "source_sha256": "f7403fee87fe5e079c230435a00a025aed3813607d778a9b52af23e48e878979",
   "development_scope": {
     "terminal_counts": [
       10
@@ -57,155 +14,36 @@
     "allowed_seeds": [
       2026112302
     ],
-    "purpose": "known_failure_development_regression_not_independent_evaluation"
+    "purpose": "known_seed_service_phase_regression_not_independent_evaluation"
+  },
+  "budgets_bytes": {
+    "development_batch": 52428800,
+    "formal_batch": 262144000,
+    "default_case": 5242880,
+    "active_new_results": 1073741824
   },
   "reviewed_interfaces": {
-    "MODEL": "Q01 four-only nonlinear grid likelihood region with triangle/box remainder envelope; local Fisher scale/condition diagnostic, no interior derivative requirement. V01 correlated Schur-complement prediction over frozen four-only region; witness never changes estimate. Explicitly nominal.",
-    "WRITER": "UTF-8 live case/batch/active byte limits and reserved outcomes checked; execute_task catches quota failure and attempts actual return, without further events.",
-    "PLANNER": "64 finite candidates, qualified positions separated from attempts; truth-free position/stage proposal followed by actual navigation/return/distinctness gates.",
-    "STATE": "New region mode passes fixed-input 4+1, boundary, bad geometry, invalid covariance, 100 m corrupt heldout, raw-member exclusion, frozen estimate and navigation-version checks.",
-    "RECORDING": "Only recording branches change in MotionWorld compact mode; no physics/navigation/radio arithmetic is skipped.",
-    "OFFLINE": "Only after MotionWorld.finish: store terminal true coordinates and physical home/final pose, allowing direct external error reconstruction. No decision inputs change.",
-    "RETURN_EXECUTION": "Per-reference-step movement/image deadline reserves conditional return; actual posterior return is rechecked. Insufficient service budget terminates work rather than consuming return time. Deterministic positive-neighbor and no-motion-on-no-budget checks pass.",
-    "SHARED_POINT": "At an occupied point, actual onsite image plus radio/retreat/return gates are reused between IDs. Post-service image and stop occur onsite; failure recovery does not create a fictitious posterior. No model/numeric-parameter changes.",
-    "STAGE_ADMISSION": "Partial-position bookkeeping uses existing 0.05 s decision budget; four-fit/heldout uses existing 8 s. Only VERIFY can publish and reserves STOP. If onsite compute/retreat cannot be reserved, actually recenter and rebuild the same 4+1 inputs at the new common navigation version; notification may return to the known service point, without new RTT. Every segment/STOP preserves return.",
-    "COORDINATION": "P02: compare all current proposals with VERIFY priority; allow at most two fit-supplement plans during coverage, at most one supplement between coverage vertices; LOCALIZE puts geometry gain before nominal range risk. Same candidates/quotas apply to cost comparator.",
-    "TRANSACTION": "Choose 2..4 complete atomic recovery blocks from actual remaining time, phase computation/STOP cost and conditional return reserve; NOTICE has no cold macro. Already-paid wait is not counted twice. Recheck actual image/navigation/return per atomic block; only four complete cold services form a macro.",
-    "DEPARTURE_RECOVERY": "On direct departure navigation rejection, try actual onsite images then existing at-most-two short recovery viewpoints under D minus conditional return reserve; re-evaluate from actual posterior. Existing observed inter-reference departure looks remain accessible. Unrecovered departure stops service rather than skipping the route. No navigation filter, noise or numerical target changes."
+    "MODEL_STATE": "Q01/V01 nominal grid/conditional region; four-only fit, fresh raw-disjoint heldout, common navigation version. No strict task risk guarantee.",
+    "WRITER": "Live UTF-8 case/batch/active quotas; reserved outcome plus bounded actual return on quota failure; no source copies or full covariance traces.",
+    "RETURN": "Conditional reference return reserves, actual images/posterior recheck, bounded departure recovery; no terminal RTT pose update.",
+    "PLANNER": "Same finite 64 candidates, transaction/attempt caps, complete macro and quality/return gates for stage/cost. P02 all-ID/finite-fit handover permits consecutive feedback service; remaining coverage is finite fallback.",
+    "FORECAST": "UAV/map principal covariance submatrix only in pure admission forecasts, no Schur conditioning; coupled-clone covariance equality checked. Actual joint navigation, measurements and fitting unchanged.",
+    "OFFLINE": "Truth coordinates, bias and return endpoints export only after MotionWorld.finish; independent Python audit reconstructs errors, conditional witnesses and completion."
   },
   "evidence": {
-    "reproducible_command": "addpath('matlab_mvp'); setup_project; project('check');",
+    "checks": "results/scope_review_20261120/focus_component_checks_v1.json",
     "all_passed": true,
     "new_missions_in_checks": 0,
-    "source_file_count": 153,
-    "local_component_report": "results/scope_review_20261120/region_component_checks_v3.json",
-    "saved_input_review": "results/scope_review_20261120/region_review_v3.json",
-    "saved_input_ready_snapshots": 4,
-    "saved_input_snapshots": 18,
-    "single_terminal_region_integration": {
-      "source_revision": "17b8877",
-      "cases": [
-        2026112101,
-        2026112102
-      ],
-      "complete": [
-        false,
-        true
-      ],
-      "all_returned": true,
-      "independent_conditional_witness_audit_passed": true
-    },
-    "five_terminal_integration": {
-      "seed": 2026112201,
-      "source_revision": "264425e",
-      "complete": true,
-      "all_nodes_correct_sleep_and_ack": true,
-      "return_error_m": 0.18817749500576184,
-      "worst_terminal_error_m": 5.324829428749585,
-      "total_time_s": 1247.3965699270236,
-      "bytes": 340553,
-      "independent_truth_and_conditional_audit_passed": true
-    },
-    "return_execution_components": {
-      "all_components": "results/scope_review_20261120/return_component_checks_v2.json",
-      "positive_neighbor_and_no_motion": "results/scope_review_20261120/return_plan_checks_final.json",
-      "all_passed": true,
-      "missions": 0
-    },
-    "ten_terminal_development_before_fix": {
-      "seed": 2026112202,
-      "source_revision": "08037c8",
-      "complete": false,
-      "discovered": 10,
-      "online_completed": 6,
-      "false_accept_count": 1,
-      "returned": false,
-      "return_error_m": 14.400357275910313,
-      "persistent_bias_of_false_accept_m": 10.06593405,
-      "stop_ack_missing_but_physically_asleep": [
-        9
-      ],
-      "all_results_retained": true
-    },
-    "stage_admission_components": {
-      "path": "results/scope_review_20261120/stage_admission_checks.json",
-      "all_passed": true,
-      "missions": 0
-    },
-    "return_fix_first_development": {
-      "seed": 2026112203,
-      "source_revision": "6367294",
-      "complete": false,
-      "returned": true,
-      "return_error_m": 0.1518001570274378,
-      "reason": "COMPUTE_NAVIGATION_NOT_ADMITTED",
-      "all_results_retained": true
-    },
-    "latest_bounded_recovery": {
-      "seed": 2026112301,
-      "source_revision": "46fe68e",
-      "all_discovered": true,
-      "correct_online_completed": 8,
-      "complete": false,
-      "false_accept_count": 0,
-      "all_completed_nodes_ack_and_asleep": true,
-      "unfinished_nodes": [
-        9,
-        10
-      ],
-      "returned": true,
-      "return_error_m": 0.2121418371605998,
-      "total_time_s": 1714.8151268061251,
-      "bytes": 625232,
-      "independent_audit_passed": true
-    },
-    "coordination_components": {
-      "path": "results/scope_review_20261120/coordination_checks_v1.json",
-      "all_passed": true,
-      "new_missions": 0,
-      "minimum_verify_reserve_s": 21.480352,
-      "maximum_verify_reserve_s": 34.060704,
-      "numeric_baseline_values_unchanged": 342
-    },
-    "departure_components": {
-      "path": "results/scope_review_20261120/departure_component_checks_v1.json",
-      "all_passed": true,
-      "new_missions": 0
-    },
-    "ten_terminal_coordination_failure": {
-      "seed": 2026112302,
-      "source_revision": "be0c763",
-      "discovered": 7,
-      "online_completed": 2,
-      "returned": false,
-      "return_error_m": 84.43050850448194,
-      "bytes": 426807,
-      "purpose": "development_not_independent"
-    }
+    "source_file_count": 155,
+    "requirement_audit": "results/scope_review_20261120/requirement_status.json",
+    "phase_diagnostic": "results/scope_review_20261120/phase_handover_diagnostic.json",
+    "independent_evaluation_cases": 0
   },
-  "development_findings": [
-    {
-      "case": "dev_2026112001_n1_stage",
-      "result": "EXCEPTION: InitialReferenceFailed; actual return passed; all files retained (11756 bytes).",
-      "cause": "Integration called acquire_reference before last_reference_id existed.",
-      "correction": "Use inherited visit_reference for the initial actual reference, then acquire_reference for later transitions. No parameter/model changes.",
-      "next_seed": 2026112002
-    }
+  "open_items": [
+    "Validate one explicit phase-handover development regression; prior 9/10 plus return is not complete.",
+    "New actual departure repair branch has not yet been physically exercised; do not infer branch coverage from a different timed flight.",
+    "Freeze stable source/config/unseen seeds before paired 5/10 evaluation; no retuning on the same evaluation."
   ],
-  "development_results": {
-    "attempts": 3,
-    "startup_bug_attempts": 1,
-    "corrected_cases": 2,
-    "corrected_closed_loop_successes": 0,
-    "all_actual_returns": 3,
-    "valid_feedback_positions": [
-      3,
-      4
-    ],
-    "new_result_bytes": 364447,
-    "independent_evaluation_cases": 0,
-    "requirement_audit": "results/scope_review_20261120/requirement_status.json"
-  },
   "pending_preference": {
     "question": "nominal 5 m model as main versus retained conservative 10 m online envelope",
     "optional": true,

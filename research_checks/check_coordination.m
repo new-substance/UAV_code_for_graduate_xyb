@@ -29,10 +29,19 @@ a=proposal('LOCALIZE',2,.01,0);b=proposal('LOCALIZE',10,.03,0);
 assert(uavpriority.select_service_owner({a,b},'stage')==2);
 assert(uavpriority.select_service_owner({a,b},'cost')==1);
 assert(uavpriority.select_service_owner({[],[]},'stage')==0);
+nodes=repmat(struct('discovered',true,'completed',false),1,3);
+states=repmat({struct('fit',struct('x',[30;40]))},1,3);
+assert(uavpriority.service_phase_ready(nodes,states));
+nodes(2).discovered=false;[ready,missing]=uavpriority.service_phase_ready(nodes,states);
+assert(~ready && isequal(missing,2));nodes(2).discovered=true;
+states{2}=[];assert(~uavpriority.service_phase_ready(nodes,states));
+states{2}=struct('fit',struct('x',[NaN;40]));assert(~uavpriority.service_phase_ready(nodes,states));
+nodes(2).completed=true;states{2}=[];assert(uavpriority.service_phase_ready(nodes,states));
 out=struct('all_passed',true,'mission_count',0,'minimum_complete_blocks',near.block_cap, ...
     'full_transaction_reserve_s',full.total_s,'minimum_transaction_reserve_s',near.total_s, ...
     'no_infinite_return_admission',true,'no_double_wait_charge',true, ...
-    'cross_terminal_priority_checked',true,'identical_comparator_inputs',true);
+    'cross_terminal_priority_checked',true,'identical_comparator_inputs',true, ...
+    'all_ids_and_finite_estimates_required_before_feedback_priority',true);
 end
 function c=proposal(stage,cost,gain,risk)
 c=struct('available',true,'stage',stage,'candidate_id',1,'reference_id',1, ...

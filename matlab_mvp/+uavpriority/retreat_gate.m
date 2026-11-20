@@ -1,4 +1,5 @@
 function report=retreat_gate(nav,hold_s,ref,cfg)
+nav=uavmvp.nav_prune(nav,[]);
 prediction=uavmvp.predict_hold(nav,hold_s,cfg);
 back=uavmvp.reference_return_plan(prediction.nav,cfg,ref);retreat=back.first_leg;
 radius=sqrt(cfg.stage.local_geometry_level*cfg.stage.navigation_covariance_scale* ...

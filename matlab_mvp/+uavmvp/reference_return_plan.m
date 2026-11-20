@@ -2,6 +2,7 @@ function plan=reference_return_plan(nav,cfg,current_reference,blocked)
 %REFERENCE_RETURN_PLAN Mapped-reference graph and conditional time reserve.
 % Future visual success is a condition, never a fictitious posterior update.
 if nargin<4,blocked=[];end
+nav=uavmvp.nav_prune(nav,[]); % marginalization, never conditioning on clones
 xy=cfg.scene.reference_centers_xy_m;home=cfg.scene.home_xyz_m(:);
 [~,goal]=min(vecnorm(xy-home(1:2)',2,2));
 path=uavmvp.reference_path(cfg,current_reference,goal,blocked);ids=path.ids;

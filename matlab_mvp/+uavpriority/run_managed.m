@@ -19,7 +19,7 @@ identity=uavmvp.project_fingerprints();
 limits=struct('case_bytes',review.budgets_bytes.default_case, ...
     'batch_bytes',review.budgets_bytes.development_batch,'active_bytes',review.budgets_bytes.active_new_results);
 manifest=struct('purpose','development_not_independent_evaluation','identity',identity, ...
-    'configuration_expanded',c,'options',options,'review',review.status);
+    'review_purpose',scope.purpose,'configuration_expanded',c,'options',options,'review',review.status);
 w=uavmvp.ResultWriter(fullfile(root,char(options.label)),seeds,manifest,limits,active);
 stop_batch=false;
 for seed=seeds
