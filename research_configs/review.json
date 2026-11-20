@@ -1,7 +1,7 @@
 {
-  "status": "approved_for_bounded_development",
+  "status": "quality_review_required",
   "specification": "论文总纲.md",
-  "specification_sha256": "82f61430b9dfb25090680cbf8e1fc0c57f16decf7799ff18947e6f9b5a340478",
+  "specification_sha256": "d3e40c3c571988e0c7edc0200e97afd08f9d8247f006d87f4db9c774369d7be2",
   "research_scope": {
     "delivery_priority": "end_to_end_wake_discover_localize_position_feedback_routing_and_return",
     "mandatory_independent_module_innovations": false,
@@ -14,15 +14,15 @@
   "configuration_sha256": "f51f286eb0c1d17f4919fb2d6755f32baa9f2f23019f0141bc2e9a94a22bed5a",
   "configuration_identity": "Numerical settings identical to frozen V8 nominal; provenance/status metadata normalized for portable source publication",
   "allowed_now": [
-    "deterministic algebra/fixed-input/component checks",
-    "one case per batch, single-terminal bounded development with declared new seeds",
-    "read-only saved-result diagnosis; no independent performance claim"
+    "status/config and deterministic component checks",
+    "saved four-point/quality-input diagnosis and derivation",
+    "source/version review; no additional mission before quality-model review"
   ],
-  "mission_enabled": true,
+  "mission_enabled": false,
   "open_items": [
     {
-      "id": "DEV-N1",
-      "item": "Run and independently audit the first bounded single-terminal integration case; no success-rate claim."
+      "id": "QUALITY",
+      "item": "Both corrected development cases discover/use feedback/return but do not pass quality. Review local Fisher guard, constrained grid region and boundary derivative using saved inputs before more flights; do not change offline targets or physical noise."
     },
     {
       "id": "DEV-MULTI",
@@ -85,5 +85,19 @@
       "correction": "Use inherited visit_reference for the initial actual reference, then acquire_reference for later transitions. No parameter/model changes.",
       "next_seed": 2026112002
     }
-  ]
+  ],
+  "development_results": {
+    "attempts": 3,
+    "startup_bug_attempts": 1,
+    "corrected_cases": 2,
+    "corrected_closed_loop_successes": 0,
+    "all_actual_returns": 3,
+    "valid_feedback_positions": [
+      3,
+      4
+    ],
+    "new_result_bytes": 364447,
+    "independent_evaluation_cases": 0,
+    "requirement_audit": "results/scope_review_20261120/requirement_status.json"
+  }
 }
