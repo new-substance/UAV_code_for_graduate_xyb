@@ -1,7 +1,7 @@
 {
   "status": "approved_for_bounded_development",
   "specification": "论文总纲.md",
-  "specification_sha256": "014d9be0166579aa6809cd6215e7840e35aed7606ef348b9a4b220f68da5073a",
+  "specification_sha256": "4b3efab1877fa17a429f002239fba3ab09655e738f91c09840aa9a79eabb37c7",
   "research_scope": {
     "delivery_priority": "end_to_end_wake_discover_localize_position_feedback_routing_and_return",
     "mandatory_independent_module_innovations": false,
@@ -20,10 +20,6 @@
   ],
   "mission_enabled": true,
   "open_items": [
-    {
-      "id": "DEV-REGION",
-      "item": "Validate actual fresh heldout, publish/sleep and return in one newly seeded flight under the reviewed region model; fixed-input readiness is not mission success."
-    },
     {
       "id": "DEV-MULTI",
       "item": "After single-terminal integration checks, review and enable shared-flight 5/10-terminal development; keep all unfinished/error cases."
@@ -48,25 +44,25 @@
     "active_new_results": 1073741824
   },
   "historical_review_note": "Kept only in the original local workspace; not required by the published deterministic checks",
-  "source_sha256": "b6e041703019d202ce1e4cf0f631d8d381c650f0a9b444b483efb68c8429b42d",
+  "source_sha256": "36dbfa5a41535a58b257aea252e0a485d4c47903a5ed94a82d9037372bc4b346",
   "development_scope": {
     "terminal_counts": [
-      1
+      5
     ],
     "max_cases_per_batch": 1,
     "allowed_seeds": [
-      2026112101,
-      2026112102,
-      2026112103
+      2026112201,
+      2026112202
     ],
-    "purpose": "grid_conditional_integration_development_not_independent_evaluation"
+    "purpose": "shared_flight_five_terminal_development_not_independent_evaluation"
   },
   "reviewed_interfaces": {
     "MODEL": "Q01 four-only nonlinear grid likelihood region with triangle/box remainder envelope; local Fisher scale/condition diagnostic, no interior derivative requirement. V01 correlated Schur-complement prediction over frozen four-only region; witness never changes estimate. Explicitly nominal.",
     "WRITER": "UTF-8 live case/batch/active byte limits and reserved outcomes checked; execute_task catches quota failure and attempts actual return, without further events.",
     "PLANNER": "64 finite candidates, qualified positions separated from attempts; truth-free position/stage proposal followed by actual navigation/return/distinctness gates.",
     "STATE": "New region mode passes fixed-input 4+1, boundary, bad geometry, invalid covariance, 100 m corrupt heldout, raw-member exclusion, frozen estimate and navigation-version checks.",
-    "RECORDING": "Only recording branches change in MotionWorld compact mode; no physics/navigation/radio arithmetic is skipped."
+    "RECORDING": "Only recording branches change in MotionWorld compact mode; no physics/navigation/radio arithmetic is skipped.",
+    "OFFLINE": "Only after MotionWorld.finish: store terminal true coordinates and physical home/final pose, allowing direct external error reconstruction. No decision inputs change."
   },
   "evidence": {
     "reproducible_command": "addpath('matlab_mvp'); setup_project; project('check');",
@@ -76,7 +72,20 @@
     "local_component_report": "results/scope_review_20261120/region_component_checks_v3.json",
     "saved_input_review": "results/scope_review_20261120/region_review_v3.json",
     "saved_input_ready_snapshots": 4,
-    "saved_input_snapshots": 18
+    "saved_input_snapshots": 18,
+    "single_terminal_region_integration": {
+      "source_revision": "17b8877",
+      "cases": [
+        2026112101,
+        2026112102
+      ],
+      "complete": [
+        false,
+        true
+      ],
+      "all_returned": true,
+      "independent_conditional_witness_audit_passed": true
+    }
   },
   "development_findings": [
     {

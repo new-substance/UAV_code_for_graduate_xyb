@@ -121,6 +121,18 @@ def audit(directory: Path) -> dict:
                     assert node["phase"] == "DONE"
                     error = node["true_error_m"]
                     assert node["false_accept"] == (error is None or not math.isfinite(error) or error > target)
+                if node.get("true_position_xy_m") and node["estimate_xy_m"]:
+                    if all(v is not None and math.isfinite(v) for v in node["estimate_xy_m"]):
+                        expected_error = math.dist(node["estimate_xy_m"], node["true_position_xy_m"])
+                        assert math.isclose(node["true_error_m"], expected_error, rel_tol=1e-9, abs_tol=1e-9)
+                    else:
+                        assert node["true_error_m"] is None
+            if "physical_home_xyz_m" in outcome:
+                return_error = math.dist(outcome["physical_home_xyz_m"], outcome["physical_final_xyz_m"])
+                assert math.isclose(outcome["return_error_m"], return_error, rel_tol=1e-9, abs_tol=1e-9)
+                expected_return = (outcome["physically_landed"] and outcome["return_command_completed"] and
+                                   outcome["return_arrived"] and return_error <= cfg["motion_and_budget"]["return_position_tolerance_m"])
+                assert outcome["returned"] == expected_return
             complete = all(n["online_completed"] and not n["false_accept"] and
                            n["stop_ack"] and n["deep_sleep"] for n in nodes) and outcome["returned"]
             assert complete == outcome["end_to_end_success"]
