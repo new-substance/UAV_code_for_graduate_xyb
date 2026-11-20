@@ -1,5 +1,5 @@
 function out=project(action,options)
-%PROJECT Single managed entry. Components checked; mission integration pending.
+%PROJECT Single managed entry; task runs use the explicit review.json scope.
 if nargin<1,action='status';end
 setup_project();repo=fileparts(fileparts(mfilename('fullpath')));
 review=jsondecode(fileread(fullfile(repo,'research_configs','review.json')));

@@ -2,7 +2,7 @@
 
 GNSS受限军用演训区临时监测节点定位的研究代码与现行设计文档。项目仅作仿真研究，不代表硬件实测或一般军用环境性能认证。
 
-**有界开发入口已接通；质量/核验已化简，按审查范围验证新航次，完整多终端闭环与独立性能尚未验证。** 物理数值与定位优化保持不变；质量/核验采用显式新版，不把组件检查当作任务成功。具体研究边界和既有负结果见[论文总纲](论文总纲.md)。
+**单终端与5终端已有开发闭环；10终端完整闭环与独立性能尚未验证。当前先做物理可行性诊断，暂停新增航次。** 物理数值与定位优化保持不变；质量/核验采用显式新版，不把组件检查当作任务成功。具体研究边界和既有负结果见[论文总纲](论文总纲.md)。
 
 ## 研究范围
 
@@ -57,6 +57,7 @@ capture_migration_reference('tmp/fixed_input_check.json');
 check_bounded_writer();
 check_position_feedback();
 check_localization_state();
+geometry = diagnose_geometry_hypotheses(); % 仅固定输入，不改变基准或运行航次
 ```
 
 这些命令不运行任务航次，也不用于估计任务成功率。`tests/`保留了既有模块测试源码，部分历史用例需要旧环境或涉及任务过程；首版不把“运行全部旧测试”列为独立克隆后的通过标准。
@@ -66,6 +67,14 @@ check_localization_state();
 `project('run', options)`只接受review.json登记的开发规模/种子；规格、配置或源码变化会使指纹门槛拒绝运行。options包含seeds、count、rule（stage/cost）和唯一label；输出只在results/current/label。旧的大轨迹写入与全量源码快照入口仍停用。先单终端开发，再审查放行5/10终端，独立评价另行冻结。参数、独立数据和失败统计规则见总纲及AGENTS。
 
 默认工程限额：开发50 MiB/批、正式250 MiB/批、单例5 MiB、当期新增结果1 GiB。project('check')验证字节限额、位置反馈、4＋1、名义区域/预测核验和返回预约，不启动航次。最新开发结果、失败与待办统一见[总纲第5—6节](论文总纲.md)，不在各README重复维护计数。
+
+本地结果只用一个自动汇总入口，逐例审计后生成results/current_overview.json：
+
+```powershell
+python -X utf8 research_checks/summarize_managed_results.py
+```
+
+[开发结果快照](evidence/development_cases.json)保留各版本逐例正负结果，[固定输入几何诊断](evidence/geometry_hypotheses.json)保留候选高度的名义检查；两者均不构成独立成功率或完整物理可行性证明。
 
 ## 仓库内容与本地历史
 

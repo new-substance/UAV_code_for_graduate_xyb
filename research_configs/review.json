@@ -1,11 +1,11 @@
 {
-  "status": "approved_for_bounded_development",
-  "mission_enabled": true,
+  "status": "integration_review_required",
+  "mission_enabled": false,
   "specification": "论文总纲.md",
-  "specification_sha256": "42312eafbdfa6e858aaf8b750091ab8555a738f577ee5b395935fd96ab5a8533",
+  "specification_sha256": "ae3b03fe6f417ef584c1bb99472d40299abdecd084f73b24e0970668839d5bfc",
   "configuration": "research_configs/baseline.json",
   "configuration_sha256": "0c69438c6495c395e75e5d9c06bf04a0f41bc756c6e1d1ec14efbe1b3d7b4343",
-  "source_sha256": "11b0effd56441cf8d699d2c4299aa12218ba738f39d38473341c91e1e2638756",
+  "source_sha256": "b3c4146af917724929b4d1c48e006d3c89652625ca501b83e6be6539f49fc32a",
   "development_scope": {
     "terminal_counts": [
       10
@@ -35,15 +35,31 @@
     "checks": "results/scope_review_20261120/entry_component_checks_v1.json",
     "all_passed": true,
     "new_missions_in_checks": 0,
-    "source_file_count": 155,
+    "source_file_count": 156,
     "requirement_audit": "results/current_overview.json",
     "phase_diagnostic": "results/scope_review_20261120/phase_handover_diagnostic.json",
-    "independent_evaluation_cases": 0
+    "independent_evaluation_cases": 0,
+    "public_development_summary": "evidence/development_cases.json",
+    "geometry_hypotheses": "evidence/geometry_hypotheses.json",
+    "entry_regression": {
+      "source_revision": "a327161",
+      "all_discovered": true,
+      "online_completed": 8,
+      "false_accept_count": 0,
+      "returned": true,
+      "return_error_m": 0.39761306456839035,
+      "full_task_passed": false,
+      "phase_switch_triggered": true,
+      "entry_rejections": 16,
+      "bytes": 737648,
+      "independent_audit_passed": true
+    }
   },
   "open_items": [
-    "Validate one explicit entry/retreat development regression; prior 9/10 plus return is not complete. Phase handover has not yet triggered in a finished run.",
-    "Departure repair physically failed after repeated arrival-image waits. Fixed entry admission and immediate retreat need new actual evidence; no conditional navigation guarantee.",
-    "Freeze stable source/config/unseen seeds before paired 5/10 evaluation; no retuning on the same evaluation."
+    "All three current engineering additions have bounded/component evidence; latest actual regression has 8/10 correct plus return, not full completion.",
+    "Diagnose joint camera/RTT/quality feasibility and rejected-proposal quota usage before another task run; no additional planner innovation modules.",
+    "Height 18/20 m fixed inputs improve entry margin but are not approved replacements for the confirmed 15 m baseline or evidence of task feasibility.",
+    "Freeze stable source/config/unseen seeds before paired 5/10 evaluation; independent evaluation remains zero."
   ],
   "pending_preference": {
     "question": "nominal 5 m model as main versus retained conservative 10 m online envelope",

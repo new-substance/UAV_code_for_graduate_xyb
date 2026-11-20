@@ -1,0 +1,23 @@
+function out=diagnose_geometry_hypotheses()
+%DIAGNOSE_GEOMETRY_HYPOTHESES Fixed inputs, no world/seed/task or config edit.
+repo=fileparts(fileparts(mfilename('fullpath')));addpath(fullfile(repo,'matlab_mvp'));setup_project;
+c=load_project_config();rows={};[~,id]=min(vecnorm(c.scene.reference_centers_xy_m-[70,10],2,2));
+for height=[15,18,20]
+    test=c;test.scene.flight_height_m=height;
+    n=uavmvp.nav_init(test);n.p=[70;10;height];n.last_reference_id=id;
+    [pixels,~,visible]=uavmvp.camera_model(n,id,test);assert(visible);
+    [n,image]=uavmvp.nav_update_reference(n,struct('marker_id',id,'detected',true,'epoch_s',n.t,'pixels',pixels),test);
+    assert(image.accepted);
+    p=uavmvp.predict_service_visit(n,[70;17.5;height],id,test,1);
+    cam=test.navigation_candidate.camera;
+    rows{end+1}=struct('height_m',height,'entry_pass',p.entry_camera_accepted, ...
+        'return_pass',p.accepted,'entry_pixel_margin',p.entry.reference.pixel_margin, ...
+        'vertical_footprint_half_m',height*cam.height_px/(2*cam.fy_px), ...
+        'marker_nominal_edge_px',cam.fy_px*test.navigation_candidate.marker_side_m/height, ...
+        'central_cell_nearest_marker_slant_m',norm([5;30;height-test.scene.terminal_height_m])); %#ok<AGROW>
+end
+out=struct('purpose','deterministic_geometry_hypotheses_not_task_feasibility_or_performance', ...
+    'task_missions',0,'baseline_configuration_changed',false, ...
+    'initial_image','zero-residual fixed-input reference image; optimistic, not a detection guarantee', ...
+    'rows',{rows});
+end

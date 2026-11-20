@@ -30,6 +30,8 @@ def summarize(root: Path) -> dict:
             nodes = out.get("nodes", [])
             if isinstance(nodes, dict):
                 nodes = [nodes]
+            accepted_errors = [n["true_error_m"] for n in nodes
+                               if n["online_completed"] and n.get("true_error_m") is not None]
             cases.append({"label": directory.name, "seed": int(row["seed"]),
                 "count": manifest["options"]["count"], "rule": manifest["options"]["rule"],
                 "purpose": manifest.get("review_purpose", manifest["purpose"]),
@@ -39,6 +41,10 @@ def summarize(root: Path) -> dict:
                 "discovered": sum(n["discovered"] for n in nodes),
                 "online_completed": sum(n["online_completed"] for n in nodes),
                 "false_accept_count": out.get("false_accept_count"),
+                "worst_accepted_true_error_m": max(accepted_errors, default=None),
+                "unfinished_addresses": [n["address"] for n in nodes if not n["online_completed"]],
+                "ack_missing_addresses": [n["address"] for n in nodes if n["online_completed"] and not n["stop_ack"]],
+                "awake_addresses": [n["address"] for n in nodes if not n["deep_sleep"]],
                 "returned": out.get("returned"), "return_error_m": out.get("return_error_m"),
                 "total_time_s": out.get("total_time_s"),
                 "feedback_delivered": out.get("position_feedback_delivered"),
