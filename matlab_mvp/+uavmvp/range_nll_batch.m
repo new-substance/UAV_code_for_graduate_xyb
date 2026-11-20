@@ -1,4 +1,4 @@
-function [F,chi] = range_nll_batch(points,anchors,ranges,Pnav,Cradio,height)
+function [F,chi,parts] = range_nll_batch(points,anchors,ranges,Pnav,Cradio,height)
 %RANGE_NLL_BATCH Vectorized small-matrix Cholesky over position candidates.
 % F = r' C(x)^(-1) r + log det C(x); no covariance inverse is formed.
 n=size(points,1);m=size(anchors,2);
@@ -38,4 +38,7 @@ for i=1:m
 end
 chi=sum(y.^2,2);F=chi+logdet;
 F(~valid)=Inf;chi(~valid)=Inf;
+if nargout>2
+    parts=struct('L',L,'logdet',logdet,'residual',residual,'whitened',y,'valid',valid);
+end
 end

@@ -1,5 +1,8 @@
 function c=verify_position(f,b,cfg,require_quality)
 if nargin<4,require_quality=true;end
+if isfield(cfg.localization,'quality_method') && strcmp(cfg.localization.quality_method,'grid_conditional')
+    c=uavpriority.verify_region(f,b,cfg,require_quality);return;
+end
 c=uavstage.verify_position(f,b,cfg,require_quality);
 c.raw_statistic=c.statistic;c.model_residual_bound_m=NaN;
 if isfinite(c.variance) && c.variance>0 && f.sensitivity_ok

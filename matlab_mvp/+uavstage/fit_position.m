@@ -1,6 +1,7 @@
 function fit=fit_position(bundle,cfg)
 %FIT_POSITION Exactly four records; actual C(x)-dependent NLL, global grid.
 a=bundle.anchors;r=bundle.ranges;P=bundle.Pnav;C=bundle.Cradio;
+region_only=isfield(cfg.localization,'quality_method') && strcmp(cfg.localization.quality_method,'grid_conditional');
 assert(size(a,2)==4 && numel(r)==4);
 fit=struct('x',[NaN;NaN],'objective',Inf,'fit_stat',Inf,'condition',Inf, ...
     'covariance',nan(2),'sensitivity',nan(2,4),'sensitivity_ok',false, ...
@@ -36,12 +37,15 @@ end
 [d,H,Q]=uavmvp.range_model(fit.x,a,P,C,cfg.scene.terminal_height_m);
 [L,flag]=chol(Q,'lower');if flag,fit.reason='INVALID_COVARIANCE';return;end
 Z=L\H;J=Z'*Z;fit.condition=cond(J);fit.fit_stat=sum((L\(r-d)).^2);
-if rank(J)<2,fit.reason='DEGENERATE_GEOMETRY';return;end
-fit.covariance=J\eye(2);
+if rank(J)<2
+    if ~region_only,fit.reason='DEGENERATE_GEOMETRY';return;end
+else
+    fit.covariance=J\eye(2);
+end
 % The stage only uses a stable INTERIOR estimator derivative. Boundary cases
 % are retained as incomplete, rather than silently applying an interior rule.
 inside=all(fit.x>.01) && all(fit.x<[cfg.scene.width_m;cfg.scene.height_m]-.01);
-if inside && fit.solver_flag>0 && ~fit.seed_truncated
+if ~region_only && inside && fit.solver_flag>0 && ~fit.seed_truncated
     A=zeros(2,4);ok=true;
     for k=1:4
         h=max(1e-3,1e-3*sqrt(Q(k,k)));rp=r;rm=r;rp(k)=rp(k)+h;rm(k)=rm(k)-h;
@@ -52,6 +56,7 @@ if inside && fit.solver_flag>0 && ~fit.seed_truncated
     end
     fit.sensitivity=A;fit.sensitivity_ok=ok && all(isfinite(A),'all');
 end
+if region_only,return;end % common solver only; Q01 is evaluated by its wrapper
 fit=uavstage.classify_fit(fit,cfg);
 % Refine near the actual online radius boundary, before publishing a result.
 % This is a numerical guard, not a continuous-domain containment proof.

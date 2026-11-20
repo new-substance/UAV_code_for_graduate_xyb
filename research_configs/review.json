@@ -1,7 +1,7 @@
 {
-  "status": "quality_review_required",
+  "status": "approved_for_bounded_development",
   "specification": "论文总纲.md",
-  "specification_sha256": "d3e40c3c571988e0c7edc0200e97afd08f9d8247f006d87f4db9c774369d7be2",
+  "specification_sha256": "014d9be0166579aa6809cd6215e7840e35aed7606ef348b9a4b220f68da5073a",
   "research_scope": {
     "delivery_priority": "end_to_end_wake_discover_localize_position_feedback_routing_and_return",
     "mandatory_independent_module_innovations": false,
@@ -11,18 +11,18 @@
     "candidate_improvement": "position_and_stage_feedback_for_useful_next_service_point"
   },
   "configuration": "research_configs/baseline.json",
-  "configuration_sha256": "f51f286eb0c1d17f4919fb2d6755f32baa9f2f23019f0141bc2e9a94a22bed5a",
-  "configuration_identity": "Numerical settings identical to frozen V8 nominal; provenance/status metadata normalized for portable source publication",
+  "configuration_sha256": "0c69438c6495c395e75e5d9c06bf04a0f41bc756c6e1d1ec14efbe1b3d7b4343",
+  "configuration_identity": "342 numerical values unchanged from V8 nominal; explicit quality_method=grid_conditional changes quality/heldout model. Old empirical coverage does not transfer.",
   "allowed_now": [
-    "status/config and deterministic component checks",
-    "saved four-point/quality-input diagnosis and derivation",
-    "source/version review; no additional mission before quality-model review"
+    "deterministic algebra/region/state/writer checks",
+    "saved-input counterfactual analysis, never retroactive task success",
+    "one-case single-terminal development on declared new seeds; no independent-performance claim"
   ],
-  "mission_enabled": false,
+  "mission_enabled": true,
   "open_items": [
     {
-      "id": "QUALITY",
-      "item": "Both corrected development cases discover/use feedback/return but do not pass quality. Review local Fisher guard, constrained grid region and boundary derivative using saved inputs before more flights; do not change offline targets or physical noise."
+      "id": "DEV-REGION",
+      "item": "Validate actual fresh heldout, publish/sleep and return in one newly seeded flight under the reviewed region model; fixed-input readiness is not mission success."
     },
     {
       "id": "DEV-MULTI",
@@ -48,34 +48,35 @@
     "active_new_results": 1073741824
   },
   "historical_review_note": "Kept only in the original local workspace; not required by the published deterministic checks",
-  "source_sha256": "a83185106f3a3a54a33eb6047293eb4805b3626a6e14cd9b4bbd36711155a130",
+  "source_sha256": "b6e041703019d202ce1e4cf0f631d8d381c650f0a9b444b483efb68c8429b42d",
   "development_scope": {
     "terminal_counts": [
       1
     ],
     "max_cases_per_batch": 1,
     "allowed_seeds": [
-      2026112001,
-      2026112002,
-      2026112003,
-      2026112004
+      2026112101,
+      2026112102,
+      2026112103
     ],
-    "purpose": "integration_development_not_independent_evaluation"
+    "purpose": "grid_conditional_integration_development_not_independent_evaluation"
   },
   "reviewed_interfaces": {
-    "MODEL": "Adopt unchanged C(x) likelihood/nominal grid quality/correlated heldout; invalid sensitivity remains rejected, no new estimator or thresholds.",
+    "MODEL": "Q01 four-only nonlinear grid likelihood region with triangle/box remainder envelope; local Fisher scale/condition diagnostic, no interior derivative requirement. V01 correlated Schur-complement prediction over frozen four-only region; witness never changes estimate. Explicitly nominal.",
     "WRITER": "UTF-8 live case/batch/active byte limits and reserved outcomes checked; execute_task catches quota failure and attempts actual return, without further events.",
     "PLANNER": "64 finite candidates, qualified positions separated from attempts; truth-free position/stage proposal followed by actual navigation/return/distinctness gates.",
-    "STATE": "Fixed-input tests pass 4+1 exclusion, bad heldout rejection, repeated-position rejection, raw-member exclusion and same-version refresh.",
+    "STATE": "New region mode passes fixed-input 4+1, boundary, bad geometry, invalid covariance, 100 m corrupt heldout, raw-member exclusion, frozen estimate and navigation-version checks.",
     "RECORDING": "Only recording branches change in MotionWorld compact mode; no physics/navigation/radio arithmetic is skipped."
   },
   "evidence": {
     "reproducible_command": "addpath('matlab_mvp'); setup_project; project('check');",
     "all_passed": true,
     "new_missions_in_checks": 0,
-    "source_file_count": 141,
-    "local_component_report": "results/scope_review_20261120/component_checks.json",
-    "saved_input_review": "results/scope_review_20261120/saved_failure_review.json"
+    "source_file_count": 146,
+    "local_component_report": "results/scope_review_20261120/region_component_checks_v3.json",
+    "saved_input_review": "results/scope_review_20261120/region_review_v3.json",
+    "saved_input_ready_snapshots": 4,
+    "saved_input_snapshots": 18
   },
   "development_findings": [
     {

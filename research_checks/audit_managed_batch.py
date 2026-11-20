@@ -7,6 +7,43 @@ import math
 from pathlib import Path
 
 
+def check_region_prediction(detail: dict, cfg: dict) -> None:
+    """Reconstruct witness statistics directly, without MATLAB helper code."""
+    import numpy as np
+
+    fit, check, bundle = detail["fit"], detail["check"], detail["input"]
+    if not check.get("witness_xy_m"):
+        assert not check["passed"]
+        return
+    point = np.asarray(check["witness_xy_m"], dtype=float).reshape(2)
+    target = np.r_[point, cfg["scene"]["terminal_height_m"]]
+    anchors = np.asarray(bundle["anchors"], dtype=float)
+    delta = anchors - target[:, None]
+    distances = np.linalg.norm(delta, axis=0)
+    G = np.zeros((5, 15))
+    for k in range(5):
+        G[k, 3*k:3*k+3] = delta[:, k] / distances[k]
+    C = np.asarray(bundle["Cradio"]) + G @ np.asarray(bundle["Pnav"]) @ G.T
+    K = np.linalg.solve(C[:4, :4], C[:4, 4]).T
+    variance = float(C[4, 4] - K @ C[:4, 4])
+    residuals = np.asarray(bundle["ranges"]).reshape(5) - distances
+    residual = float(residuals[4] - K @ residuals[:4])
+    bounds = np.asarray(bundle["model_bias_bounds_m"]).reshape(5)
+    bound = float(bounds[4] + np.abs(K) @ bounds[:4])
+    statistic = max(0, abs(residual)-bound)**2 / variance
+    for actual, expected in ((check["variance"], variance), (check["residual"], residual),
+                             (check["model_residual_bound_m"], bound), (check["statistic"], statistic)):
+        assert math.isclose(actual, expected, rel_tol=1e-7, abs_tol=1e-8)
+    L = np.linalg.cholesky(C[:4, :4])
+    whitened = np.linalg.solve(L, residuals[:4])
+    signs = np.array([[1 if (j >> k) & 1 else -1 for k in range(4)] for j in range(16)])
+    a = max(np.linalg.norm(np.linalg.solve(L, signs[j]*bounds[:4])) for j in range(16))
+    lower = max(0, np.linalg.norm(whitened)-a)**2 + 2*np.log(np.diag(L)).sum()
+    assert lower <= fit["region_reference_upper"] + cfg["stage"]["region_gamma"] + 1e-6
+    assert np.linalg.norm(point-np.asarray(fit["x"]).reshape(2)) + fit["datum_allowance_m"] <= fit["radius"] + 1e-6
+    assert check["passed"] == (fit["quality"] and statistic <= cfg["stage"]["verification_gate"])
+
+
 def read_lines(path: Path) -> list[dict]:
     if not path.exists():
         return []
@@ -22,6 +59,7 @@ def audit(directory: Path) -> dict:
     rows = [json.loads(line) for line in outcome_lines]
     assert len(rows) == len(seeds) and [r["seed"] for r in rows] == seeds
     limits = manifest["limits"]
+    cfg = manifest["manifest"]["configuration_expanded"]
     files = [p for p in directory.rglob("*") if p.is_file()]
     total = sum(p.stat().st_size for p in files)
     assert total <= limits["batch_bytes"]
@@ -58,6 +96,8 @@ def audit(directory: Path) -> dict:
                 groups = bundle["constituent_ids"]
                 members = [v for group in groups for v in (group if isinstance(group, list) else [group])]
                 assert len(members) == len(set(members)), "Raw services reused in fit/heldout"
+                if check.get("kind") == "grid_conditional":
+                    check_region_prediction(detail, cfg)
             elif kind == "PUBLISHED":
                 assert data["address"] not in published
                 proof = data["proof"]
@@ -69,7 +109,6 @@ def audit(directory: Path) -> dict:
             nodes = outcome["nodes"]
             if isinstance(nodes, dict):
                 nodes = [nodes]
-            cfg = manifest["manifest"]["configuration_expanded"]
             target = cfg["localization"]["offline_position_error_limit_m"]
             for node in nodes:
                 if complete_trace:

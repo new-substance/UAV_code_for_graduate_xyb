@@ -1,6 +1,6 @@
 {
   "schema_version": "strategy-design-v2",
-  "status": "frozen_v8_foundation_not_full_mission_validated",
+  "status": "development_grid_conditional_not_independently_evaluated",
   "provenance": "All numeric values below are development assumptions, not measured CSS, IMU, camera or aircraft specifications. Literature supports mechanisms, not this combined profile.",
   "confirmation_record": {
     "completed_on": "2026-11-12",
@@ -352,7 +352,9 @@
     ],
     "risk_note": "chi-square gates describe nominal model consistency; they do not guarantee false acceptance probability or full-mission accuracy",
     "group_geometry_rule": "global_geometry",
-    "group_geometry_grid_m": 2.5
+    "group_geometry_grid_m": 2.5,
+    "quality_method": "grid_conditional",
+    "quality_note": "Q01 four-only nominal likelihood region with bounded-model envelope; V01 correlated conditional prediction over frozen region. Legacy V8 gamma/gates are retained design constants, not recalibrated coverage claims. Physical numeric parameters unchanged."
   },
   "planner": {
     "candidate_cap": 16,
