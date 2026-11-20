@@ -1,5 +1,5 @@
-function out=project(action)
-%PROJECT Single managed entry. No mission executor is released in this phase.
+function out=project(action,options)
+%PROJECT Single managed entry. Components checked; mission integration pending.
 if nargin<1,action='status';end
 setup_project();repo=fileparts(fileparts(mfilename('fullpath')));
 review=jsondecode(fileread(fullfile(repo,'research_configs','review.json')));
@@ -7,16 +7,17 @@ switch lower(char(action))
     case 'status'
         out=struct('research_core','End-to-end task first; independent module innovations not required', ...
             'route_guidance','Terminal estimates guide following service waypoints; IMU/vision maintain UAV pose', ...
-            'review_status',review.status,'mission_enabled',false, ...
-            'reason','Scope review and bounded lightweight writer remain pending', ...
+            'review_status',review.status,'mission_enabled',review.mission_enabled, ...
+            'reason','Read review.json for allowed development scope; independent full-mission performance remains unvalidated', ...
             'specification','论文总纲.md','configuration','research_configs/baseline.json');
     case 'config'
         out=load_project_config();
     case 'check'
         out=deterministic_checks();
     case 'run'
-        error('uavproject:SimulationNotApproved', ...
-            'New missions are not approved. Complete the scoped model review and bounded writer first.');
+        uavmvp.review_gate();
+        assert(nargin==2,'uavproject:RunOptions','Declare seeds, count, rule and a new output label.');
+        out=uavpriority.run_managed(options);
     otherwise
         error('uavproject:UnknownAction','Use status, config, check or run.');
 end
@@ -44,10 +45,15 @@ for k=1:numel(packages)
         'uavproject:PathAmbiguity','Start a clean MATLAB session and load only matlab_mvp.');
 end
 try
-    project('run');error('uavproject:GateFailed','A mission unexpectedly passed the gate.');
+    uavmvp.review_gate();
 catch problem
-    assert(strcmp(problem.identifier,'uavproject:SimulationNotApproved'));
+    assert(ismember(problem.identifier,{'uavproject:SimulationNotApproved','uavproject:ReviewMismatch'}));
 end
-out=struct('all_passed',true,'kind','deterministic_algebra_config_paths_and_run_gate', ...
-    'mission_count',0,'rtt_error_m',abs(r.range_m-distance),'source_roots',1);
+original_path=path;restore_path=onCleanup(@()path(original_path)); %#ok<NASGU>
+addpath(fullfile(fileparts(main),'research_checks'));
+writer=check_bounded_writer();feedback=check_position_feedback();state=check_localization_state();
+out=struct('all_passed',writer.all_passed && feedback.all_passed && state.all_passed, ...
+    'kind','deterministic_algebra_paths_run_gate_writer_and_feedback', ...
+    'mission_count',0,'rtt_error_m',abs(r.range_m-distance),'source_roots',1, ...
+    'writer',writer,'position_feedback',feedback,'localization_state',state);
 end

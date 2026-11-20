@@ -118,12 +118,14 @@ classdef MotionWorld < handle
             prior=obj.nav;
             [obj.nav,report]=uavmvp.nav_update_reference(obj.nav,observation,cfg);
             % Replayable sensor/update evidence; exported only after finish.
-            obj.reference_log{end+1}=struct('time_s',obj.t,'marker_id',id, ...
-                'observation',observation,'prior',prior,'report',report, ...
-                'posterior_p',obj.nav.p,'posterior_R',obj.nav.R, ...
-                'true_p',obj.truth.p,'true_R',obj.truth.R);
-            if isfield(cfg.sim,'reference_outage_intervals_s')
-                obj.reference_log{end}.sensor_forced_outage=forced_outage;
+            if obj.full_recording()
+                obj.reference_log{end+1}=struct('time_s',obj.t,'marker_id',id, ...
+                    'observation',observation,'prior',prior,'report',report, ...
+                    'posterior_p',obj.nav.p,'posterior_R',obj.nav.R, ...
+                    'true_p',obj.truth.p,'true_R',obj.truth.R);
+                if isfield(cfg.sim,'reference_outage_intervals_s')
+                    obj.reference_log{end}.sensor_forced_outage=forced_outage;
+                end
             end
             obj.record();
         end
@@ -164,8 +166,10 @@ classdef MotionWorld < handle
                 end
             end
             obj.hold(max(0,start+control.reserved_s-obj.t));
-            obj.radio_log{end+1}=struct('kind',control.kind,'start_s',start,'end_s',obj.t, ...
-                'members',control.active_members,'received_count',numel(packets));
+            if obj.full_recording()
+                obj.radio_log{end+1}=struct('kind',control.kind,'start_s',start,'end_s',obj.t, ...
+                    'members',control.active_members,'received_count',numel(packets));
+            end
         end
         function raw=measure_service(obj,request)
             assert(~obj.finished && ~isempty(obj.radio));start=obj.t;id=request.address;
@@ -225,9 +229,11 @@ classdef MotionWorld < handle
                     'motion_accepted',spread<=obj.cfg.sim.range_support_span_limit_m && bound<=obj.cfg.sim.range_model_bias_bound_limit_m);
             end
             obj.prune(setdiff(obj.nav.clone_ids,support));
-            obj.radio_log{end+1}=struct('kind','RANGE_SERVICE','address',id,'mode',request.mode, ...
-                'start_s',start,'end_s',obj.t,'reason',reason,'support_ids',support, ...
-                'true_support_ranges_m',ranges,'request',request,'raw',raw);
+            if obj.full_recording()
+                obj.radio_log{end+1}=struct('kind','RANGE_SERVICE','address',id,'mode',request.mode, ...
+                    'start_s',start,'end_s',obj.t,'reason',reason,'support_ids',support, ...
+                    'true_support_ranges_m',ranges,'request',request,'raw',raw);
+            end
         end
         function packet=transmit_stop(obj,command)
             assert(~obj.finished && ~isempty(obj.radio));packet=[];start=obj.t;id=command.address;
@@ -241,8 +247,10 @@ classdef MotionWorld < handle
             else
                 obj.hold(max(0,start+command.reserved_s-obj.t));
             end
-            obj.radio_log{end+1}=struct('kind','STOP','address',id,'start_s',start,'end_s',obj.t, ...
-                'physically_received',~isempty(reply),'ack_received',~isempty(packet));
+            if obj.full_recording()
+                obj.radio_log{end+1}=struct('kind','STOP','address',id,'start_s',start,'end_s',obj.t, ...
+                    'physically_received',~isempty(reply),'ack_received',~isempty(packet));
+            end
         end
         function data=finish(obj)
             assert(~obj.finished);obj.finished=true;obj.record();
@@ -270,8 +278,13 @@ classdef MotionWorld < handle
             rs=RandStream('mt19937ar','Seed',seed);
         end
         function record(obj)
-            obj.trace(end+1,:)=[obj.t,obj.truth.p',obj.nav.p',obj.truth.v',obj.nav.v', ...
+            index=size(obj.trace,1)+1;
+            if ~obj.full_recording(),index=min(index,2);end
+            obj.trace(index,:)=[obj.t,obj.truth.p',obj.nav.p',obj.truth.v',obj.nav.v', ...
                 sqrt(max(0,diag(obj.nav.P(1:3,1:3))))'];
+        end
+        function full=full_recording(obj)
+            full=~isfield(obj.cfg.sim,'compact_recording') || ~obj.cfg.sim.compact_recording;
         end
     end
 end

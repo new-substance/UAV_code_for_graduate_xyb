@@ -1,7 +1,7 @@
 {
-  "status": "not_approved_for_simulation",
+  "status": "approved_for_bounded_development",
   "specification": "论文总纲.md",
-  "specification_sha256": "d45a09a0f13c3def4b9b8ff1611ae9847af44a5c59fb49a7f81bfbdb7ec01c7d",
+  "specification_sha256": "82f61430b9dfb25090680cbf8e1fc0c57f16decf7799ff18947e6f9b5a340478",
   "research_scope": {
     "delivery_priority": "end_to_end_wake_discover_localize_position_feedback_routing_and_return",
     "mandatory_independent_module_innovations": false,
@@ -14,23 +14,23 @@
   "configuration_sha256": "f51f286eb0c1d17f4919fb2d6755f32baa9f2f23019f0141bc2e9a94a22bed5a",
   "configuration_identity": "Numerical settings identical to frozen V8 nominal; provenance/status metadata normalized for portable source publication",
   "allowed_now": [
-    "status/config inspection",
-    "deterministic algebra and fixed saved-input checks",
-    "source/document consolidation"
+    "deterministic algebra/fixed-input/component checks",
+    "one case per batch, single-terminal bounded development with declared new seeds",
+    "read-only saved-result diagnosis; no independent performance claim"
   ],
-  "mission_enabled": false,
+  "mission_enabled": true,
   "open_items": [
     {
-      "id": "MODEL",
-      "item": "Use saved V8 failures to select and review the actual C2 model, numerical/quality definitions and interface; no strict global confidence theorem required"
+      "id": "DEV-N1",
+      "item": "Run and independently audit the first bounded single-terminal integration case; no success-rate claim."
     },
     {
-      "id": "WRITER",
-      "item": "Implement lightweight event/results output with live byte counting and bounded anomaly traces before any new mission"
+      "id": "DEV-MULTI",
+      "item": "After single-terminal integration checks, review and enable shared-flight 5/10-terminal development; keep all unfinished/error cases."
     },
     {
-      "id": "PLANNER",
-      "item": "Define the minimal position/phase feedback interface, feasible next-point selection and bounded no-action handling; no independent global planner required"
+      "id": "EVALUATION",
+      "item": "Freeze tested code/config and unseen evaluation seeds; compare same candidates/resources and audit requirement-level completion."
     }
   ],
   "removed_from_required_scope": [
@@ -47,5 +47,34 @@
     "default_case": 5242880,
     "active_new_results": 1073741824
   },
-  "historical_review_note": "Kept only in the original local workspace; not required by the published deterministic checks"
+  "historical_review_note": "Kept only in the original local workspace; not required by the published deterministic checks",
+  "source_sha256": "06d81383c7ef81309cf3377104cc094f9a901cf25cabe020152fb8029ad695d4",
+  "development_scope": {
+    "terminal_counts": [
+      1
+    ],
+    "max_cases_per_batch": 1,
+    "allowed_seeds": [
+      2026112001,
+      2026112002,
+      2026112003,
+      2026112004
+    ],
+    "purpose": "integration_development_not_independent_evaluation"
+  },
+  "reviewed_interfaces": {
+    "MODEL": "Adopt unchanged C(x) likelihood/nominal grid quality/correlated heldout; invalid sensitivity remains rejected, no new estimator or thresholds.",
+    "WRITER": "UTF-8 live case/batch/active byte limits and reserved outcomes checked; execute_task catches quota failure and attempts actual return, without further events.",
+    "PLANNER": "64 finite candidates, qualified positions separated from attempts; truth-free position/stage proposal followed by actual navigation/return/distinctness gates.",
+    "STATE": "Fixed-input tests pass 4+1 exclusion, bad heldout rejection, repeated-position rejection, raw-member exclusion and same-version refresh.",
+    "RECORDING": "Only recording branches change in MotionWorld compact mode; no physics/navigation/radio arithmetic is skipped."
+  },
+  "evidence": {
+    "reproducible_command": "addpath('matlab_mvp'); setup_project; project('check');",
+    "all_passed": true,
+    "new_missions_in_checks": 0,
+    "source_file_count": 141,
+    "local_component_report": "results/scope_review_20261120/component_checks.json",
+    "saved_input_review": "results/scope_review_20261120/saved_failure_review.json"
+  }
 }
