@@ -260,6 +260,11 @@ out=struct('reason',reason,'exception',exception,'count',count,'policy',rule, ..
                 p_got=reacquire_reference(ref);
             end
             if ~p_got.accepted
+                if p_at_point
+                    p_reacquired=reacquire_reference(ref);
+                    if ~p_reacquired.accepted,why=p_reacquired.reason;return;end
+                    why='ONSITE_IMAGE_FAILED_RECENTERED';continue;
+                end
                 why=p_got.reason;
                 if contains(why,'BUDGET') || strcmp(why,'DEPARTURE_REFERENCE_UNRECOVERED'),return;end
                 continue;
@@ -272,10 +277,21 @@ out=struct('reason',reason,'exception',exception,'count',count,'policy',rule, ..
                 p_escape_return=uavmvp.reference_return_plan(p_escape.dwell.nav,cfg,ref);
                 p_outward_allowance=p_escape.outward.duration_s+2+ ...
                     cfg.navigation_candidate.reference_max_attempts_per_visit*cfg.navigation_candidate.reference_observation_s;
+                if ~p_escape.entry_camera_accepted
+                    why='ONSITE_CAMERA_FORECAST_REJECTED';
+                    emit('ACQUISITION_REJECTED',struct('xy_m',xy,'reference_id',ref, ...
+                        'reason',why,'pixel_margin',p_escape.entry.reference.pixel_margin));
+                    continue;
+                end
                 if ~p_escape.accepted || ~p_escape_return.available || ...
                         w.t+p_outward_allowance+p_minimum.minimum_total_s+p_escape_return.reserve_s>deadline,continue;end
                 p_moved=uavmvp.fly_to(w,p_q,cfg,p_escape.outward.duration_s+2);if ~p_moved.arrived,continue;end
-                p_onsite=uavpriority.observe_onsite(w,ref,cfg,deadline);if ~p_onsite.accepted,continue;end
+                p_onsite=uavpriority.observe_onsite(w,ref,cfg,deadline);
+                if ~p_onsite.accepted
+                    p_reacquired=reacquire_reference(ref);
+                    if ~p_reacquired.accepted,why=p_reacquired.reason;return;end
+                    why='ARRIVAL_IMAGE_FAILED_RECENTERED';continue;
+                end
             end
             p_waiting=uavpriority.wait_reference(w,ref,p_minimum.extra_service_s,cfg);if ~p_waiting.accepted,continue;end
             p_gate=uavpriority.navigation_gate(w.nav,p_minimum.atomic_radio_s,cfg);

@@ -5,6 +5,10 @@ if nargin<5,dwell_s=cfg.motion_and_budget.stop_max_dwell_s;end
 if nargin<6,onsite_observation_s=0;end
 assert(isfinite(onsite_observation_s) && onsite_observation_s>=0);
 outward=uavmvp.predict_leg(nav,target,cfg,60);
+entry=uavmvp.predict_hold(outward.nav,cfg.navigation_candidate.reference_observation_s,cfg);
+entry.reference=uavmvp.reference_margin(entry.nav,reference_id,cfg);
+entry_accepted=outward.arrived && outward.envelope_inside_area && ...
+    entry.envelope_inside_area && entry.reference.envelope_inside;
 dwell=uavmvp.predict_hold(outward.nav,dwell_s+onsite_observation_s,cfg);
 back=uavmvp.predict_leg(dwell.nav,[nav.map_p(1:2,reference_id);cfg.scene.flight_height_m],cfg,60,reference_id);
 % The fallback image is exposed AFTER the return flight. Failed on-site
@@ -15,5 +19,6 @@ out=struct('accepted',outward.arrived && back.arrived && outward.envelope_inside
     dwell.envelope_inside_area && back.envelope_inside_area && reacquisition.envelope_inside_area && ...
     reacquisition.reference.envelope_inside, ...
     'duration_s',outward.duration_s+dwell.duration_s+back.duration_s+reacquisition.duration_s, ...
-    'onsite_observation_s',onsite_observation_s,'outward',outward,'dwell',dwell,'back',back,'reacquisition',reacquisition);
+    'onsite_observation_s',onsite_observation_s,'outward',outward,'dwell',dwell,'back',back, ...
+    'entry_camera_accepted',entry_accepted,'entry',entry,'reacquisition',reacquisition);
 end

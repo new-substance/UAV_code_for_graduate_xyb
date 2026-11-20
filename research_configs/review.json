@@ -2,10 +2,10 @@
   "status": "approved_for_bounded_development",
   "mission_enabled": true,
   "specification": "论文总纲.md",
-  "specification_sha256": "71739e942af67eb7f3f8b34f5ef2f5e049041608e608d1f540c4a0a0c87b9d93",
+  "specification_sha256": "42312eafbdfa6e858aaf8b750091ab8555a738f577ee5b395935fd96ab5a8533",
   "configuration": "research_configs/baseline.json",
   "configuration_sha256": "0c69438c6495c395e75e5d9c06bf04a0f41bc756c6e1d1ec14efbe1b3d7b4343",
-  "source_sha256": "f7403fee87fe5e079c230435a00a025aed3813607d778a9b52af23e48e878979",
+  "source_sha256": "11b0effd56441cf8d699d2c4299aa12218ba738f39d38473341c91e1e2638756",
   "development_scope": {
     "terminal_counts": [
       10
@@ -14,7 +14,7 @@
     "allowed_seeds": [
       2026112302
     ],
-    "purpose": "known_seed_service_phase_regression_not_independent_evaluation"
+    "purpose": "known_seed_entry_visibility_and_immediate_retreat_regression_not_independent_evaluation"
   },
   "budgets_bytes": {
     "development_batch": 52428800,
@@ -26,22 +26,23 @@
     "MODEL_STATE": "Q01/V01 nominal grid/conditional region; four-only fit, fresh raw-disjoint heldout, common navigation version. No strict task risk guarantee.",
     "WRITER": "Live UTF-8 case/batch/active quotas; reserved outcome plus bounded actual return on quota failure; no source copies or full covariance traces.",
     "RETURN": "Conditional reference return reserves, actual images/posterior recheck, bounded departure recovery; no terminal RTT pose update.",
+    "ENTRY": "Require first-frame on-site pixel envelope as well as return forecast before leaving a reference for an inset point. At most two arrival images then immediately recenter on failure before another finite attempt; do not spend an unchecked second wait. Fixed input distinguishes a passing return from rejected first frame.",
     "PLANNER": "Same finite 64 candidates, transaction/attempt caps, complete macro and quality/return gates for stage/cost. P02 all-ID/finite-fit handover permits consecutive feedback service; remaining coverage is finite fallback.",
     "FORECAST": "UAV/map principal covariance submatrix only in pure admission forecasts, no Schur conditioning; coupled-clone covariance equality checked. Actual joint navigation, measurements and fitting unchanged.",
     "OFFLINE": "Truth coordinates, bias and return endpoints export only after MotionWorld.finish; independent Python audit reconstructs errors, conditional witnesses and completion."
   },
   "evidence": {
-    "checks": "results/scope_review_20261120/focus_component_checks_v1.json",
+    "checks": "results/scope_review_20261120/entry_component_checks_v1.json",
     "all_passed": true,
     "new_missions_in_checks": 0,
     "source_file_count": 155,
-    "requirement_audit": "results/scope_review_20261120/requirement_status.json",
+    "requirement_audit": "results/current_overview.json",
     "phase_diagnostic": "results/scope_review_20261120/phase_handover_diagnostic.json",
     "independent_evaluation_cases": 0
   },
   "open_items": [
-    "Validate one explicit phase-handover development regression; prior 9/10 plus return is not complete.",
-    "New actual departure repair branch has not yet been physically exercised; do not infer branch coverage from a different timed flight.",
+    "Validate one explicit entry/retreat development regression; prior 9/10 plus return is not complete. Phase handover has not yet triggered in a finished run.",
+    "Departure repair physically failed after repeated arrival-image waits. Fixed entry admission and immediate retreat need new actual evidence; no conditional navigation guarantee.",
     "Freeze stable source/config/unseen seeds before paired 5/10 evaluation; no retuning on the same evaluation."
   ],
   "pending_preference": {
