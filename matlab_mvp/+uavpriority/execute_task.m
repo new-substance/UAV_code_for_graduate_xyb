@@ -37,7 +37,12 @@ try
             [ready,why]=prepare(q,ref);
             emit('POINT_ADMISSION',struct('xy_m',q,'reference_id',ref,'accepted',ready,'reason',why, ...
                 'estimated_uav_p_m',w.nav.p,'Pxy_m2',w.nav.P(1:2,1:2),'nav_version',w.nav.version));
-            if ~ready,continue;end
+            if ~ready
+                if strcmp(why,'RETURN_RESOURCE') || contains(why,'BUDGET')
+                    reason='RETURN_RESOURCE_RESERVED';break;
+                end
+                continue;
+            end
             targets=find(~[book.nodes.completed]);responded=false(1,count);
             targets=targets(cellfun(@(s)isempty(s) || ~strcmp(s.phase,'FAILED'),states(targets)));
             for group=unique(ceil(targets/cfg.css.group_size))
@@ -66,16 +71,30 @@ try
                     if ~isempty(k),attempts(k,id)=attempts(k,id)+1;end
                 end
                 [ready,why]=prepare(q,ref);
-                if ~ready,emit('SERVICE_SKIPPED',struct('address',id,'reason',why));continue;end
+                if ~ready
+                    emit('SERVICE_SKIPPED',struct('address',id,'reason',why));
+                    if strcmp(why,'RETURN_RESOURCE') || contains(why,'BUDGET')
+                        reason='RETURN_RESOURCE_RESERVED';break;
+                    end
+                    continue;
+                end
                 [children,report]=serve(id,ref);emit('SPATIAL_SERVICE',report);
-                got=uavpriority.acquire_reference(w,ref,cfg,deadline);
-                if ~got.accepted,reason='POST_SERVICE_REFERENCE_FAILED';break;end
+                got=uavpriority.observe_onsite(w,ref,cfg,deadline);
+                if ~got.accepted
+                    recovery=uavpriority.acquire_safe_reference(w,ref,cfg,deadline);
+                    if ~recovery.accepted,reason='POST_SERVICE_REFERENCE_FAILED';break;end
+                    emit('SERVICE_SKIPPED',struct('address',id,'reason','POST_SERVICE_IMAGE_FAILED'));prune();continue;
+                end
                 if numel(children)~=cfg.priority.cold_services_per_position,prune();continue;end
                 rid=children(end);macros{id}{end+1}=struct('id',rid,'constituent_ids',children);
                 pool=[];if ~isempty(states{id}),pool=states{id}.pool_ids;end
                 b=uavpriority.bundle(book.nodes(id).range_records,w.nav,histories{id},macros{id},[pool,rid],cfg);
                 nav_gate=uavpriority.navigation_gate(w.nav,r.compute_s+r.stop_s,cfg);
-                if ~nav_gate.accepted,reason='COMPUTE_NAVIGATION_NOT_ADMITTED';break;end
+                compute_retreat=uavpriority.retreat_gate(w.nav,r.compute_s+r.stop_s,ref,cfg);
+                if ~nav_gate.accepted || ~compute_retreat.accepted,reason='COMPUTE_NAVIGATION_NOT_ADMITTED';break;end
+                if w.t+r.compute_s+r.stop_s+compute_retreat.return_plan.reserve_s>deadline
+                    reason='RETURN_RESOURCE_RESERVED';break;
+                end
                 timer=tic;[states{id},detail]=uavpriority.update_localization(states{id},b,cfg);
                 elapsed=toc(timer);w.hold(elapsed);
                 if owner==id && ismember(rid,states{id}.pool_ids),feedback_delivered=feedback_delivered+1;end
@@ -95,7 +114,7 @@ try
                 prune();
             end
             if ismember(reason,{'POST_SERVICE_REFERENCE_FAILED', ...
-                    'COMPUTE_NAVIGATION_NOT_ADMITTED','COMPUTE_RESERVATION_OVERRUN'}),break;end
+                    'COMPUTE_NAVIGATION_NOT_ADMITTED','COMPUTE_RESERVATION_OVERRUN','RETURN_RESOURCE_RESERVED'}),break;end
         end
     else
         reason=gate.reason;
@@ -115,10 +134,12 @@ if launched
 end
 data=w.finish();nodes=repmat(struct('address',0,'discovered',false,'online_completed',false, ...
     'phase','NOT_LOCALIZED','estimate_xy_m',[],'true_position_xy_m',[],'true_error_m',NaN,'false_accept',false, ...
+    'offline_range_bias_m',NaN, ...
     'quality_radius_m',NaN,'verification_rounds',0,'stop_ack',false,'deep_sleep',false),1,count);
 for id=1:count
     s=states{id};nodes(id).address=id;nodes(id).discovered=book.nodes(id).discovered;
     nodes(id).true_position_xy_m=data.radio_truth.terminal_positions(1:2,id);
+    nodes(id).offline_range_bias_m=data.radio_truth.persistent_range_bias_m(id);
     nodes(id).online_completed=book.nodes(id).completed;nodes(id).stop_ack=book.nodes(id).stop_ack;
     if ~isempty(s)
         nodes(id).phase=s.phase;nodes(id).verification_rounds=s.verification_rounds;
@@ -174,10 +195,25 @@ out=struct('reason',reason,'exception',exception,'count',count,'policy',rule, ..
         ready=false;why='NAVIGATION_OR_RETURN_ADMISSION';
         p_q=[xy';cfg.scene.flight_height_m];p_center=[cfg.scene.reference_centers_xy_m(ref,:)';cfg.scene.flight_height_m];
         for p_recovery=1:cfg.stage.navigation_recovery_cap
-            p_got=uavpriority.acquire_reference(w,ref,cfg,deadline);if ~p_got.accepted,continue;end
+            p_at_point=norm(w.nav.p-p_q)<.5 && norm(w.nav.v)<.2;
+            if p_at_point
+                p_current_return=uavmvp.reference_return_plan(w.nav,cfg,ref);
+                p_image_allowance=cfg.navigation_candidate.reference_max_attempts_per_visit*cfg.navigation_candidate.reference_observation_s;
+                if ~isfinite(p_current_return.reserve_s) || w.t+p_image_allowance+p_current_return.reserve_s>deadline
+                    why='RETURN_RESOURCE';return;
+                end
+                p_got=uavpriority.observe_onsite(w,ref,cfg,deadline);
+            else
+                p_got=uavpriority.acquire_safe_reference(w,ref,cfg,deadline);
+            end
+            if ~p_got.accepted
+                why=p_got.reason;
+                if contains(why,'BUDGET'),return;end
+                continue;
+            end
             p_back=uavmvp.reference_return_plan(w.nav,cfg,ref);
             if ~p_back.available || w.t+r.total_s+p_back.reserve_s>deadline,why='RETURN_RESOURCE';continue;end
-            if norm(p_q-p_center)>.01
+            if ~p_at_point && norm(p_q-p_center)>.01
                 p_escape=uavmvp.predict_service_visit(w.nav,p_q,ref,cfg, ...
                     cfg.navigation_candidate.reference_max_attempts_per_visit*cfg.navigation_candidate.reference_observation_s);
                 if ~p_escape.accepted || w.t+p_escape.duration_s+r.total_s+p_back.reserve_s>deadline,continue;end
