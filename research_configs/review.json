@@ -1,7 +1,7 @@
 {
-  "status": "approved_for_bounded_development",
+  "status": "coordination_and_model_review_required",
   "specification": "论文总纲.md",
-  "specification_sha256": "d4d7718354e3c1a9da257e757d71f247ef219c5e1595419baed613bbda407093",
+  "specification_sha256": "7f6079145491e1c7010eae6d44718a29622e10af1067f3b0515609f22fb8fb15",
   "research_scope": {
     "delivery_priority": "end_to_end_wake_discover_localize_position_feedback_routing_and_return",
     "mandatory_independent_module_innovations": false,
@@ -14,12 +14,16 @@
   "configuration_sha256": "0c69438c6495c395e75e5d9c06bf04a0f41bc756c6e1d1ec14efbe1b3d7b4343",
   "configuration_identity": "342 numerical values unchanged from V8 nominal; explicit quality_method=grid_conditional changes quality/heldout model. Old empirical coverage does not transfer.",
   "allowed_now": [
-    "deterministic algebra/region/state/writer checks",
-    "saved-input counterfactual analysis, never retroactive task success",
-    "one-case single-terminal development on declared new seeds; no independent-performance claim"
+    "deterministic component/algebra checks",
+    "saved state/decision/resource diagnosis and bounded coordination design",
+    "no new mission until the next scope/source/config review is frozen"
   ],
-  "mission_enabled": true,
+  "mission_enabled": false,
   "open_items": [
+    {
+      "id": "COORDINATION",
+      "item": "Finish node-level task closure. Inspect first-ID next-point ownership and fixed maximum recovery-block reservation; derive any stage/transaction admission refinement before new runs. Do not count 8/10 as complete or relax true-error/return targets."
+    },
     {
       "id": "DEV-MULTI",
       "item": "After single-terminal integration checks, review and enable shared-flight 5/10-terminal development; keep all unfinished/error cases."
@@ -133,6 +137,24 @@
       "return_error_m": 0.1518001570274378,
       "reason": "COMPUTE_NAVIGATION_NOT_ADMITTED",
       "all_results_retained": true
+    },
+    "latest_bounded_recovery": {
+      "seed": 2026112301,
+      "source_revision": "46fe68e",
+      "all_discovered": true,
+      "correct_online_completed": 8,
+      "complete": false,
+      "false_accept_count": 0,
+      "all_completed_nodes_ack_and_asleep": true,
+      "unfinished_nodes": [
+        9,
+        10
+      ],
+      "returned": true,
+      "return_error_m": 0.2121418371605998,
+      "total_time_s": 1714.8151268061251,
+      "bytes": 625232,
+      "independent_audit_passed": true
     }
   },
   "development_findings": [
@@ -157,5 +179,10 @@
     "new_result_bytes": 364447,
     "independent_evaluation_cases": 0,
     "requirement_audit": "results/scope_review_20261120/requirement_status.json"
+  },
+  "pending_preference": {
+    "question": "nominal 5 m model as main versus retained conservative 10 m online envelope",
+    "optional": true,
+    "default_until_reply": "retain current 10 m online model; physical 5 m unchanged"
   }
 }
