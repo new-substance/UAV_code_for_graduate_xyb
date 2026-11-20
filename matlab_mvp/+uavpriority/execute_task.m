@@ -88,25 +88,49 @@ try
                 if numel(children)~=cfg.priority.cold_services_per_position,prune();continue;end
                 rid=children(end);macros{id}{end+1}=struct('id',rid,'constituent_ids',children);
                 pool=[];if ~isempty(states{id}),pool=states{id}.pool_ids;end
-                b=uavpriority.bundle(book.nodes(id).range_records,w.nav,histories{id},macros{id},[pool,rid],cfg);
-                nav_gate=uavpriority.navigation_gate(w.nav,r.compute_s+r.stop_s,cfg);
-                compute_retreat=uavpriority.retreat_gate(w.nav,r.compute_s+r.stop_s,ref,cfg);
+                compute_budget=cfg.motion_and_budget.calculation_model_s_per_decision;
+                if numel(pool)+1>=4,compute_budget=r.compute_s;end
+                stop_budget=0;
+                if ~isempty(states{id}) && strcmp(states{id}.phase,'VERIFY'),stop_budget=r.stop_s;end
+                compute_window=compute_budget+stop_budget;
+                nav_gate=uavpriority.navigation_gate(w.nav,compute_window,cfg);
+                compute_retreat=uavpriority.retreat_gate(w.nav,compute_window,ref,cfg);
+                recentered=false;
+                if ~nav_gate.accepted || ~compute_retreat.accepted
+                    recovery=uavpriority.acquire_safe_reference(w,ref,cfg,deadline);
+                    if ~recovery.accepted,reason='COMPUTE_NAVIGATION_NOT_ADMITTED';break;end
+                    recentered=true;
+                    nav_gate=uavpriority.navigation_gate(w.nav,compute_window,cfg);
+                    compute_retreat=uavpriority.retreat_gate(w.nav,compute_window,ref,cfg);
+                end
+                emit('COMPUTE_ADMISSION',struct('address',id,'compute_reserve_s',compute_budget, ...
+                    'stop_reserve_s',stop_budget,'recentered',recentered,'navigation_ok',nav_gate.accepted, ...
+                    'retreat_ok',compute_retreat.accepted,'return_reserve_s',compute_retreat.return_plan.reserve_s));
                 if ~nav_gate.accepted || ~compute_retreat.accepted,reason='COMPUTE_NAVIGATION_NOT_ADMITTED';break;end
-                if w.t+r.compute_s+r.stop_s+compute_retreat.return_plan.reserve_s>deadline
+                if w.t+compute_window+compute_retreat.return_plan.reserve_s>deadline
                     reason='RETURN_RESOURCE_RESERVED';break;
                 end
+                b=uavpriority.bundle(book.nodes(id).range_records,w.nav,histories{id},macros{id},[pool,rid],cfg);
                 timer=tic;[states{id},detail]=uavpriority.update_localization(states{id},b,cfg);
                 elapsed=toc(timer);w.hold(elapsed);
                 if owner==id && ismember(rid,states{id}.pool_ids),feedback_delivered=feedback_delivered+1;end
                 emit('LOCALIZATION',struct('address',id,'phase',states{id}.phase, ...
-                    'solver_wall_and_charged_s',elapsed,'detail',detail));
-                if elapsed>r.compute_s,reason='COMPUTE_RESERVATION_OVERRUN';break;end
+                    'solver_wall_and_charged_s',elapsed,'compute_reserve_s',compute_budget,'detail',detail));
+                if elapsed>compute_budget,reason='COMPUTE_RESERVATION_OVERRUN';break;end
                 if strcmp(states{id}.phase,'DONE')
                     book.complete(id,states{id}.proof);
-                    for retry=1:cfg.planner.stop_notice_attempt_cap
-                        packet=w.transmit_stop(book.stop_request(id,w.t));
-                        if ~isempty(packet),book.receive_stop_ack(packet,packet.received_time_s);end
-                        if book.nodes(id).stop_ack,break;end
+                    if norm(w.nav.p-[q';cfg.scene.flight_height_m])>.5
+                        [notice_ready,notice_reason]=prepare(q,ref);
+                        if ~notice_ready,emit('NOTICE_POINT_UNAVAILABLE',struct('address',id,'reason',notice_reason));end
+                    end
+                    notice_gate=uavpriority.retreat_gate(w.nav,r.stop_s,ref,cfg);
+                    notice_ready=notice_gate.accepted && w.t+r.stop_s+notice_gate.return_plan.reserve_s<=deadline;
+                    if notice_ready
+                        for retry=1:cfg.planner.stop_notice_attempt_cap
+                            packet=w.transmit_stop(book.stop_request(id,w.t));
+                            if ~isempty(packet),book.receive_stop_ack(packet,packet.received_time_s);end
+                            if book.nodes(id).stop_ack,break;end
+                        end
                     end
                     emit('PUBLISHED',struct('address',id,'x',states{id}.fit.x, ...
                         'proof',states{id}.proof,'stop_ack',book.nodes(id).stop_ack));

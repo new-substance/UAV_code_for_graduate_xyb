@@ -1,7 +1,7 @@
 {
   "status": "approved_for_bounded_development",
   "specification": "论文总纲.md",
-  "specification_sha256": "6c96f26c3ef84f25fa367feeb111d63ad0fce2ee8927c57533f9c2e80c5ca898",
+  "specification_sha256": "d4d7718354e3c1a9da257e757d71f247ef219c5e1595419baed613bbda407093",
   "research_scope": {
     "delivery_priority": "end_to_end_wake_discover_localize_position_feedback_routing_and_return",
     "mandatory_independent_module_innovations": false,
@@ -44,16 +44,16 @@
     "active_new_results": 1073741824
   },
   "historical_review_note": "Kept only in the original local workspace; not required by the published deterministic checks",
-  "source_sha256": "4ab0aec2fae08251ece6f3ef5cb6c2d965873d471a4de8b844214e0a1cd8870a",
+  "source_sha256": "52e5c54eda251e4ec967718869dfaba48c321f3eae6b6293caa862cf2e1ba2f5",
   "development_scope": {
     "terminal_counts": [
       10
     ],
     "max_cases_per_batch": 1,
     "allowed_seeds": [
-      2026112203
+      2026112301
     ],
-    "purpose": "return_reserve_and_shared_point_execution_development_not_independent_evaluation"
+    "purpose": "bounded_computation_recovery_development_not_independent_evaluation"
   },
   "reviewed_interfaces": {
     "MODEL": "Q01 four-only nonlinear grid likelihood region with triangle/box remainder envelope; local Fisher scale/condition diagnostic, no interior derivative requirement. V01 correlated Schur-complement prediction over frozen four-only region; witness never changes estimate. Explicitly nominal.",
@@ -63,7 +63,8 @@
     "RECORDING": "Only recording branches change in MotionWorld compact mode; no physics/navigation/radio arithmetic is skipped.",
     "OFFLINE": "Only after MotionWorld.finish: store terminal true coordinates and physical home/final pose, allowing direct external error reconstruction. No decision inputs change.",
     "RETURN_EXECUTION": "Per-reference-step movement/image deadline reserves conditional return; actual posterior return is rechecked. Insufficient service budget terminates work rather than consuming return time. Deterministic positive-neighbor and no-motion-on-no-budget checks pass.",
-    "SHARED_POINT": "At an occupied point, actual onsite image plus radio/retreat/return gates are reused between IDs. Post-service image and stop occur onsite; failure recovery does not create a fictitious posterior. No model/numeric-parameter changes."
+    "SHARED_POINT": "At an occupied point, actual onsite image plus radio/retreat/return gates are reused between IDs. Post-service image and stop occur onsite; failure recovery does not create a fictitious posterior. No model/numeric-parameter changes.",
+    "STAGE_ADMISSION": "Partial-position bookkeeping uses existing 0.05 s decision budget; four-fit/heldout uses existing 8 s. Only VERIFY can publish and reserves STOP. If onsite compute/retreat cannot be reserved, actually recenter and rebuild the same 4+1 inputs at the new common navigation version; notification may return to the known service point, without new RTT. Every segment/STOP preserves return."
   },
   "evidence": {
     "reproducible_command": "addpath('matlab_mvp'); setup_project; project('check');",
@@ -117,6 +118,20 @@
       "stop_ack_missing_but_physically_asleep": [
         9
       ],
+      "all_results_retained": true
+    },
+    "stage_admission_components": {
+      "path": "results/scope_review_20261120/stage_admission_checks.json",
+      "all_passed": true,
+      "missions": 0
+    },
+    "return_fix_first_development": {
+      "seed": 2026112203,
+      "source_revision": "6367294",
+      "complete": false,
+      "returned": true,
+      "return_error_m": 0.1518001570274378,
+      "reason": "COMPUTE_NAVIGATION_NOT_ADMITTED",
       "all_results_retained": true
     }
   },
