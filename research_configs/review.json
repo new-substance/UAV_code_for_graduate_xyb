@@ -1,7 +1,7 @@
 {
   "status": "approved_for_bounded_development",
   "specification": "论文总纲.md",
-  "specification_sha256": "4b3efab1877fa17a429f002239fba3ab09655e738f91c09840aa9a79eabb37c7",
+  "specification_sha256": "fe47f17415393e36b27aefe4a832b879de21cd05d791ded2a5db0aed01d898a5",
   "research_scope": {
     "delivery_priority": "end_to_end_wake_discover_localize_position_feedback_routing_and_return",
     "mandatory_independent_module_innovations": false,
@@ -47,14 +47,14 @@
   "source_sha256": "36dbfa5a41535a58b257aea252e0a485d4c47903a5ed94a82d9037372bc4b346",
   "development_scope": {
     "terminal_counts": [
-      5
+      10
     ],
     "max_cases_per_batch": 1,
     "allowed_seeds": [
-      2026112201,
-      2026112202
+      2026112202,
+      2026112203
     ],
-    "purpose": "shared_flight_five_terminal_development_not_independent_evaluation"
+    "purpose": "shared_flight_ten_terminal_development_not_independent_evaluation"
   },
   "reviewed_interfaces": {
     "MODEL": "Q01 four-only nonlinear grid likelihood region with triangle/box remainder envelope; local Fisher scale/condition diagnostic, no interior derivative requirement. V01 correlated Schur-complement prediction over frozen four-only region; witness never changes estimate. Explicitly nominal.",
@@ -85,6 +85,17 @@
       ],
       "all_returned": true,
       "independent_conditional_witness_audit_passed": true
+    },
+    "five_terminal_integration": {
+      "seed": 2026112201,
+      "source_revision": "264425e",
+      "complete": true,
+      "all_nodes_correct_sleep_and_ack": true,
+      "return_error_m": 0.18817749500576184,
+      "worst_terminal_error_m": 5.324829428749585,
+      "total_time_s": 1247.3965699270236,
+      "bytes": 340553,
+      "independent_truth_and_conditional_audit_passed": true
     }
   },
   "development_findings": [
