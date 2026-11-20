@@ -10,7 +10,7 @@ for id=1:count,histories{id}=uavmvp.radio_history_init(cfg);macros{id}={};end
 deadline=cfg.stage.platform_resource_s;r=uavpriority.reservation(cfg);
 nr=size(cfg.scene.reference_centers_xy_m,1);attempts=zeros(2*nr,count);
 extra_fit=zeros(1,count);extra_verify=zeros(1,count);feedback_count=0;
-feedback_delivered=0;
+feedback_delivered=0;coverage_fit_plans=0;
 cover=cfg.stage.route_xy_m;cover_index=0;last_extra=false;reason='ROUTE_EXHAUSTED';
 exception=[];launched=false;returning=struct('arrived',false,'reason','NOT_LAUNCHED');
 try
@@ -34,9 +34,11 @@ try
                 emit('POSITION_FEEDBACK',struct('address',owner,'choice',choice));
             end
             w.hold(cfg.motion_and_budget.calculation_model_s_per_decision);
-            [ready,why]=prepare(q,ref);
+            [ready,why,point_budget]=prepare(q,ref);
             emit('POINT_ADMISSION',struct('xy_m',q,'reference_id',ref,'accepted',ready,'reason',why, ...
-                'estimated_uav_p_m',w.nav.p,'Pxy_m2',w.nav.P(1:2,1:2),'nav_version',w.nav.version));
+                'estimated_uav_p_m',w.nav.p,'Pxy_m2',w.nav.P(1:2,1:2),'nav_version',w.nav.version, ...
+                'minimum_transaction_s',point_budget.minimum_total_s,'reserved_transaction_s',point_budget.total_s, ...
+                'block_cap',point_budget.block_cap,'return_reserve_s',point_budget.return_s));
             if ~ready
                 if strcmp(why,'RETURN_RESOURCE') || contains(why,'BUDGET')
                     reason='RETURN_RESOURCE_RESERVED';break;
@@ -70,7 +72,9 @@ try
                     k=find(vecnorm(candidates-q,2,2)<1e-6,1);
                     if ~isempty(k),attempts(k,id)=attempts(k,id)+1;end
                 end
-                [ready,why]=prepare(q,ref);
+                node_phase='LOCALIZE';node_pool_count=0;
+                if ~isempty(states{id}),node_phase=states{id}.phase;node_pool_count=numel(states{id}.pool_ids);end
+                [ready,why,service_budget]=prepare(q,ref,node_phase,node_pool_count);
                 if ~ready
                     emit('SERVICE_SKIPPED',struct('address',id,'reason',why));
                     if strcmp(why,'RETURN_RESOURCE') || contains(why,'BUDGET')
@@ -78,7 +82,7 @@ try
                     end
                     continue;
                 end
-                [children,report]=serve(id,ref);emit('SPATIAL_SERVICE',report);
+                [children,report]=serve(id,ref,service_budget);emit('SPATIAL_SERVICE',report);
                 got=uavpriority.observe_onsite(w,ref,cfg,deadline);
                 if ~got.accepted
                     recovery=uavpriority.acquire_safe_reference(w,ref,cfg,deadline);
@@ -120,7 +124,7 @@ try
                 if strcmp(states{id}.phase,'DONE')
                     book.complete(id,states{id}.proof);
                     if norm(w.nav.p-[q';cfg.scene.flight_height_m])>.5
-                        [notice_ready,notice_reason]=prepare(q,ref);
+                        [notice_ready,notice_reason]=prepare(q,ref,'NOTICE',0);
                         if ~notice_ready,emit('NOTICE_POINT_UNAVAILABLE',struct('address',id,'reason',notice_reason));end
                     end
                     notice_gate=uavpriority.retreat_gate(w.nav,r.stop_s,ref,cfg);
@@ -186,28 +190,32 @@ out=struct('reason',reason,'exception',exception,'count',count,'policy',rule, ..
     'physical_home_xyz_m',data.true_home,'physical_final_xyz_m',data.true_position, ...
     'physically_landed',data.physically_landed,'return_command_completed',landed,'return_arrived',returning.arrived, ...
     'position_feedback_decisions',feedback_count,'position_feedback_delivered',feedback_delivered, ...
+    'coverage_fit_plans',coverage_fit_plans, ...
     'extra_fit_plans',extra_fit,'extra_heldout_plans',extra_verify, ...
     'end_to_end_success',all([nodes.online_completed]) && ~any([nodes.false_accept]) && ...
         all([nodes.stop_ack]) && all([nodes.deep_sleep]) && returned);
     function [q,ref,owner,choice]=next_point()
         q=[];ref=NaN;owner=0;choice=[];n_coverage_left=cover_index<size(cover,1);
         if ~n_coverage_left || ~last_extra
-            % VERIFY gets a fresh opportunity without suspending coverage.
-            for n_phase={'VERIFY','LOCALIZE'}
-                if n_coverage_left && strcmp(n_phase{1},'LOCALIZE'),continue;end
-                for n_address=1:count
-                    n_s=states{n_address};if isempty(n_s) || ~strcmp(n_s.phase,n_phase{1}) || isempty(n_s.fit),continue;end
-                    if strcmp(n_phase{1},'VERIFY')
-                        if extra_verify(n_address)>=cfg.priority.extra_heldout_cap,continue;end
-                    elseif extra_fit(n_address)>=cfg.priority.extra_fit_cap,continue;
-                    end
-                    n_b=uavpriority.bundle(book.nodes(n_address).range_records,w.nav,histories{n_address}, ...
-                        macros{n_address},n_s.pool_ids,cfg);
-                    n_selected=uavpriority.choose_service_point(w.nav,n_s.phase,n_s.fit,n_b.anchors(1:2,:)',attempts(:,n_address),cfg,rule);
-                    if n_selected.available
-                        q=n_selected.xy_m;ref=n_selected.reference_id;owner=n_address;choice=n_selected;last_extra=true;return;
-                    end
+            n_choices=cell(1,count);
+            for n_address=1:count
+                n_s=states{n_address};if isempty(n_s) || ~ismember(n_s.phase,{'VERIFY','LOCALIZE'}) || isempty(n_s.fit),continue;end
+                if strcmp(n_s.phase,'VERIFY')
+                    if extra_verify(n_address)>=cfg.priority.extra_heldout_cap,continue;end
+                else
+                    if extra_fit(n_address)>=cfg.priority.extra_fit_cap,continue;end
+                    if n_coverage_left && coverage_fit_plans>=cfg.planner.coverage_max_service_insertions,continue;end
                 end
+                n_b=uavpriority.bundle(book.nodes(n_address).range_records,w.nav,histories{n_address}, ...
+                    macros{n_address},n_s.pool_ids,cfg);
+                n_choices{n_address}=uavpriority.choose_service_point(w.nav,n_s.phase,n_s.fit,n_b.anchors(1:2,:)',attempts(:,n_address),cfg,rule);
+            end
+            [n_owner,n_selected,n_alternatives]=uavpriority.select_service_owner(n_choices,rule);
+            if n_owner>0 && (~n_coverage_left || norm(n_selected.xy_m-cover(cover_index+1,:))>1e-6)
+                q=n_selected.xy_m;ref=n_selected.reference_id;owner=n_owner;choice=n_selected;
+                choice.alternatives=n_alternatives;last_extra=true;
+                if n_coverage_left && strcmp(states{owner}.phase,'LOCALIZE'),coverage_fit_plans=coverage_fit_plans+1;end
+                return;
             end
         end
         if n_coverage_left
@@ -215,7 +223,11 @@ out=struct('reason',reason,'exception',exception,'count',count,'policy',rule, ..
             [~,ref]=min(vecnorm(cfg.scene.reference_centers_xy_m-q,2,2));last_extra=false;
         end
     end
-    function [ready,why]=prepare(xy,ref)
+    function [ready,why,budget]=prepare(xy,ref,phase,pool_count)
+        if nargin<3,phase='GLOBAL';end
+        if nargin<4,pool_count=0;end
+        p_minimum=uavpriority.transaction_reservation(cfg,phase,pool_count,Inf,0);
+        budget=p_minimum;budget.available=false;budget.block_cap=0;budget.return_s=NaN;
         ready=false;why='NAVIGATION_OR_RETURN_ADMISSION';
         p_q=[xy';cfg.scene.flight_height_m];p_center=[cfg.scene.reference_centers_xy_m(ref,:)';cfg.scene.flight_height_m];
         for p_recovery=1:cfg.stage.navigation_recovery_cap
@@ -236,24 +248,30 @@ out=struct('reason',reason,'exception',exception,'count',count,'policy',rule, ..
                 continue;
             end
             p_back=uavmvp.reference_return_plan(w.nav,cfg,ref);
-            if ~p_back.available || w.t+r.total_s+p_back.reserve_s>deadline,why='RETURN_RESOURCE';continue;end
+            if ~p_back.available || w.t+p_minimum.minimum_total_s+p_back.reserve_s>deadline,why='RETURN_RESOURCE';continue;end
             if ~p_at_point && norm(p_q-p_center)>.01
                 p_escape=uavmvp.predict_service_visit(w.nav,p_q,ref,cfg, ...
                     cfg.navigation_candidate.reference_max_attempts_per_visit*cfg.navigation_candidate.reference_observation_s);
-                if ~p_escape.accepted || w.t+p_escape.duration_s+r.total_s+p_back.reserve_s>deadline,continue;end
+                p_escape_return=uavmvp.reference_return_plan(p_escape.dwell.nav,cfg,ref);
+                p_outward_allowance=p_escape.outward.duration_s+2+ ...
+                    cfg.navigation_candidate.reference_max_attempts_per_visit*cfg.navigation_candidate.reference_observation_s;
+                if ~p_escape.accepted || ~p_escape_return.available || ...
+                        w.t+p_outward_allowance+p_minimum.minimum_total_s+p_escape_return.reserve_s>deadline,continue;end
                 p_moved=uavmvp.fly_to(w,p_q,cfg,p_escape.outward.duration_s+2);if ~p_moved.arrived,continue;end
                 p_onsite=uavpriority.observe_onsite(w,ref,cfg,deadline);if ~p_onsite.accepted,continue;end
             end
-            p_waiting=uavpriority.wait_reference(w,ref,r.extra_service_s,cfg);if ~p_waiting.accepted,continue;end
-            p_gate=uavpriority.navigation_gate(w.nav,r.atomic_radio_s,cfg);
-            p_retreat=uavpriority.retreat_gate(w.nav,r.atomic_radio_s,ref,cfg);p_back=p_retreat.return_plan;
-            p_enough=p_back.available && w.t+r.total_s-r.extra_service_s+p_back.reserve_s<=deadline;
+            p_waiting=uavpriority.wait_reference(w,ref,p_minimum.extra_service_s,cfg);if ~p_waiting.accepted,continue;end
+            p_gate=uavpriority.navigation_gate(w.nav,p_minimum.atomic_radio_s,cfg);
+            p_retreat=uavpriority.retreat_gate(w.nav,p_minimum.atomic_radio_s,ref,cfg);p_back=p_retreat.return_plan;
+            budget=uavpriority.transaction_reservation(cfg,phase,pool_count,deadline-w.t,p_back.reserve_s,true);
+            p_enough=p_back.available && budget.available;
             if p_gate.accepted && p_retreat.accepted && p_enough,ready=true;why='ADMITTED';return;end
+            if ~budget.available,why='RETURN_RESOURCE';end
         end
     end
-    function [children,report]=serve(id,ref)
+    function [children,report]=serve(id,ref,allocation)
         v_start=w.t;children=[];w.hold(cfg.motion_and_budget.settle_s);v_tries=0;
-        for v_block=1:cfg.priority.burst_recovery_blocks
+        for v_block=1:allocation.block_cap
             v_goal=min(cfg.priority.cold_services_per_position,numel(children)+cfg.priority.services_per_atomic_block);
             for v_slot=numel(children)+1:v_goal
                 v_ok=false;
@@ -268,15 +286,20 @@ out=struct('reason',reason,'exception',exception,'count',count,'policy',rule, ..
                 end
                 if ~v_ok,break;end
             end
-            if numel(children)==cfg.priority.cold_services_per_position || v_block==cfg.priority.burst_recovery_blocks,break;end
+            if numel(children)==cfg.priority.cold_services_per_position || v_block==allocation.block_cap,break;end
             v_image=uavpriority.observe_onsite(w,ref,cfg,deadline);if ~v_image.accepted,break;end
             v_gate=uavpriority.navigation_gate(w.nav,r.atomic_radio_s,cfg);
             v_escape=uavpriority.retreat_gate(w.nav,r.atomic_radio_s,ref,cfg);v_back=v_escape.return_plan;
             if ~v_gate.accepted || ~v_escape.accepted || ~v_back.available || ...
-                    w.t+r.atomic_radio_s+r.compute_s+r.stop_s+v_back.reserve_s>deadline,break;end
+                    w.t+r.atomic_radio_s+allocation.compute_s+allocation.stop_s+r.post_radio_reference_s+v_back.reserve_s>deadline,break;end
         end
         report=struct('address',id,'start_s',v_start,'end_s',w.t,'tries',v_tries, ...
-            'constituent_ids',children,'qualified_spatial_record',numel(children)==cfg.priority.cold_services_per_position);
+            'constituent_ids',children,'qualified_spatial_record',numel(children)==cfg.priority.cold_services_per_position, ...
+            'reserved_block_cap',allocation.block_cap,'minimum_transaction_s',allocation.minimum_total_s, ...
+            'reserved_transaction_s',allocation.total_s,'transaction_phase',allocation.phase, ...
+            'compute_reserve_s',allocation.compute_s,'stop_reserve_s',allocation.stop_s, ...
+            'atomic_reserve_s',allocation.atomic_radio_s,'image_reserve_s',allocation.post_radio_reference_s, ...
+            'start_remaining_s',allocation.remaining_s,'return_reserve_s',allocation.return_s);
     end
     function prune()
         pr_keep=[];

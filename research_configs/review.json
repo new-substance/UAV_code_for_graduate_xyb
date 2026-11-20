@@ -1,7 +1,7 @@
 {
-  "status": "coordination_and_model_review_required",
+  "status": "approved_for_bounded_development",
   "specification": "论文总纲.md",
-  "specification_sha256": "7f6079145491e1c7010eae6d44718a29622e10af1067f3b0515609f22fb8fb15",
+  "specification_sha256": "faf029e29ec72840c16e195b403d5831b3cb79df5de0ed1c0775b3a8000d7913",
   "research_scope": {
     "delivery_priority": "end_to_end_wake_discover_localize_position_feedback_routing_and_return",
     "mandatory_independent_module_innovations": false,
@@ -14,11 +14,11 @@
   "configuration_sha256": "0c69438c6495c395e75e5d9c06bf04a0f41bc756c6e1d1ec14efbe1b3d7b4343",
   "configuration_identity": "342 numerical values unchanged from V8 nominal; explicit quality_method=grid_conditional changes quality/heldout model. Old empirical coverage does not transfer.",
   "allowed_now": [
-    "deterministic component/algebra checks",
-    "saved state/decision/resource diagnosis and bounded coordination design",
-    "no new mission until the next scope/source/config review is frozen"
+    "deterministic algebra and component checks",
+    "one registered 10-terminal development case with finite phase coordination",
+    "saved-output analysis; no independent performance claim"
   ],
-  "mission_enabled": false,
+  "mission_enabled": true,
   "open_items": [
     {
       "id": "COORDINATION",
@@ -48,16 +48,16 @@
     "active_new_results": 1073741824
   },
   "historical_review_note": "Kept only in the original local workspace; not required by the published deterministic checks",
-  "source_sha256": "52e5c54eda251e4ec967718869dfaba48c321f3eae6b6293caa862cf2e1ba2f5",
+  "source_sha256": "1fea6abe83cff009e2fdbb5240e9ba185ac589534ffd0fbbe6511cac1a00d135",
   "development_scope": {
     "terminal_counts": [
       10
     ],
     "max_cases_per_batch": 1,
     "allowed_seeds": [
-      2026112301
+      2026112302
     ],
-    "purpose": "bounded_computation_recovery_development_not_independent_evaluation"
+    "purpose": "finite_phase_coordination_development_not_independent_evaluation"
   },
   "reviewed_interfaces": {
     "MODEL": "Q01 four-only nonlinear grid likelihood region with triangle/box remainder envelope; local Fisher scale/condition diagnostic, no interior derivative requirement. V01 correlated Schur-complement prediction over frozen four-only region; witness never changes estimate. Explicitly nominal.",
@@ -68,13 +68,15 @@
     "OFFLINE": "Only after MotionWorld.finish: store terminal true coordinates and physical home/final pose, allowing direct external error reconstruction. No decision inputs change.",
     "RETURN_EXECUTION": "Per-reference-step movement/image deadline reserves conditional return; actual posterior return is rechecked. Insufficient service budget terminates work rather than consuming return time. Deterministic positive-neighbor and no-motion-on-no-budget checks pass.",
     "SHARED_POINT": "At an occupied point, actual onsite image plus radio/retreat/return gates are reused between IDs. Post-service image and stop occur onsite; failure recovery does not create a fictitious posterior. No model/numeric-parameter changes.",
-    "STAGE_ADMISSION": "Partial-position bookkeeping uses existing 0.05 s decision budget; four-fit/heldout uses existing 8 s. Only VERIFY can publish and reserves STOP. If onsite compute/retreat cannot be reserved, actually recenter and rebuild the same 4+1 inputs at the new common navigation version; notification may return to the known service point, without new RTT. Every segment/STOP preserves return."
+    "STAGE_ADMISSION": "Partial-position bookkeeping uses existing 0.05 s decision budget; four-fit/heldout uses existing 8 s. Only VERIFY can publish and reserves STOP. If onsite compute/retreat cannot be reserved, actually recenter and rebuild the same 4+1 inputs at the new common navigation version; notification may return to the known service point, without new RTT. Every segment/STOP preserves return.",
+    "COORDINATION": "P02: compare all current proposals with VERIFY priority; allow at most two fit-supplement plans during coverage, at most one supplement between coverage vertices; LOCALIZE puts geometry gain before nominal range risk. Same candidates/quotas apply to cost comparator.",
+    "TRANSACTION": "Choose 2..4 complete atomic recovery blocks from actual remaining time, phase computation/STOP cost and conditional return reserve; NOTICE has no cold macro. Already-paid wait is not counted twice. Recheck actual image/navigation/return per atomic block; only four complete cold services form a macro."
   },
   "evidence": {
     "reproducible_command": "addpath('matlab_mvp'); setup_project; project('check');",
     "all_passed": true,
     "new_missions_in_checks": 0,
-    "source_file_count": 146,
+    "source_file_count": 151,
     "local_component_report": "results/scope_review_20261120/region_component_checks_v3.json",
     "saved_input_review": "results/scope_review_20261120/region_review_v3.json",
     "saved_input_ready_snapshots": 4,
@@ -155,6 +157,14 @@
       "total_time_s": 1714.8151268061251,
       "bytes": 625232,
       "independent_audit_passed": true
+    },
+    "coordination_components": {
+      "path": "results/scope_review_20261120/coordination_checks_v1.json",
+      "all_passed": true,
+      "new_missions": 0,
+      "minimum_verify_reserve_s": 21.480352,
+      "maximum_verify_reserve_s": 34.060704,
+      "numeric_baseline_values_unchanged": 342
     }
   },
   "development_findings": [

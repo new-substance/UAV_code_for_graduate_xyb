@@ -83,8 +83,33 @@ def audit(directory: Path) -> dict:
             data = event["data"]
             if kind == "SPATIAL_SERVICE":
                 assert data["address"] not in published, "New RTT service after publication"
+                children = data["constituent_ids"]
+                if isinstance(children, (int, float)):
+                    children = [children]
+                assert len(children) == len(set(children))
+                assert data["qualified_spatial_record"] == (len(children) == cfg["priority"]["cold_services_per_position"])
+                if "reserved_block_cap" in data:
+                    minimum = math.ceil(cfg["priority"]["cold_services_per_position"] / cfg["priority"]["services_per_atomic_block"])
+                    assert minimum <= data["reserved_block_cap"] <= cfg["priority"]["burst_recovery_blocks"]
+                    cost = data["reserved_block_cap"]*(data["atomic_reserve_s"]+data["image_reserve_s"])
+                    cost += data["compute_reserve_s"]+data["stop_reserve_s"]
+                    assert math.isclose(cost, data["reserved_transaction_s"], abs_tol=1e-8)
+                    assert cost + data["return_reserve_s"] <= data["start_remaining_s"]+1e-8
+                    assert data["end_s"]-data["start_s"] <= cost-data["compute_reserve_s"]-data["stop_reserve_s"]+1e-6
                 if data["constituent_ids"]:
                     qualified.add(data["address"])
+            elif kind == "POSITION_FEEDBACK" and "alternatives" in data["choice"]:
+                choice = data["choice"]
+                rows = choice["alternatives"]
+                if rows and isinstance(rows[0], (int, float)):
+                    rows = [rows]
+                def key(row):
+                    owner, phase, candidate, _, cost, risk, gain = row
+                    if choice["rule"] == "cost":
+                        return phase, 0, 0, cost, owner, candidate
+                    return (phase, risk, 0, cost, owner, candidate) if phase == 0 else (phase, -gain, risk, cost, owner, candidate)
+                selected = min(rows, key=key)
+                assert selected[0] == data["address"] and selected[2] == choice["candidate_id"]
             elif kind == "LOCALIZATION" and data["detail"]["check"]:
                 detail = data["detail"]
                 check = detail["check"]

@@ -37,7 +37,7 @@ for k=1:n
     score=[0,0,cost,k];
     if strcmp(rule,'stage')
         if strcmp(stage,'VERIFY'),score=[risk,0,cost,k];
-        else,score=[risk,-gain,cost,k];end
+        else,score=[-gain,risk,cost,k];end
     end
     delta=find(abs(score-best)>1e-12,1);
     if ~choice.available || (~isempty(delta) && score(delta)<best(delta))
@@ -46,6 +46,10 @@ for k=1:n
     end
 end
 choice.candidates=table;
+if choice.available
+    row=table(choice.candidate_id,:);
+    choice.cost_proxy_s=row(8);choice.range_risk_m=row(9);choice.geometry_gain=row(10);
+end
 end
 function H=jacobian(points,x,cfg)
 if isempty(points),H=zeros(0,2);return;end
