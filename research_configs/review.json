@@ -1,0 +1,48 @@
+{
+  "status": "not_approved_for_simulation",
+  "specification": "论文总纲.md",
+  "specification_sha256": "08091bd95f5b3bb6d08e435845f5a457561feb02bcc9a29cf3fd0d1984a42d04",
+  "research_scope": {
+    "core": "C3",
+    "foundation": "C2",
+    "engineering_support": "C1"
+  },
+  "configuration": "research_configs/baseline.json",
+  "configuration_sha256": "f51f286eb0c1d17f4919fb2d6755f32baa9f2f23019f0141bc2e9a94a22bed5a",
+  "configuration_identity": "Numerical settings identical to frozen V8 nominal; provenance/status metadata normalized for portable source publication",
+  "allowed_now": [
+    "status/config inspection",
+    "deterministic algebra and fixed saved-input checks",
+    "source/document consolidation"
+  ],
+  "mission_enabled": false,
+  "open_items": [
+    {
+      "id": "MODEL",
+      "item": "Use saved V8 failures to select and review the actual C2 model, numerical/quality definitions and interface; no strict global confidence theorem required"
+    },
+    {
+      "id": "WRITER",
+      "item": "Implement lightweight event/results output with live byte counting and bounded anomaly traces before any new mission"
+    },
+    {
+      "id": "PLANNER",
+      "item": "Define the finite candidate/phase/shared-cost C3 rule and no-action handling before its scoped experiments"
+    }
+  ],
+  "removed_from_required_scope": [
+    "new navigation algorithm",
+    "physical-layer waveform research",
+    "strict sequential simultaneous coverage",
+    "continuous-domain global outer bound",
+    "KKT sensitivity theorem",
+    "global-optimal/chance-constrained planner or LP tail-bound proof"
+  ],
+  "budgets_bytes": {
+    "development_batch": 52428800,
+    "formal_batch": 262144000,
+    "default_case": 5242880,
+    "active_new_results": 1073741824
+  },
+  "historical_review_note": "Kept only in the original local workspace; not required by the published deterministic checks"
+}

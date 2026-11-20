@@ -1,0 +1,611 @@
+{
+  "schema_version": "strategy-design-v2",
+  "status": "frozen_v8_foundation_not_full_mission_validated",
+  "provenance": "All numeric values below are development assumptions, not measured CSS, IMU, camera or aircraft specifications. Literature supports mechanisms, not this combined profile.",
+  "confirmation_record": {
+    "completed_on": "2026-11-12",
+    "path": "../最小可行方案_逐项确认清单_20261111.md",
+    "confirmed_items": [
+      "C1",
+      "C2",
+      "C3",
+      "C4",
+      "C5",
+      "C6"
+    ],
+    "scope": "User-confirmed simulation development conditions: visual markers plus IMU; uncertain surveyed launch pose; continuous pre-wake listening without receive-power study; obstacle-free 120x80 m at 15 m, 5 then 10 terminals; 20 m per-terminal position target; 600 s full mission and 3 m return tolerance. Detailed sensor/radio/noise parameters remain assumptions; feasibility is unverified.",
+    "superseded_by": "../论文总纲.md",
+    "historical_note": "Original 2026-11-12 record retained for provenance only; the 600 s cutoff was superseded. Current scope and timing rules are in 论文总纲.md."
+  },
+  "scene": {
+    "width_m": 120,
+    "height_m": 80,
+    "terminal_counts": 1,
+    "home_xyz_m": [
+      10,
+      10,
+      0
+    ],
+    "flight_height_m": 15,
+    "terminal_height_m": 0,
+    "reference_centers_xy_m": [
+      [
+        10,
+        10
+      ],
+      [
+        20,
+        10
+      ],
+      [
+        30,
+        10
+      ],
+      [
+        40,
+        10
+      ],
+      [
+        50,
+        10
+      ],
+      [
+        60,
+        10
+      ],
+      [
+        70,
+        10
+      ],
+      [
+        80,
+        10
+      ],
+      [
+        90,
+        10
+      ],
+      [
+        100,
+        10
+      ],
+      [
+        110,
+        10
+      ],
+      [
+        110,
+        20
+      ],
+      [
+        110,
+        30
+      ],
+      [
+        110,
+        40
+      ],
+      [
+        110,
+        50
+      ],
+      [
+        110,
+        60
+      ],
+      [
+        110,
+        70
+      ],
+      [
+        100,
+        70
+      ],
+      [
+        90,
+        70
+      ],
+      [
+        80,
+        70
+      ],
+      [
+        70,
+        70
+      ],
+      [
+        60,
+        70
+      ],
+      [
+        50,
+        70
+      ],
+      [
+        40,
+        70
+      ],
+      [
+        30,
+        70
+      ],
+      [
+        20,
+        70
+      ],
+      [
+        10,
+        70
+      ],
+      [
+        10,
+        60
+      ],
+      [
+        10,
+        50
+      ],
+      [
+        10,
+        40
+      ],
+      [
+        10,
+        30
+      ],
+      [
+        10,
+        20
+      ]
+    ],
+    "design_service_slant_m": 40,
+    "navigation_design_margin_m": 5,
+    "max_sweeps": 2,
+    "application": "GNSS-limited military training/support area: temporary monitoring-node localization",
+    "application_confirmed_date": "2026-11-13",
+    "application_scope": "Above-ground surveyed area; no GNSS during the mission. Generic CSS simulation, not field or anti-jamming certification."
+  },
+  "css": {
+    "profile": "CSS-SIM-A",
+    "bandwidth_hz": 1000000.0,
+    "spreading_factor": 9,
+    "coding_efficiency": 0.5,
+    "preamble_symbols": 12,
+    "sync_delimiter_symbols": 4.25,
+    "physical_header_symbols": 8,
+    "crc_bytes": 2,
+    "payload_mapping": "ceil(8*(application_bytes+crc_bytes)/(coding_efficiency*spreading_factor)); abstract block coding, not the LoRa airtime formula",
+    "group_base_bytes": 16,
+    "group_member_bytes": 12,
+    "common_application_header_bytes": 13,
+    "frame_application_bytes": {
+      "identity": 24,
+      "range_request": 20,
+      "range_response": 24,
+      "range_metadata": 40,
+      "stop": 20,
+      "stop_ack": 20
+    },
+    "group_size": 3,
+    "guard_s": 0.001,
+    "wake_ready_s": 0.02,
+    "response_processing_switch_s": 0.02,
+    "metadata_processing_switch_s": 0.002,
+    "exchange_deadline_s": 0.3,
+    "cold_exchange_count": 2,
+    "cold_request_min_separation_s": 0.2,
+    "warm_exchange_count": 1,
+    "max_service_attempts_per_stop": 2,
+    "contact_validity_s": 10,
+    "packet_lateness_limit_s": 1,
+    "receive_mode": "user_confirmed_continuous_listening_before_logical_wake; no receive-power study or low-power claim",
+    "duty_cycle_sensitivity": {
+      "listen_period_s": 1,
+      "listen_window_s": 0.2,
+      "note": "optional later scenario, excluded from initial MVP; derive repeated-frame coverage and revised dwell before enabling"
+    }
+  },
+  "ranging": {
+    "range_white_std_m": 10,
+    "device_persistent_bias_std_m": 3,
+    "initial_clock_ratio_std_ppm": 0.2,
+    "clock_ratio_random_walk_ppm_per_sqrt_s": 0.02,
+    "clock_calibration_max_age_s": 30,
+    "quality_reported_std_limit_m": 8,
+    "baseline_stage_probabilities": {
+      "wake_decode": 0.98,
+      "identity_decode_given_control": 0.95,
+      "range_exchange_valid": 0.9
+    },
+    "baseline_probability_scope": "development Bernoulli adapter inside declared radius; not a calibrated service guarantee",
+    "stress": {
+      "range_white_std_m": [
+        2,
+        5,
+        10
+      ],
+      "persistent_bias_std_m": [
+        0,
+        3,
+        10
+      ],
+      "positive_path_bias_m": [
+        0,
+        10,
+        30
+      ],
+      "link_bad_state_probability": 0.25,
+      "bad_state_mean_duration_s": 5
+    },
+    "no_double_count": "range_white_std excludes separately modeled clock residual; persistent bias enters joint covariance, not each diagonal as independent noise"
+  },
+  "navigation_candidate": {
+    "profile": "VIS-A_user_confirmed_simulation_reference; detailed_sensor_parameters_remain_assumptions",
+    "state": [
+      "position",
+      "velocity",
+      "attitude",
+      "accelerometer_bias",
+      "gyroscope_bias"
+    ],
+    "imu_rate_hz": 100,
+    "acc_noise_density_mps2_per_sqrt_hz": 0.01,
+    "gyro_noise_density_radps_per_sqrt_hz": 0.0002,
+    "acc_bias_random_walk_mps2_per_sqrt_s": 0.0001,
+    "gyro_bias_random_walk_radps_per_sqrt_s": 1e-05,
+    "initial_pose_source": "user-confirmed simulation condition: surveyed launch pad and known placement direction supply uncertain pose prior; numerical uncertainty remains a development assumption; static IMU aids gravity alignment but not yaw; downward camera updates start only after visibility checks",
+    "initial_position_std_m": 0.2,
+    "initial_velocity_std_mps": 0.05,
+    "initial_roll_pitch_std_deg": 0.05,
+    "initial_yaw_std_deg": 0.5,
+    "initial_acc_bias_std_mps2": 0.002,
+    "initial_gyro_bias_std_radps": 0.0001,
+    "camera": {
+      "width_px": 640,
+      "height_px": 480,
+      "fx_px": 400,
+      "fy_px": 400,
+      "cx_px": 320,
+      "cy_px": 240,
+      "nominal_orientation": "downward",
+      "pixel_std": 1
+    },
+    "marker_side_m": 1,
+    "marker_min_projected_edge_px": 16,
+    "marker_max_slant_m": 25,
+    "marker_detect_probability_given_visibility": 0.95,
+    "reference_observation_s": 0.5,
+    "reference_max_attempts_per_visit": 2,
+    "survey_translation_std_m": 0.05,
+    "survey_rotation_std_deg": 0.2,
+    "survey_error_model": "persistent reference-pose nuisance states with joint covariance; never redraw at each observation",
+    "measurement_epoch_position_clones": true,
+    "unknown_terminal_rtt_updates_navigation": false,
+    "antenna_lever_arm_body_m": [
+      0.1,
+      0,
+      0.1
+    ],
+    "camera_lever_arm_body_m": [
+      0,
+      0,
+      -0.1
+    ],
+    "camera_to_body_rotation": [
+      [
+        1,
+        0,
+        0
+      ],
+      [
+        0,
+        -1,
+        0
+      ],
+      [
+        0,
+        0,
+        -1
+      ]
+    ],
+    "extrinsic_model": "body z points upward; camera optical z points downward; matrices and lever arms are exact only in the nominal development profile",
+    "timestamp_alignment_std_s": 0.0001,
+    "survey_common_translation_std_m": 0.2
+  },
+  "motion_and_budget": {
+    "horizontal_max_speed_mps": 3,
+    "horizontal_acceleration_mps2": 1,
+    "vertical_speed_mps": 1,
+    "settle_s": 1,
+    "time_limit_s": 1800,
+    "time_limit_sensitivity_s": [
+      300,
+      600,
+      900
+    ],
+    "return_reserve_s": 30,
+    "return_position_tolerance_m": 3,
+    "reference_failure_return_replans": 2,
+    "calculation_model_s_per_decision": 0.05,
+    "time_scope": "takeoff start through physical return and landing; model computation delay included, actual solver CPU time reported separately"
+  },
+  "localization": {
+    "fit_position_count": 4,
+    "heldout_position_count": 1,
+    "distinct_horizontal_separation_m": 5,
+    "retained_position_pool_cap": 16,
+    "new_positions_per_terminal_cap": 32,
+    "verification_round_cap": 3,
+    "grid_initial_m": 1,
+    "grid_refined_m": 0.5,
+    "max_local_search_iterations": 60,
+    "information_condition_number_limit": 100,
+    "fit_chi2_df2_gate": 9.210340372,
+    "region_chi2_df2_level": 5.991464547,
+    "verification_chi2_df1_gate": 6.634896601,
+    "nominal_region_radius_limit_m": 20,
+    "offline_position_error_limit_m": 20,
+    "accuracy_sensitivity_m": [
+      10,
+      20,
+      30
+    ],
+    "risk_note": "chi-square gates describe nominal model consistency; they do not guarantee false acceptance probability or full-mission accuracy",
+    "group_geometry_rule": "global_geometry",
+    "group_geometry_grid_m": 2.5
+  },
+  "planner": {
+    "candidate_cap": 16,
+    "coverage_candidate_quota": 4,
+    "horizon": 2,
+    "scenario_count": 8,
+    "beam_width": 8,
+    "tail_step_cap": 12,
+    "coverage_max_service_insertions": 2,
+    "terminal_max_wait_s": 120,
+    "stop_notice_attempt_cap": 3,
+    "information_rule": "only current observations and known models; planning random stream independent of physical future",
+    "status": "candidate method; novelty and gain unverified",
+    "belief_grid_step_m": 5,
+    "local_candidate_radius_m": 6.5,
+    "local_candidate_angles_deg": [
+      0,
+      45,
+      90,
+      135,
+      180,
+      225,
+      270,
+      315
+    ],
+    "local_candidate_pattern": "circle",
+    "local_candidate_halfwidth_xy_m": [
+      7,
+      5
+    ],
+    "footprint_candidate_fraction": 0.85,
+    "geometry_proxy": "four_fit",
+    "prediction_model": "arrival",
+    "scoring_ablation": "none",
+    "optional_service_window_s": 1
+  },
+  "source_file": "research_configs/完整策略_v2_仿真假设草案_20261111.json",
+  "sim": {
+    "dt": 0.01,
+    "gravity": [
+      0,
+      0,
+      -9.80665
+    ],
+    "reference_nis_gate": 26.1244815584,
+    "reference_min_depth_m": 0.1,
+    "camera_noise_scale": 1,
+    "reference_max_iterations": 30,
+    "reference_step_tolerance": 1e-07,
+    "radio_hardware_delay_s": 1e-06,
+    "radio_correlated_bad_states": false,
+    "range_support_span_limit_m": 1,
+    "range_model_bias_bound_limit_m": 0.1,
+    "reference_graph_edge_limit_m": 20.1,
+    "reference_leg_overhead_s": 8,
+    "landing_reserve_s": 65,
+    "reference_departure_margin_px": 40,
+    "reference_recovery_maneuvers": 2,
+    "assumption_note": "Local ENU, body z up; calibrated pinhole, no distortion. Numerical settings are development assumptions.",
+    "terminal_device_class": "uavstage.TerminalDevice",
+    "radio_truth_range_white_std_m": 5
+  },
+  "stage": {
+    "version": "priority-envelope-perimeter-v8",
+    "profile": "nominal",
+    "protocol": "REQUEST_RESPONSE_META_COLD2_WARM1",
+    "route_xy_m": [
+      [
+        10,
+        10
+      ],
+      [
+        20,
+        10
+      ],
+      [
+        30,
+        10
+      ],
+      [
+        40,
+        10
+      ],
+      [
+        50,
+        10
+      ],
+      [
+        60,
+        10
+      ],
+      [
+        70,
+        10
+      ],
+      [
+        80,
+        10
+      ],
+      [
+        90,
+        10
+      ],
+      [
+        100,
+        10
+      ],
+      [
+        110,
+        10
+      ],
+      [
+        110,
+        20
+      ],
+      [
+        110,
+        30
+      ],
+      [
+        110,
+        40
+      ],
+      [
+        110,
+        50
+      ],
+      [
+        110,
+        60
+      ],
+      [
+        110,
+        70
+      ],
+      [
+        100,
+        70
+      ],
+      [
+        90,
+        70
+      ],
+      [
+        80,
+        70
+      ],
+      [
+        70,
+        70
+      ],
+      [
+        60,
+        70
+      ],
+      [
+        50,
+        70
+      ],
+      [
+        40,
+        70
+      ],
+      [
+        30,
+        70
+      ],
+      [
+        20,
+        70
+      ],
+      [
+        10,
+        70
+      ],
+      [
+        10,
+        60
+      ],
+      [
+        10,
+        50
+      ],
+      [
+        10,
+        40
+      ],
+      [
+        10,
+        30
+      ],
+      [
+        10,
+        20
+      ]
+    ],
+    "calibration_route_count": 5,
+    "transaction_attempt_cap": 2,
+    "backoff_s": 0.25,
+    "compute_reserve_s": 8,
+    "reserve_margin_s": 1,
+    "navigation_radius_limit_m": 8,
+    "navigation_max_reference_age_s": 25,
+    "navigation_recovery_cap": 2,
+    "platform_resource_s": 1800,
+    "reference_success_conditional_return": true,
+    "region_gamma": 7.5697452555943325,
+    "local_geometry_level": 5.991464547,
+    "fit_gate": 9.322943175046808,
+    "verification_gate": 6.634896601,
+    "region_radius_limit_m": 20,
+    "calibration_quantile": 0.95,
+    "navigation_covariance_scale": 1.8643715619912962,
+    "region_kind": "whole-domain-sampled-likelihood-difference-with-grid-padding",
+    "publication": "first completion snapshot; no post-completion re-ranging or silent revisions"
+  },
+  "priority": {
+    "method": "priority",
+    "white_std_upper_m": 10,
+    "datum_translation_bound_m": 2,
+    "cold_services_per_position": 4,
+    "services_per_atomic_block": 2,
+    "wait_refresh_interval_s": 2,
+    "wait_observations": true,
+    "selection_pool_cap": 10,
+    "aggregate_bias_limit_m": 0.2,
+    "extra_fit_cap": 6,
+    "extra_heldout_cap": 3,
+    "extra_service_cap": 9,
+    "inset_service_offset_m": 7.5,
+    "calibration_route_xy_m": [
+      [
+        10,
+        10
+      ],
+      [
+        30,
+        10
+      ],
+      [
+        50,
+        10
+      ],
+      [
+        10,
+        30
+      ],
+      [
+        10,
+        50
+      ]
+    ],
+    "datum_assumption": "additional unknown fixed horizontal translation bounded by two metres",
+    "burst_recovery_blocks": 4
+  }
+}

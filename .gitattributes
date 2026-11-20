@@ -1,0 +1,5 @@
+# Keep specification/config hashes stable across Windows and other checkouts.
+* text=auto eol=lf
+*.m text eol=lf
+*.md text eol=lf
+*.json text eol=lf
