@@ -48,7 +48,7 @@
     "active_new_results": 1073741824
   },
   "historical_review_note": "Kept only in the original local workspace; not required by the published deterministic checks",
-  "source_sha256": "06d81383c7ef81309cf3377104cc094f9a901cf25cabe020152fb8029ad695d4",
+  "source_sha256": "a83185106f3a3a54a33eb6047293eb4805b3626a6e14cd9b4bbd36711155a130",
   "development_scope": {
     "terminal_counts": [
       1
@@ -76,5 +76,14 @@
     "source_file_count": 141,
     "local_component_report": "results/scope_review_20261120/component_checks.json",
     "saved_input_review": "results/scope_review_20261120/saved_failure_review.json"
-  }
+  },
+  "development_findings": [
+    {
+      "case": "dev_2026112001_n1_stage",
+      "result": "EXCEPTION: InitialReferenceFailed; actual return passed; all files retained (11756 bytes).",
+      "cause": "Integration called acquire_reference before last_reference_id existed.",
+      "correction": "Use inherited visit_reference for the initial actual reference, then acquire_reference for later transitions. No parameter/model changes.",
+      "next_seed": 2026112002
+    }
+  ]
 }

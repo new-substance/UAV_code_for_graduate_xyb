@@ -19,7 +19,8 @@ try
         home=cfg.scene.home_xyz_m(:);launched=true;
         takeoff=uavmvp.fly_to(w,[home(1:2);cfg.scene.flight_height_m],cfg,40);
         assert(takeoff.arrived,'uavproject:TakeoffFailed','Takeoff did not arrive.');
-        first=uavpriority.acquire_reference(w,1,cfg,deadline);
+        first=uavmvp.visit_reference(w,1,cfg,deadline);
+        emit('INITIAL_REFERENCE',struct('accepted',first.accepted,'reason',first.reason));
         assert(first.accepted,'uavproject:InitialReferenceFailed','Initial actual reference failed.');
         while true
             if all([book.nodes.completed]),reason='ALL_ONLINE_VERIFIED';break;end
