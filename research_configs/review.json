@@ -2,10 +2,10 @@
   "status": "approved_for_bounded_development",
   "mission_enabled": true,
   "specification": "论文总纲.md",
-  "specification_sha256": "e798ede679f9228eeabced5c4195fe7044f3a808d7e0c965f63d5b536f695b16",
+  "specification_sha256": "7ec9094a49b900117f0ebee84ff5b8bde3f5922984c8f56593bfd32e4d09e867",
   "configuration": "research_configs/baseline.json",
   "configuration_sha256": "13a532f47499dafaa1a7a21e951642805410b65e6f62284bf710c9e5cd634566",
-  "source_sha256": "11328cbc99b2f9414bcb6756819a5558885e637a8348bc9c48fafc10bc1450a3",
+  "source_sha256": "d80d90a49b9a1a14ceaadc02c2e2f8ffd489c215f275f13142693a5d2c45724f",
   "development_scope": {
     "terminal_counts": [
       10
@@ -14,7 +14,7 @@
     "allowed_seeds": [
       2026112302
     ],
-    "purpose": "known_seed_search_priority_regression_matched_nominal18_not_independent"
+    "purpose": "known_seed_seeded_coverage_and_effective_observation_quotas_nominal18_not_independent"
   },
   "budgets_bytes": {
     "development_batch": 52428800,
@@ -30,10 +30,11 @@
     "PLANNER": "P01 96 shared center/inward/outward candidates; outward half-ray clearance capped by existing inset length. Stage/cost same candidates/quotas. Ranking template retains shared bias via exact rank-one inverse; actual complete C and all admission/4+1 gates remain authoritative.",
     "FORECAST": "UAV/map principal covariance submatrix only in pure admission forecasts, no Schur conditioning; coupled-clone covariance equality checked. Actual joint navigation, measurements and fitting unchanged.",
     "OFFLINE": "Truth coordinates, bias and return endpoints export only after MotionWorld.finish; independent Python audit reconstructs errors, conditional witnesses and completion.",
-    "SEARCH_PRIORITY": "Until all registered IDs are discovered, proposals may use only current/next coverage reference; stage/cost share restriction. All-discovered releases priority without requiring all finite fits; unseeded IDs remain explicit and use finite coverage fallback. No new numeric allowance or physical changes."
+    "SEARCH_PRIORITY": "Keep current/next-reference restriction while any ID is undiscovered or has no finite fit. Fit/verify on the spine remain allowed. Finite-estimate LOCALIZE waits for planned improvement at ordinary coverage points; targeted points retain shared service.",
+    "QUOTAS": "6 fit / 3 heldout quotas count owned qualified new spatial records, not rejected plans. Per-candidate attempt cap and total-position/task-return limits remain unchanged. Plans and delivered positions are logged separately; Python reconstructs delivered counters from complete events."
   },
   "evidence": {
-    "checks": "results/scope_review_20261120/search_priority_component_checks.json",
+    "checks": "results/scope_review_20261120/effective_quota_component_checks.json",
     "all_passed": true,
     "new_missions_in_checks": 0,
     "source_file_count": 159,
@@ -70,7 +71,7 @@
     "search_priority_checks_passed": true
   },
   "open_items": [
-    "Verify actual discovery/localization/return with the search-period reference restriction. Previous nominal18 case found 8/10 and closed 4/10, with actual return; do not claim full closure.",
+    "Validate one full ten-node known-seed case with seed-coverage priority and effective-observation quotas; latest prior case closes 5/10. No further physical or numeric changes.",
     "Freeze unchanged source/config and unseen seeds for paired comparison after integration; all negative results retained.",
     "10 m upper-envelope pressure comparison must use same final algorithms/geometry, not pooled old-version outcomes."
   ],

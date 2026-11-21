@@ -35,14 +35,14 @@ assert(uavpriority.service_phase_ready(nodes,states));
 nodes(2).discovered=false;[ready,missing]=uavpriority.service_phase_ready(nodes,states);
 assert(~ready && isequal(missing,2));nodes(2).discovered=true;
 states{2}=[];[ready,missing]=uavpriority.service_phase_ready(nodes,states);
-assert(ready && isequal(missing,2));
-states{2}=struct('fit',struct('x',[NaN;40]));assert(uavpriority.service_phase_ready(nodes,states));
+assert(~ready && isequal(missing,2));
+states{2}=struct('fit',struct('x',[NaN;40]));assert(~uavpriority.service_phase_ready(nodes,states));
 nodes(2).completed=true;states{2}=[];assert(uavpriority.service_phase_ready(nodes,states));
 out=struct('all_passed',true,'mission_count',0,'minimum_complete_blocks',near.block_cap, ...
     'full_transaction_reserve_s',full.total_s,'minimum_transaction_reserve_s',near.total_s, ...
     'no_infinite_return_admission',true,'no_double_wait_charge',true, ...
     'cross_terminal_priority_checked',true,'identical_comparator_inputs',true, ...
-    'all_ids_required_without_global_four_fit_barrier',true);
+    'seed_coverage_without_blocking_fit_or_verify_on_the_spine',true);
 end
 function c=proposal(stage,cost,gain,risk)
 c=struct('available',true,'stage',stage,'candidate_id',1,'reference_id',1, ...

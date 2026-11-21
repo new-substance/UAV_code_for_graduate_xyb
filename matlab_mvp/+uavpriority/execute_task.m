@@ -10,6 +10,7 @@ for id=1:count,histories{id}=uavmvp.radio_history_init(cfg);macros{id}={};end
 deadline=cfg.stage.platform_resource_s;r=uavpriority.reservation(cfg);
 candidate_points=uavpriority.service_candidates(cfg);attempts=zeros(size(candidate_points,1),count);
 extra_fit=zeros(1,count);extra_verify=zeros(1,count);feedback_count=0;
+extra_fit_proposals=zeros(1,count);extra_verify_proposals=zeros(1,count);
 feedback_delivered=0;coverage_fit_plans=0;feedback_phase_entered=false;
 cover=cfg.stage.route_xy_m;cover_index=0;last_extra=false;reason='ROUTE_EXHAUSTED';
 exception=[];launched=false;returning=struct('arrived',false,'reason','NOT_LAUNCHED');
@@ -28,14 +29,14 @@ try
             if isempty(q),break;end
             if owner>0
                 feedback_count=feedback_count+1;
-                if strcmp(states{owner}.phase,'VERIFY'),extra_verify(owner)=extra_verify(owner)+1;
-                else,extra_fit(owner)=extra_fit(owner)+1;end
+                if strcmp(states{owner}.phase,'VERIFY'),extra_verify_proposals(owner)=extra_verify_proposals(owner)+1;
+                else,extra_fit_proposals(owner)=extra_fit_proposals(owner)+1;end
                 attempts(choice.candidate_id,owner)=attempts(choice.candidate_id,owner)+1;
                 emit('POSITION_FEEDBACK',struct('address',owner,'choice',choice));
             end
             w.hold(cfg.motion_and_budget.calculation_model_s_per_decision);
             [ready,why,point_budget]=prepare(q,ref);
-            emit('POINT_ADMISSION',struct('xy_m',q,'reference_id',ref,'accepted',ready,'reason',why, ...
+            emit('POINT_ADMISSION',struct('xy_m',q,'reference_id',ref,'service_owner',owner,'accepted',ready,'reason',why, ...
                 'estimated_uav_p_m',w.nav.p,'Pxy_m2',w.nav.P(1:2,1:2),'nav_version',w.nav.version, ...
                 'reference_mean_xy_m',w.nav.map_p(1:2,ref),'reference_nominal_xy_m',cfg.scene.reference_centers_xy_m(ref,:), ...
                 'minimum_transaction_s',point_budget.minimum_total_s,'reserved_transaction_s',point_budget.total_s, ...
@@ -63,6 +64,10 @@ try
             % All first contacts precede supplemental work at this point.
             for id=find(responded)
                 if book.nodes(id).completed,continue;end
+                if owner==0 && ~isempty(states{id}) && strcmp(states{id}.phase,'LOCALIZE') && ...
+                        ~isempty(states{id}.fit) && all(isfinite(states{id}.fit.x))
+                    emit('SERVICE_SKIPPED',struct('address',id,'reason','WAITING_FOR_FOCUSED_IMPROVEMENT'));continue;
+                end
                 if ~isempty(states{id}) && ~isempty(states{id}.pool_ids)
                     previous=uavpriority.bundle(book.nodes(id).range_records,w.nav,histories{id}, ...
                         macros{id},states{id}.pool_ids,cfg);
@@ -120,7 +125,11 @@ try
                 b=uavpriority.bundle(book.nodes(id).range_records,w.nav,histories{id},macros{id},[pool,rid],cfg);
                 timer=tic;[states{id},detail]=uavpriority.update_localization(states{id},b,cfg);
                 elapsed=toc(timer);w.hold(elapsed);
-                if owner==id && ismember(rid,states{id}.pool_ids),feedback_delivered=feedback_delivered+1;end
+                if owner==id && ismember(rid,states{id}.pool_ids)
+                    feedback_delivered=feedback_delivered+1;
+                    if strcmp(node_phase,'VERIFY'),extra_verify(id)=extra_verify(id)+1;
+                    else,extra_fit(id)=extra_fit(id)+1;end
+                end
                 emit('LOCALIZATION',struct('address',id,'phase',states{id}.phase, ...
                     'solver_wall_and_charged_s',elapsed,'compute_reserve_s',compute_budget,'detail',detail));
                 if elapsed>compute_budget,reason='COMPUTE_RESERVATION_OVERRUN';break;end
@@ -202,7 +211,8 @@ out=struct('reason',reason,'exception',exception,'count',count,'policy',rule, ..
     'physically_landed',data.physically_landed,'return_command_completed',landed,'return_arrived',returning.arrived, ...
     'position_feedback_decisions',feedback_count,'position_feedback_delivered',feedback_delivered, ...
     'coverage_fit_plans',coverage_fit_plans, ...
-    'extra_fit_plans',extra_fit,'extra_heldout_plans',extra_verify, ...
+    'extra_fit_plans',extra_fit_proposals,'extra_heldout_plans',extra_verify_proposals, ...
+    'extra_fit_positions',extra_fit,'extra_heldout_positions',extra_verify, ...
     'end_to_end_success',all([nodes.online_completed]) && ~any([nodes.false_accept]) && ...
         all([nodes.stop_ack]) && all([nodes.deep_sleep]) && returned);
     function [q,ref,owner,choice]=next_point()
@@ -211,7 +221,8 @@ out=struct('reason',reason,'exception',exception,'count',count,'policy',rule, ..
         if n_feedback_ready && ~feedback_phase_entered
             feedback_phase_entered=true;
             emit('PHASE_CHANGE',struct('phase','POSITION_FEEDBACK_SERVICE', ...
-                'coverage_vertices_remaining',size(cover,1)-cover_index,'unseeded_addresses',n_unseeded));
+                'coverage_vertices_remaining',size(cover,1)-cover_index,'unseeded_addresses',n_unseeded, ...
+                'phase_rule','seeded_coverage'));
         end
         n_coverage_left=n_coverage_pending && ~n_feedback_ready;
         n_allowed=1:size(cfg.scene.reference_centers_xy_m,1);n_next_reference=NaN;
@@ -240,6 +251,7 @@ out=struct('reason',reason,'exception',exception,'count',count,'policy',rule, ..
                 choice.coverage_priority=n_coverage_left;choice.next_coverage_reference=n_next_reference;
                 choice.current_reference_id=w.nav.last_reference_id;
                 choice.coverage_vertices_remaining=size(cover,1)-cover_index;
+                choice.unseeded_addresses=n_unseeded;choice.phase_rule='seeded_coverage';
                 if n_coverage_left && strcmp(states{owner}.phase,'LOCALIZE'),coverage_fit_plans=coverage_fit_plans+1;end
                 return;
             end

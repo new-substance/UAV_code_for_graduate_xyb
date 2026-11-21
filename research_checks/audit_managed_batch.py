@@ -112,9 +112,29 @@ def audit(directory: Path) -> dict:
         complete_trace = not row["event_budget_exhausted"]
         published = set()
         qualified = set()
+        seeded = set()
+        owner = 0
+        proposal_phase = None
+        fit_delivered = [0]*int(cfg["scene"]["terminal_counts"])
+        verify_delivered = fit_delivered.copy()
+        service_qualified = {}
         for event in events:
             kind = event["kind"]
             data = event["data"]
+            if kind == "POINT_ADMISSION":
+                owner = data.get("service_owner", 0)
+            if kind == "LOCALIZATION":
+                detail = data["detail"]
+                latest = detail.get("recovery_fit") or detail.get("fit")
+                if isinstance(latest, dict):
+                    if all(v is not None and math.isfinite(v) for v in latest["x"]):
+                        seeded.add(data["address"])
+                    else:
+                        seeded.discard(data["address"])
+                if owner == data["address"] and service_qualified.get(owner) and detail["reason"] != "NOT_A_NEW_POSITION":
+                    delivered = verify_delivered if proposal_phase == "VERIFY" else fit_delivered
+                    delivered[int(owner)-1] += 1
+                    service_qualified[owner] = False
             if kind == "SPATIAL_SERVICE":
                 assert data["address"] not in published, "New RTT service after publication"
                 children = data["constituent_ids"]
@@ -122,6 +142,7 @@ def audit(directory: Path) -> dict:
                     children = [children]
                 assert len(children) == len(set(children))
                 assert data["qualified_spatial_record"] == (len(children) == cfg["priority"]["cold_services_per_position"])
+                service_qualified[data["address"]] = data["qualified_spatial_record"]
                 if "reserved_block_cap" in data:
                     minimum = math.ceil(cfg["priority"]["cold_services_per_position"] / cfg["priority"]["services_per_atomic_block"])
                     assert minimum <= data["reserved_block_cap"] <= cfg["priority"]["burst_recovery_blocks"]
@@ -134,10 +155,17 @@ def audit(directory: Path) -> dict:
                     qualified.add(data["address"])
             elif kind == "POSITION_FEEDBACK" and "alternatives" in data["choice"]:
                 choice = data["choice"]
+                proposal_phase = choice["stage"]
                 if choice.get("information_proxy") == "white_plus_common_bias":
                     check_information_prediction(choice, cfg)
                 if "coverage_priority" in choice:
-                    expected_priority = (len(qualified) < cfg["scene"]["terminal_counts"] and
+                    unseeded = choice.get("unseeded_addresses", [])
+                    if isinstance(unseeded, (int, float)):
+                        unseeded = [unseeded]
+                    if choice.get("phase_rule") == "seeded_coverage":
+                        expected_unseeded = set(range(1, int(cfg["scene"]["terminal_counts"])+1)) - (qualified & seeded)
+                        assert set(unseeded) == expected_unseeded
+                    expected_priority = ((len(qualified) < cfg["scene"]["terminal_counts"] or bool(unseeded)) and
                                          choice["coverage_vertices_remaining"] > 0)
                     assert choice["coverage_priority"] == expected_priority
                     if expected_priority:
@@ -145,15 +173,15 @@ def audit(directory: Path) -> dict:
                         if isinstance(allowed, (int, float)):
                             allowed = [allowed]
                         assert set(allowed) == {choice["current_reference_id"], choice["next_coverage_reference"]}
-                rows = choice["alternatives"]
-                if rows and isinstance(rows[0], (int, float)):
-                    rows = [rows]
+                alternatives = choice["alternatives"]
+                if alternatives and isinstance(alternatives[0], (int, float)):
+                    alternatives = [alternatives]
                 def key(row):
                     owner, phase, candidate, _, cost, risk, gain = row
                     if choice["rule"] == "cost":
                         return phase, 0, 0, cost, owner, candidate
                     return (phase, risk, 0, cost, owner, candidate) if phase == 0 else (phase, -gain, risk, cost, owner, candidate)
-                selected = min(rows, key=key)
+                selected = min(alternatives, key=key)
                 assert selected[0] == data["address"] and selected[2] == choice["candidate_id"]
             elif kind == "LOCALIZATION" and data["detail"]["check"]:
                 detail = data["detail"]
@@ -175,6 +203,17 @@ def audit(directory: Path) -> dict:
                 assert proof["heldout_id"] not in proof["fit_ids"]
                 published.add(data["address"])
         outcome = row["outcome"]
+        if "extra_fit_positions" in outcome:
+            actual_fit = outcome["extra_fit_positions"]
+            actual_verify = outcome["extra_heldout_positions"]
+            if isinstance(actual_fit, (int, float)):
+                actual_fit, actual_verify = [actual_fit], [actual_verify]
+            if complete_trace:
+                assert actual_fit == fit_delivered and actual_verify == verify_delivered
+                assert sum(fit_delivered)+sum(verify_delivered) == outcome["position_feedback_delivered"]
+            else:
+                assert all(a <= b for a, b in zip(fit_delivered, actual_fit))
+                assert all(a <= b for a, b in zip(verify_delivered, actual_verify))
         if "nodes" in outcome:
             nodes = outcome["nodes"]
             if isinstance(nodes, dict):

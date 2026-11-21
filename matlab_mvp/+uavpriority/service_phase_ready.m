@@ -1,5 +1,5 @@
 function [ready,unseeded]=service_phase_ready(nodes,states)
-%SERVICE_PHASE_READY P02 all discovered IDs, no global four-fit barrier.
+%SERVICE_PHASE_READY P02 finish seed coverage before cross-region feedback.
 assert(numel(nodes)==numel(states));unseeded=[];
 for id=1:numel(nodes)
     s=states{id};
@@ -8,5 +8,5 @@ for id=1:numel(nodes)
         unseeded(end+1)=id; %#ok<AGROW>
     end
 end
-ready=all([nodes.discovered]);
+ready=all([nodes.discovered]) && isempty(unseeded);
 end
