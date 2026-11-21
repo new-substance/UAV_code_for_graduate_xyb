@@ -24,6 +24,7 @@ def summarize(root: Path) -> dict:
             continue
         report = audit(directory)
         manifest = json.loads((directory / "manifest.json").read_text(encoding="utf-8"))["manifest"]
+        cfg = manifest["configuration_expanded"]
         for line in (directory / "outcomes.jsonl").read_text(encoding="utf-8").splitlines():
             row = json.loads(line)
             out = row["outcome"]
@@ -37,16 +38,24 @@ def summarize(root: Path) -> dict:
                 "purpose": manifest.get("review_purpose", manifest["purpose"]),
                 "source_sha256": manifest["identity"]["source"],
                 "configuration_sha256": manifest["identity"]["configuration"],
+                "model": {
+                    "flight_height_m": cfg["scene"]["flight_height_m"],
+                    "online_range_white_std_m": cfg["ranging"]["range_white_std_m"],
+                    "physical_range_white_std_m": cfg["sim"]["radio_truth_range_white_std_m"],
+                    "time_allowance_s": cfg["stage"]["platform_resource_s"],
+                },
                 "reason": out["reason"], "complete": out["end_to_end_success"],
                 "discovered": sum(n["discovered"] for n in nodes),
                 "online_completed": sum(n["online_completed"] for n in nodes),
                 "false_accept_count": out.get("false_accept_count"),
+                "best_accepted_true_error_m": min(accepted_errors, default=None),
                 "worst_accepted_true_error_m": max(accepted_errors, default=None),
                 "unfinished_addresses": [n["address"] for n in nodes if not n["online_completed"]],
                 "ack_missing_addresses": [n["address"] for n in nodes if n["online_completed"] and not n["stop_ack"]],
                 "awake_addresses": [n["address"] for n in nodes if not n["deep_sleep"]],
                 "returned": out.get("returned"), "return_error_m": out.get("return_error_m"),
                 "total_time_s": out.get("total_time_s"),
+                "feedback_decisions": out.get("position_feedback_decisions"),
                 "feedback_delivered": out.get("position_feedback_delivered"),
                 "batch_bytes": report["bytes"], "audit_passed": report["all_passed"]})
     batch_bytes = {c["label"]: c["batch_bytes"] for c in cases}

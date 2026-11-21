@@ -9,11 +9,18 @@
       "purpose": "development_not_independent_evaluation",
       "source_sha256": "06d81383c7ef81309cf3377104cc094f9a901cf25cabe020152fb8029ad695d4",
       "configuration_sha256": "f51f286eb0c1d17f4919fb2d6755f32baa9f2f23019f0141bc2e9a94a22bed5a",
+      "model": {
+        "flight_height_m": 15,
+        "online_range_white_std_m": 10,
+        "physical_range_white_std_m": 5,
+        "time_allowance_s": 1800
+      },
       "reason": "EXCEPTION",
       "complete": false,
       "discovered": 0,
       "online_completed": 0,
       "false_accept_count": 0,
+      "best_accepted_true_error_m": null,
       "worst_accepted_true_error_m": null,
       "unfinished_addresses": [
         1
@@ -25,6 +32,7 @@
       "returned": true,
       "return_error_m": 0.4914910658300184,
       "total_time_s": 69.36670024903239,
+      "feedback_decisions": 0,
       "feedback_delivered": 0,
       "batch_bytes": 11756,
       "audit_passed": true
@@ -37,11 +45,18 @@
       "purpose": "development_not_independent_evaluation",
       "source_sha256": "a83185106f3a3a54a33eb6047293eb4805b3626a6e14cd9b4bbd36711155a130",
       "configuration_sha256": "f51f286eb0c1d17f4919fb2d6755f32baa9f2f23019f0141bc2e9a94a22bed5a",
+      "model": {
+        "flight_height_m": 15,
+        "online_range_white_std_m": 10,
+        "physical_range_white_std_m": 5,
+        "time_allowance_s": 1800
+      },
       "reason": "ROUTE_EXHAUSTED",
       "complete": false,
       "discovered": 1,
       "online_completed": 0,
       "false_accept_count": 0,
+      "best_accepted_true_error_m": null,
       "worst_accepted_true_error_m": null,
       "unfinished_addresses": [
         1
@@ -53,6 +68,7 @@
       "returned": true,
       "return_error_m": 0.4510970449927104,
       "total_time_s": 1034.6578796851663,
+      "feedback_decisions": 6,
       "feedback_delivered": 3,
       "batch_bytes": 177084,
       "audit_passed": true
@@ -65,11 +81,18 @@
       "purpose": "development_not_independent_evaluation",
       "source_sha256": "a83185106f3a3a54a33eb6047293eb4805b3626a6e14cd9b4bbd36711155a130",
       "configuration_sha256": "f51f286eb0c1d17f4919fb2d6755f32baa9f2f23019f0141bc2e9a94a22bed5a",
+      "model": {
+        "flight_height_m": 15,
+        "online_range_white_std_m": 10,
+        "physical_range_white_std_m": 5,
+        "time_allowance_s": 1800
+      },
       "reason": "ROUTE_EXHAUSTED",
       "complete": false,
       "discovered": 1,
       "online_completed": 0,
       "false_accept_count": 0,
+      "best_accepted_true_error_m": null,
       "worst_accepted_true_error_m": null,
       "unfinished_addresses": [
         1
@@ -81,6 +104,7 @@
       "returned": true,
       "return_error_m": 0.3579481664006274,
       "total_time_s": 1240.334695083498,
+      "feedback_decisions": 6,
       "feedback_delivered": 4,
       "batch_bytes": 175607,
       "audit_passed": true
@@ -93,11 +117,18 @@
       "purpose": "development_not_independent_evaluation",
       "source_sha256": "b6e041703019d202ce1e4cf0f631d8d381c650f0a9b444b483efb68c8429b42d",
       "configuration_sha256": "0c69438c6495c395e75e5d9c06bf04a0f41bc756c6e1d1ec14efbe1b3d7b4343",
+      "model": {
+        "flight_height_m": 15,
+        "online_range_white_std_m": 10,
+        "physical_range_white_std_m": 5,
+        "time_allowance_s": 1800
+      },
       "reason": "ROUTE_EXHAUSTED",
       "complete": false,
       "discovered": 1,
       "online_completed": 0,
       "false_accept_count": 0,
+      "best_accepted_true_error_m": null,
       "worst_accepted_true_error_m": null,
       "unfinished_addresses": [
         1
@@ -109,6 +140,7 @@
       "returned": true,
       "return_error_m": 0.5250214419905306,
       "total_time_s": 1135.6032751399375,
+      "feedback_decisions": 6,
       "feedback_delivered": 4,
       "batch_bytes": 177297,
       "audit_passed": true
@@ -121,11 +153,18 @@
       "purpose": "development_not_independent_evaluation",
       "source_sha256": "b6e041703019d202ce1e4cf0f631d8d381c650f0a9b444b483efb68c8429b42d",
       "configuration_sha256": "0c69438c6495c395e75e5d9c06bf04a0f41bc756c6e1d1ec14efbe1b3d7b4343",
+      "model": {
+        "flight_height_m": 15,
+        "online_range_white_std_m": 10,
+        "physical_range_white_std_m": 5,
+        "time_allowance_s": 1800
+      },
       "reason": "ALL_ONLINE_VERIFIED",
       "complete": true,
       "discovered": 1,
       "online_completed": 1,
       "false_accept_count": 0,
+      "best_accepted_true_error_m": 5.5968746964536225,
       "worst_accepted_true_error_m": 5.5968746964536225,
       "unfinished_addresses": [],
       "ack_missing_addresses": [],
@@ -133,6 +172,7 @@
       "returned": true,
       "return_error_m": 0.4811009733698491,
       "total_time_s": 1253.2884445275542,
+      "feedback_decisions": 7,
       "feedback_delivered": 5,
       "batch_bytes": 215136,
       "audit_passed": true
@@ -145,11 +185,18 @@
       "purpose": "development_not_independent_evaluation",
       "source_sha256": "36dbfa5a41535a58b257aea252e0a485d4c47903a5ed94a82d9037372bc4b346",
       "configuration_sha256": "0c69438c6495c395e75e5d9c06bf04a0f41bc756c6e1d1ec14efbe1b3d7b4343",
+      "model": {
+        "flight_height_m": 15,
+        "online_range_white_std_m": 10,
+        "physical_range_white_std_m": 5,
+        "time_allowance_s": 1800
+      },
       "reason": "ALL_ONLINE_VERIFIED",
       "complete": true,
       "discovered": 5,
       "online_completed": 5,
       "false_accept_count": 0,
+      "best_accepted_true_error_m": 0.5801727397767318,
       "worst_accepted_true_error_m": 5.324829428749585,
       "unfinished_addresses": [],
       "ack_missing_addresses": [],
@@ -157,6 +204,7 @@
       "returned": true,
       "return_error_m": 0.18817749500576184,
       "total_time_s": 1247.3965699270236,
+      "feedback_decisions": 5,
       "feedback_delivered": 5,
       "batch_bytes": 340553,
       "audit_passed": true
@@ -169,11 +217,18 @@
       "purpose": "development_not_independent_evaluation",
       "source_sha256": "36dbfa5a41535a58b257aea252e0a485d4c47903a5ed94a82d9037372bc4b346",
       "configuration_sha256": "0c69438c6495c395e75e5d9c06bf04a0f41bc756c6e1d1ec14efbe1b3d7b4343",
+      "model": {
+        "flight_height_m": 15,
+        "online_range_white_std_m": 10,
+        "physical_range_white_std_m": 5,
+        "time_allowance_s": 1800
+      },
       "reason": "ROUTE_EXHAUSTED",
       "complete": false,
       "discovered": 10,
       "online_completed": 6,
       "false_accept_count": 1,
+      "best_accepted_true_error_m": 2.610804517015592,
       "worst_accepted_true_error_m": 35.35647709426632,
       "unfinished_addresses": [
         1,
@@ -193,6 +248,7 @@
       "returned": false,
       "return_error_m": 14.400357275910313,
       "total_time_s": 1795.6757453937523,
+      "feedback_decisions": 17,
       "feedback_delivered": 4,
       "batch_bytes": 559570,
       "audit_passed": true
@@ -205,11 +261,18 @@
       "purpose": "development_not_independent_evaluation",
       "source_sha256": "4ab0aec2fae08251ece6f3ef5cb6c2d965873d471a4de8b844214e0a1cd8870a",
       "configuration_sha256": "0c69438c6495c395e75e5d9c06bf04a0f41bc756c6e1d1ec14efbe1b3d7b4343",
+      "model": {
+        "flight_height_m": 15,
+        "online_range_white_std_m": 10,
+        "physical_range_white_std_m": 5,
+        "time_allowance_s": 1800
+      },
       "reason": "COMPUTE_NAVIGATION_NOT_ADMITTED",
       "complete": false,
       "discovered": 6,
       "online_completed": 0,
       "false_accept_count": 0,
+      "best_accepted_true_error_m": null,
       "worst_accepted_true_error_m": null,
       "unfinished_addresses": [
         1,
@@ -239,6 +302,7 @@
       "returned": true,
       "return_error_m": 0.1518001570274378,
       "total_time_s": 547.5330868538687,
+      "feedback_decisions": 1,
       "feedback_delivered": 0,
       "batch_bytes": 129844,
       "audit_passed": true
@@ -251,11 +315,18 @@
       "purpose": "development_not_independent_evaluation",
       "source_sha256": "52e5c54eda251e4ec967718869dfaba48c321f3eae6b6293caa862cf2e1ba2f5",
       "configuration_sha256": "0c69438c6495c395e75e5d9c06bf04a0f41bc756c6e1d1ec14efbe1b3d7b4343",
+      "model": {
+        "flight_height_m": 15,
+        "online_range_white_std_m": 10,
+        "physical_range_white_std_m": 5,
+        "time_allowance_s": 1800
+      },
       "reason": "RETURN_RESOURCE_RESERVED",
       "complete": false,
       "discovered": 10,
       "online_completed": 8,
       "false_accept_count": 0,
+      "best_accepted_true_error_m": 0.49878672009010466,
       "worst_accepted_true_error_m": 6.335816944055521,
       "unfinished_addresses": [
         9,
@@ -269,6 +340,7 @@
       "returned": true,
       "return_error_m": 0.2121418371605998,
       "total_time_s": 1714.8151268061251,
+      "feedback_decisions": 5,
       "feedback_delivered": 4,
       "batch_bytes": 625232,
       "audit_passed": true
@@ -281,11 +353,18 @@
       "purpose": "development_not_independent_evaluation",
       "source_sha256": "1fea6abe83cff009e2fdbb5240e9ba185ac589534ffd0fbbe6511cac1a00d135",
       "configuration_sha256": "0c69438c6495c395e75e5d9c06bf04a0f41bc756c6e1d1ec14efbe1b3d7b4343",
+      "model": {
+        "flight_height_m": 15,
+        "online_range_white_std_m": 10,
+        "physical_range_white_std_m": 5,
+        "time_allowance_s": 1800
+      },
       "reason": "ROUTE_EXHAUSTED",
       "complete": false,
       "discovered": 7,
       "online_completed": 2,
       "false_accept_count": 0,
+      "best_accepted_true_error_m": 1.6024251821059918,
       "worst_accepted_true_error_m": 4.254102696503565,
       "unfinished_addresses": [
         2,
@@ -314,8 +393,87 @@
       "returned": false,
       "return_error_m": 84.43050850448194,
       "total_time_s": 724.7773389218654,
+      "feedback_decisions": 20,
       "feedback_delivered": 3,
       "batch_bytes": 426807,
+      "audit_passed": true
+    },
+    {
+      "label": "dev_2026112302_n10_fullwindow",
+      "seed": 2026112302,
+      "count": 10,
+      "rule": "stage",
+      "purpose": "known_seed_nominal18_shared_service_2400s_development_not_independent",
+      "source_sha256": "458e5d9f1d8132fb254a8f83b0f2c45051723c31540d1f7a1a1c8381e4305bfd",
+      "configuration_sha256": "1540f4b1bd3a4c925a5047f5904151d874d2efeec489a17520f77a8b60eb93ed",
+      "model": {
+        "flight_height_m": 18,
+        "online_range_white_std_m": 5,
+        "physical_range_white_std_m": 5,
+        "time_allowance_s": 2400
+      },
+      "reason": "ALL_ONLINE_VERIFIED",
+      "complete": true,
+      "discovered": 10,
+      "online_completed": 10,
+      "false_accept_count": 0,
+      "best_accepted_true_error_m": 0.6404145158846507,
+      "worst_accepted_true_error_m": 13.656178883705474,
+      "unfinished_addresses": [],
+      "ack_missing_addresses": [],
+      "awake_addresses": [],
+      "returned": true,
+      "return_error_m": 0.3848121861911543,
+      "total_time_s": 1815.1289033837645,
+      "feedback_decisions": 12,
+      "feedback_delivered": 7,
+      "batch_bytes": 619177,
+      "audit_passed": true
+    },
+    {
+      "label": "dev_2026112302_n10_nominal18",
+      "seed": 2026112302,
+      "count": 10,
+      "rule": "stage",
+      "purpose": "known_seed_matched_nominal18_common_candidates_development_not_independent",
+      "source_sha256": "f76f5222ea21a8754ac1809d4c3a9a49258c1704819bf58a6dab3de68c71fbb7",
+      "configuration_sha256": "13a532f47499dafaa1a7a21e951642805410b65e6f62284bf710c9e5cd634566",
+      "model": {
+        "flight_height_m": 18,
+        "online_range_white_std_m": 5,
+        "physical_range_white_std_m": 5,
+        "time_allowance_s": 1800
+      },
+      "reason": "RETURN_RESOURCE_RESERVED",
+      "complete": false,
+      "discovered": 8,
+      "online_completed": 4,
+      "false_accept_count": 0,
+      "best_accepted_true_error_m": 1.4865243665034231,
+      "worst_accepted_true_error_m": 5.717818559276643,
+      "unfinished_addresses": [
+        3,
+        5,
+        7,
+        8,
+        9,
+        10
+      ],
+      "ack_missing_addresses": [],
+      "awake_addresses": [
+        3,
+        5,
+        7,
+        8,
+        9,
+        10
+      ],
+      "returned": true,
+      "return_error_m": 0.05565215600978054,
+      "total_time_s": 1734.084378994473,
+      "feedback_decisions": 8,
+      "feedback_delivered": 2,
+      "batch_bytes": 374772,
       "audit_passed": true
     },
     {
@@ -326,11 +484,18 @@
       "purpose": "development_not_independent_evaluation",
       "source_sha256": "e272b1e5fc76e7515eb0f0b6719e8742a3ba5583ea736d386e15857789132803",
       "configuration_sha256": "0c69438c6495c395e75e5d9c06bf04a0f41bc756c6e1d1ec14efbe1b3d7b4343",
+      "model": {
+        "flight_height_m": 15,
+        "online_range_white_std_m": 10,
+        "physical_range_white_std_m": 5,
+        "time_allowance_s": 1800
+      },
       "reason": "RETURN_RESOURCE_RESERVED",
       "complete": false,
       "discovered": 10,
       "online_completed": 9,
       "false_accept_count": 0,
+      "best_accepted_true_error_m": 0.944606460848278,
       "worst_accepted_true_error_m": 8.92620214304396,
       "unfinished_addresses": [
         9
@@ -342,8 +507,51 @@
       "returned": true,
       "return_error_m": 0.14072886470740628,
       "total_time_s": 1736.2659713897424,
+      "feedback_decisions": 9,
       "feedback_delivered": 7,
       "batch_bytes": 716212,
+      "audit_passed": true
+    },
+    {
+      "label": "reg_2026112302_n10_effectivequota",
+      "seed": 2026112302,
+      "count": 10,
+      "rule": "stage",
+      "purpose": "known_seed_seeded_coverage_and_effective_observation_quotas_nominal18_not_independent",
+      "source_sha256": "d80d90a49b9a1a14ceaadc02c2e2f8ffd489c215f275f13142693a5d2c45724f",
+      "configuration_sha256": "13a532f47499dafaa1a7a21e951642805410b65e6f62284bf710c9e5cd634566",
+      "model": {
+        "flight_height_m": 18,
+        "online_range_white_std_m": 5,
+        "physical_range_white_std_m": 5,
+        "time_allowance_s": 1800
+      },
+      "reason": "RETURN_RESOURCE_RESERVED",
+      "complete": false,
+      "discovered": 10,
+      "online_completed": 6,
+      "false_accept_count": 0,
+      "best_accepted_true_error_m": 1.5799783808841947,
+      "worst_accepted_true_error_m": 6.679189942604573,
+      "unfinished_addresses": [
+        2,
+        4,
+        9,
+        10
+      ],
+      "ack_missing_addresses": [],
+      "awake_addresses": [
+        2,
+        4,
+        9,
+        10
+      ],
+      "returned": true,
+      "return_error_m": 0.3041578450633573,
+      "total_time_s": 1718.3834922275216,
+      "feedback_decisions": 11,
+      "feedback_delivered": 6,
+      "batch_bytes": 499855,
       "audit_passed": true
     },
     {
@@ -354,11 +562,18 @@
       "purpose": "known_seed_entry_visibility_and_immediate_retreat_regression_not_independent_evaluation",
       "source_sha256": "11b0effd56441cf8d699d2c4299aa12218ba738f39d38473341c91e1e2638756",
       "configuration_sha256": "0c69438c6495c395e75e5d9c06bf04a0f41bc756c6e1d1ec14efbe1b3d7b4343",
+      "model": {
+        "flight_height_m": 15,
+        "online_range_white_std_m": 10,
+        "physical_range_white_std_m": 5,
+        "time_allowance_s": 1800
+      },
       "reason": "RETURN_RESOURCE_RESERVED",
       "complete": false,
       "discovered": 10,
       "online_completed": 8,
       "false_accept_count": 0,
+      "best_accepted_true_error_m": 1.070099679923492,
       "worst_accepted_true_error_m": 5.297550397740843,
       "unfinished_addresses": [
         9,
@@ -372,6 +587,7 @@
       "returned": true,
       "return_error_m": 0.39761306456839035,
       "total_time_s": 1727.9309061184135,
+      "feedback_decisions": 16,
       "feedback_delivered": 6,
       "batch_bytes": 737648,
       "audit_passed": true
@@ -384,11 +600,18 @@
       "purpose": "known_seed_service_phase_regression_not_independent_evaluation",
       "source_sha256": "f7403fee87fe5e079c230435a00a025aed3813607d778a9b52af23e48e878979",
       "configuration_sha256": "0c69438c6495c395e75e5d9c06bf04a0f41bc756c6e1d1ec14efbe1b3d7b4343",
+      "model": {
+        "flight_height_m": 15,
+        "online_range_white_std_m": 10,
+        "physical_range_white_std_m": 5,
+        "time_allowance_s": 1800
+      },
       "reason": "DEPARTURE_REFERENCE_UNRECOVERED",
       "complete": false,
       "discovered": 7,
       "online_completed": 1,
       "false_accept_count": 0,
+      "best_accepted_true_error_m": 4.5553074410976375,
       "worst_accepted_true_error_m": 4.5553074410976375,
       "unfinished_addresses": [
         2,
@@ -416,12 +639,57 @@
       "returned": false,
       "return_error_m": 61.99283877522214,
       "total_time_s": 506.33928856162305,
+      "feedback_decisions": 3,
       "feedback_delivered": 3,
       "batch_bytes": 269522,
+      "audit_passed": true
+    },
+    {
+      "label": "reg_2026112302_n10_searchfirst",
+      "seed": 2026112302,
+      "count": 10,
+      "rule": "stage",
+      "purpose": "known_seed_search_priority_regression_matched_nominal18_not_independent",
+      "source_sha256": "11328cbc99b2f9414bcb6756819a5558885e637a8348bc9c48fafc10bc1450a3",
+      "configuration_sha256": "13a532f47499dafaa1a7a21e951642805410b65e6f62284bf710c9e5cd634566",
+      "model": {
+        "flight_height_m": 18,
+        "online_range_white_std_m": 5,
+        "physical_range_white_std_m": 5,
+        "time_allowance_s": 1800
+      },
+      "reason": "RETURN_RESOURCE_RESERVED",
+      "complete": false,
+      "discovered": 10,
+      "online_completed": 5,
+      "false_accept_count": 0,
+      "best_accepted_true_error_m": 0.7414075810458018,
+      "worst_accepted_true_error_m": 4.434972536014087,
+      "unfinished_addresses": [
+        3,
+        7,
+        8,
+        9,
+        10
+      ],
+      "ack_missing_addresses": [],
+      "awake_addresses": [
+        3,
+        7,
+        8,
+        9,
+        10
+      ],
+      "returned": true,
+      "return_error_m": 0.039829471917080715,
+      "total_time_s": 1733.6838525184846,
+      "feedback_decisions": 15,
+      "feedback_delivered": 6,
+      "batch_bytes": 591622,
       "audit_passed": true
     }
   ],
   "unfinished_batches": [],
   "writer_lock_exists": false,
-  "completed_batch_bytes": 4562268
+  "completed_batch_bytes": 6647694
 }

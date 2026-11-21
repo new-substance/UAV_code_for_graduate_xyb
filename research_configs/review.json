@@ -2,7 +2,7 @@
   "status": "approved_for_bounded_development",
   "mission_enabled": true,
   "specification": "论文总纲.md",
-  "specification_sha256": "eba789fec14802f4b295cfbaf0bab1258ed4ef8da06b0cc76e668d507f0dac16",
+  "specification_sha256": "7bcf98aa066753f338ba4dfb3894d490492a34d0983b8d5a8ff9b017b6643501",
   "configuration": "research_configs/baseline.json",
   "configuration_sha256": "1540f4b1bd3a4c925a5047f5904151d874d2efeec489a17520f77a8b60eb93ed",
   "source_sha256": "458e5d9f1d8132fb254a8f83b0f2c45051723c31540d1f7a1a1c8381e4305bfd",
@@ -77,12 +77,40 @@
       "new_horizon_s": 3000,
       "max_prefix_difference": 0,
       "future_noise_not_clamped": true
+    },
+    "nominal18_fullwindow_development": {
+      "label": "dev_2026112302_n10_fullwindow",
+      "seed": 2026112302,
+      "source_sha256": "458e5d9f1d8132fb254a8f83b0f2c45051723c31540d1f7a1a1c8381e4305bfd",
+      "configuration_sha256": "1540f4b1bd3a4c925a5047f5904151d874d2efeec489a17520f77a8b60eb93ed",
+      "model": {
+        "flight_height_m": 18,
+        "online_range_white_std_m": 5,
+        "physical_range_white_std_m": 5,
+        "time_allowance_s": 2400
+      },
+      "complete": true,
+      "discovered": 10,
+      "online_completed": 10,
+      "false_accept_count": 0,
+      "best_accepted_true_error_m": 0.6404145158846507,
+      "worst_accepted_true_error_m": 13.656178883705474,
+      "returned": true,
+      "return_error_m": 0.3848121861911543,
+      "total_time_s": 1815.1289033837645,
+      "feedback_decisions": 12,
+      "feedback_delivered": 7,
+      "batch_bytes": 619177,
+      "audit_passed": true,
+      "all_stop_ack": true,
+      "all_deep_sleep": true,
+      "independent_evaluation": false
     }
   },
   "open_items": [
-    "Validate one explicit 2400 s known-seed development case after restoring useful shared observations; no prior 1800 s failure is reclassified.",
-    "Freeze unchanged source/config and unseen seeds for paired comparison after integration; all negative results retained.",
-    "10 m upper-envelope pressure comparison must use same final algorithms/geometry, not pooled old-version outcomes."
+    "One known-seed N10 main-model task has closed; current-version N5/N10 unseen-seed paired evaluation remains unrun and unreleased.",
+    "Freeze unchanged final source/config, unseen seeds, comparison rules and matched upper-10 profile before any independent evaluation.",
+    "Upper-10 means online 10 m with physical 5 m, unchanged geometry/resources/4+1; no pooled old-version substitute or claim of physical 10 m noise."
   ],
   "pending_preference": {
     "resolved": true,
