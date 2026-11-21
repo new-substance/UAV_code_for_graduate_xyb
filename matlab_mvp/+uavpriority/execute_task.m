@@ -37,6 +37,7 @@ try
             [ready,why,point_budget]=prepare(q,ref);
             emit('POINT_ADMISSION',struct('xy_m',q,'reference_id',ref,'accepted',ready,'reason',why, ...
                 'estimated_uav_p_m',w.nav.p,'Pxy_m2',w.nav.P(1:2,1:2),'nav_version',w.nav.version, ...
+                'reference_mean_xy_m',w.nav.map_p(1:2,ref),'reference_nominal_xy_m',cfg.scene.reference_centers_xy_m(ref,:), ...
                 'minimum_transaction_s',point_budget.minimum_total_s,'reserved_transaction_s',point_budget.total_s, ...
                 'block_cap',point_budget.block_cap,'return_reserve_s',point_budget.return_s));
             if ~ready
@@ -206,12 +207,18 @@ out=struct('reason',reason,'exception',exception,'count',count,'policy',rule, ..
         all([nodes.stop_ack]) && all([nodes.deep_sleep]) && returned);
     function [q,ref,owner,choice]=next_point()
         q=[];ref=NaN;owner=0;choice=[];n_coverage_pending=cover_index<size(cover,1);
-        n_feedback_ready=uavpriority.service_phase_ready(book.nodes,states);
+        [n_feedback_ready,n_unseeded]=uavpriority.service_phase_ready(book.nodes,states);
         if n_feedback_ready && ~feedback_phase_entered
             feedback_phase_entered=true;
-            emit('PHASE_CHANGE',struct('phase','POSITION_FEEDBACK_SERVICE','coverage_vertices_remaining',size(cover,1)-cover_index));
+            emit('PHASE_CHANGE',struct('phase','POSITION_FEEDBACK_SERVICE', ...
+                'coverage_vertices_remaining',size(cover,1)-cover_index,'unseeded_addresses',n_unseeded));
         end
         n_coverage_left=n_coverage_pending && ~n_feedback_ready;
+        n_allowed=1:size(cfg.scene.reference_centers_xy_m,1);n_next_reference=NaN;
+        if n_coverage_left
+            [~,n_next_reference]=min(vecnorm(cfg.scene.reference_centers_xy_m-cover(cover_index+1,:),2,2));
+            n_allowed=unique([w.nav.last_reference_id,n_next_reference]);
+        end
         if ~n_coverage_left || ~last_extra
             n_choices=cell(1,count);
             for n_address=1:count
@@ -224,12 +231,15 @@ out=struct('reason',reason,'exception',exception,'count',count,'policy',rule, ..
                 end
                 n_b=uavpriority.bundle(book.nodes(n_address).range_records,w.nav,histories{n_address}, ...
                     macros{n_address},n_s.pool_ids,cfg);
-                n_choices{n_address}=uavpriority.choose_service_point(w.nav,n_s.phase,n_s.fit,n_b.anchors(1:2,:)',attempts(:,n_address),cfg,rule);
+                n_choices{n_address}=uavpriority.choose_service_point(w.nav,n_s.phase,n_s.fit,n_b.anchors(1:2,:)',attempts(:,n_address),cfg,rule,n_allowed);
             end
             [n_owner,n_selected,n_alternatives]=uavpriority.select_service_owner(n_choices,rule);
             if n_owner>0 && (~n_coverage_left || norm(n_selected.xy_m-cover(cover_index+1,:))>1e-6)
                 q=n_selected.xy_m;ref=n_selected.reference_id;owner=n_owner;choice=n_selected;
                 choice.alternatives=n_alternatives;last_extra=true;
+                choice.coverage_priority=n_coverage_left;choice.next_coverage_reference=n_next_reference;
+                choice.current_reference_id=w.nav.last_reference_id;
+                choice.coverage_vertices_remaining=size(cover,1)-cover_index;
                 if n_coverage_left && strcmp(states{owner}.phase,'LOCALIZE'),coverage_fit_plans=coverage_fit_plans+1;end
                 return;
             end
@@ -247,6 +257,7 @@ out=struct('reason',reason,'exception',exception,'count',count,'policy',rule, ..
         ready=false;why='NAVIGATION_OR_RETURN_ADMISSION';
         p_q=[xy';cfg.scene.flight_height_m];p_center=[cfg.scene.reference_centers_xy_m(ref,:)';cfg.scene.flight_height_m];
         for p_recovery=1:cfg.stage.navigation_recovery_cap
+            why='NAVIGATION_OR_RETURN_ADMISSION';
             p_at_point=norm(w.nav.p-p_q)<.5 && norm(w.nav.v)<.2;
             if p_at_point
                 p_current_return=uavmvp.reference_return_plan(w.nav,cfg,ref);
@@ -282,8 +293,10 @@ out=struct('reason',reason,'exception',exception,'count',count,'policy',rule, ..
                         'reason',why,'pixel_margin',p_escape.entry.reference.pixel_margin));
                     continue;
                 end
-                if ~p_escape.accepted || ~p_escape_return.available || ...
-                        w.t+p_outward_allowance+p_minimum.minimum_total_s+p_escape_return.reserve_s>deadline,continue;end
+                if ~p_escape.accepted || ~p_escape_return.available,why='SERVICE_VISIT_FORECAST_REJECTED';continue;end
+                if w.t+p_outward_allowance+p_minimum.minimum_total_s+p_escape_return.reserve_s>deadline
+                    why='TARGET_SERVICE_RETURN_UNAVAILABLE';continue;
+                end
                 p_moved=uavmvp.fly_to(w,p_q,cfg,p_escape.outward.duration_s+2);if ~p_moved.arrived,continue;end
                 p_onsite=uavpriority.observe_onsite(w,ref,cfg,deadline);
                 if ~p_onsite.accepted
@@ -292,13 +305,16 @@ out=struct('reason',reason,'exception',exception,'count',count,'policy',rule, ..
                     why='ARRIVAL_IMAGE_FAILED_RECENTERED';continue;
                 end
             end
-            p_waiting=uavpriority.wait_reference(w,ref,p_minimum.extra_service_s,cfg);if ~p_waiting.accepted,continue;end
+            p_waiting=uavpriority.wait_reference(w,ref,p_minimum.extra_service_s,cfg);
+            if ~p_waiting.accepted,why=p_waiting.reason;continue;end
             p_gate=uavpriority.navigation_gate(w.nav,p_minimum.atomic_radio_s,cfg);
             p_retreat=uavpriority.retreat_gate(w.nav,p_minimum.atomic_radio_s,ref,cfg);p_back=p_retreat.return_plan;
             budget=uavpriority.transaction_reservation(cfg,phase,pool_count,deadline-w.t,p_back.reserve_s,true);
             p_enough=p_back.available && budget.available;
             if p_gate.accepted && p_retreat.accepted && p_enough,ready=true;why='ADMITTED';return;end
-            if ~budget.available,why='RETURN_RESOURCE';end
+            if ~budget.available,why='RETURN_RESOURCE';
+            elseif ~p_gate.accepted,why='RADIO_NAVIGATION_REJECTED';
+            elseif ~p_retreat.accepted,why='RADIO_RETREAT_REJECTED';end
         end
     end
     function [children,report]=serve(id,ref,allocation)

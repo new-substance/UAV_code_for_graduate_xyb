@@ -1,5 +1,5 @@
 function [ready,unseeded]=service_phase_ready(nodes,states)
-%SERVICE_PHASE_READY P02 leave scan priority only with known IDs/finite fits.
+%SERVICE_PHASE_READY P02 all discovered IDs, no global four-fit barrier.
 assert(numel(nodes)==numel(states));unseeded=[];
 for id=1:numel(nodes)
     s=states{id};
@@ -8,5 +8,5 @@ for id=1:numel(nodes)
         unseeded(end+1)=id; %#ok<AGROW>
     end
 end
-ready=isempty(unseeded);
+ready=all([nodes.discovered]);
 end

@@ -1,9 +1,10 @@
-function choice=choose_service_point(nav,stage,fit,observed_xy,attempts,cfg,rule)
+function choice=choose_service_point(nav,stage,fit,observed_xy,attempts,cfg,rule,allowed_references)
 %CHOOSE_SERVICE_POINT P01 finite position/stage feedback, proposal only.
 % Observed means qualified spatial records, not every planned route vertex.
 % No future image/radio or physical terminal coordinates are accepted here.
 % Actual navigation, distinct-position and return admission follow execution.
 if nargin<7,rule='stage';end
+if nargin<8,allowed_references=1:size(cfg.scene.reference_centers_xy_m,1);end
 assert(ismember(stage,{'LOCALIZE','VERIFY'}) && ismember(rule,{'stage','cost'}));
 [points,references]=uavpriority.service_candidates(cfg);
 n=size(points,1);
@@ -11,7 +12,8 @@ assert(isequal(size(attempts),[n,1]) && all(attempts>=0 & attempts==floor(attemp
 assert(isempty(observed_xy) || size(observed_xy,2)==2);
 choice=struct('available',false,'candidate_id',NaN,'reference_id',NaN,'xy_m',[], ...
     'stage',stage,'rule',rule,'estimate_xy_m',[],'eligible_count',0,'candidates',[], ...
-    'observed_xy_m',observed_xy,'radius_proxy_m',0,'information_proxy','white_plus_common_bias');
+    'observed_xy_m',observed_xy,'radius_proxy_m',0,'information_proxy','white_plus_common_bias', ...
+    'allowed_reference_ids',allowed_references);
 if isempty(fit) || any(~isfinite(fit.x)) || ~isfinite(nav.last_reference_id),return;end
 x=fit.x(:);assert(numel(x)==2);choice.estimate_xy_m=x;
 radius=0;if isfield(fit,'radius') && isfinite(fit.radius),radius=max(0,fit.radius);end
@@ -21,6 +23,7 @@ H=jacobian(observed_xy,x,cfg);base=lambda_min(uavpriority.ranging_information(H,
 table=zeros(n,10);
 for k=1:n
     ref=references(k);q=points(k,:);eligible=true;
+    if ~ismember(ref,allowed_references),eligible=false;end
     if attempts(k)>=cfg.stage.navigation_recovery_cap,eligible=false;end
     if ~isempty(observed_xy) && min(vecnorm(observed_xy-q,2,2))< ...
             cfg.localization.distinct_horizontal_separation_m+1,eligible=false;end

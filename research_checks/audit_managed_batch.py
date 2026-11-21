@@ -70,6 +70,11 @@ def check_information_prediction(choice: dict, cfg: dict) -> None:
     H = rows(observed)
     before = minimum(H)
     for row in choice["candidates"]:
+        if row[4] and "allowed_reference_ids" in choice:
+            allowed = choice["allowed_reference_ids"]
+            if isinstance(allowed, (int, float)):
+                allowed = [allowed]
+            assert row[1] in allowed
         q = np.asarray(row[2:4]).reshape(1, 2)
         expected_gain = max(0.0, minimum(np.vstack([H, rows(q)]))-before) / (1+row[7])
         assert math.isclose(row[9], expected_gain, rel_tol=1e-7, abs_tol=1e-10)
@@ -131,6 +136,15 @@ def audit(directory: Path) -> dict:
                 choice = data["choice"]
                 if choice.get("information_proxy") == "white_plus_common_bias":
                     check_information_prediction(choice, cfg)
+                if "coverage_priority" in choice:
+                    expected_priority = (len(qualified) < cfg["scene"]["terminal_counts"] and
+                                         choice["coverage_vertices_remaining"] > 0)
+                    assert choice["coverage_priority"] == expected_priority
+                    if expected_priority:
+                        allowed = choice["allowed_reference_ids"]
+                        if isinstance(allowed, (int, float)):
+                            allowed = [allowed]
+                        assert set(allowed) == {choice["current_reference_id"], choice["next_coverage_reference"]}
                 rows = choice["alternatives"]
                 if rows and isinstance(rows[0], (int, float)):
                     rows = [rows]

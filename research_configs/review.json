@@ -2,10 +2,10 @@
   "status": "approved_for_bounded_development",
   "mission_enabled": true,
   "specification": "论文总纲.md",
-  "specification_sha256": "cd28745cea638e9cb7236028fee35d1306eeb29989e8f2aacdd7754baa4e7cfc",
+  "specification_sha256": "e798ede679f9228eeabced5c4195fe7044f3a808d7e0c965f63d5b536f695b16",
   "configuration": "research_configs/baseline.json",
   "configuration_sha256": "13a532f47499dafaa1a7a21e951642805410b65e6f62284bf710c9e5cd634566",
-  "source_sha256": "f76f5222ea21a8754ac1809d4c3a9a49258c1704819bf58a6dab3de68c71fbb7",
+  "source_sha256": "11328cbc99b2f9414bcb6756819a5558885e637a8348bc9c48fafc10bc1450a3",
   "development_scope": {
     "terminal_counts": [
       10
@@ -14,7 +14,7 @@
     "allowed_seeds": [
       2026112302
     ],
-    "purpose": "known_seed_matched_nominal18_common_candidates_development_not_independent"
+    "purpose": "known_seed_search_priority_regression_matched_nominal18_not_independent"
   },
   "budgets_bytes": {
     "development_batch": 52428800,
@@ -29,10 +29,11 @@
     "ENTRY": "Require first-frame on-site pixel envelope as well as return forecast before leaving a reference for an inset point. At most two arrival images then immediately recenter on failure before another finite attempt; do not spend an unchecked second wait. Fixed input distinguishes a passing return from rejected first frame.",
     "PLANNER": "P01 96 shared center/inward/outward candidates; outward half-ray clearance capped by existing inset length. Stage/cost same candidates/quotas. Ranking template retains shared bias via exact rank-one inverse; actual complete C and all admission/4+1 gates remain authoritative.",
     "FORECAST": "UAV/map principal covariance submatrix only in pure admission forecasts, no Schur conditioning; coupled-clone covariance equality checked. Actual joint navigation, measurements and fitting unchanged.",
-    "OFFLINE": "Truth coordinates, bias and return endpoints export only after MotionWorld.finish; independent Python audit reconstructs errors, conditional witnesses and completion."
+    "OFFLINE": "Truth coordinates, bias and return endpoints export only after MotionWorld.finish; independent Python audit reconstructs errors, conditional witnesses and completion.",
+    "SEARCH_PRIORITY": "Until all registered IDs are discovered, proposals may use only current/next coverage reference; stage/cost share restriction. All-discovered releases priority without requiring all finite fits; unseeded IDs remain explicit and use finite coverage fallback. No new numeric allowance or physical changes."
   },
   "evidence": {
-    "checks": "results/scope_review_20261120/nominal18_component_checks_v2.json",
+    "checks": "results/scope_review_20261120/search_priority_component_checks.json",
     "all_passed": true,
     "new_missions_in_checks": 0,
     "source_file_count": 159,
@@ -65,10 +66,11 @@
       "fixed_fresh_heldout_passed": true,
       "scope": "optimistic noiseless fixed input only; no task feasibility or population coverage claim"
     },
-    "independent_information_check": "Direct covariance inverse on 96 recorded fixed candidates passed; +0.001 corrupted gain rejected."
+    "independent_information_check": "Direct covariance inverse on 96 recorded fixed candidates passed; +0.001 corrupted gain rejected.",
+    "search_priority_checks_passed": true
   },
   "open_items": [
-    "Validate one full ten-node development case under explicit nominal18 configuration; do not infer success from fixed inputs.",
+    "Verify actual discovery/localization/return with the search-period reference restriction. Previous nominal18 case found 8/10 and closed 4/10, with actual return; do not claim full closure.",
     "Freeze unchanged source/config and unseen seeds for paired comparison after integration; all negative results retained.",
     "10 m upper-envelope pressure comparison must use same final algorithms/geometry, not pooled old-version outcomes."
   ],
