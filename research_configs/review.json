@@ -1,11 +1,11 @@
 {
-  "status": "integration_review_required",
-  "mission_enabled": false,
+  "status": "approved_for_bounded_development",
+  "mission_enabled": true,
   "specification": "论文总纲.md",
-  "specification_sha256": "ae3b03fe6f417ef584c1bb99472d40299abdecd084f73b24e0970668839d5bfc",
+  "specification_sha256": "cd28745cea638e9cb7236028fee35d1306eeb29989e8f2aacdd7754baa4e7cfc",
   "configuration": "research_configs/baseline.json",
-  "configuration_sha256": "0c69438c6495c395e75e5d9c06bf04a0f41bc756c6e1d1ec14efbe1b3d7b4343",
-  "source_sha256": "b3c4146af917724929b4d1c48e006d3c89652625ca501b83e6be6539f49fc32a",
+  "configuration_sha256": "13a532f47499dafaa1a7a21e951642805410b65e6f62284bf710c9e5cd634566",
+  "source_sha256": "f76f5222ea21a8754ac1809d4c3a9a49258c1704819bf58a6dab3de68c71fbb7",
   "development_scope": {
     "terminal_counts": [
       10
@@ -14,7 +14,7 @@
     "allowed_seeds": [
       2026112302
     ],
-    "purpose": "known_seed_entry_visibility_and_immediate_retreat_regression_not_independent_evaluation"
+    "purpose": "known_seed_matched_nominal18_common_candidates_development_not_independent"
   },
   "budgets_bytes": {
     "development_batch": 52428800,
@@ -27,15 +27,15 @@
     "WRITER": "Live UTF-8 case/batch/active quotas; reserved outcome plus bounded actual return on quota failure; no source copies or full covariance traces.",
     "RETURN": "Conditional reference return reserves, actual images/posterior recheck, bounded departure recovery; no terminal RTT pose update.",
     "ENTRY": "Require first-frame on-site pixel envelope as well as return forecast before leaving a reference for an inset point. At most two arrival images then immediately recenter on failure before another finite attempt; do not spend an unchecked second wait. Fixed input distinguishes a passing return from rejected first frame.",
-    "PLANNER": "Same finite 64 candidates, transaction/attempt caps, complete macro and quality/return gates for stage/cost. P02 all-ID/finite-fit handover permits consecutive feedback service; remaining coverage is finite fallback.",
+    "PLANNER": "P01 96 shared center/inward/outward candidates; outward half-ray clearance capped by existing inset length. Stage/cost same candidates/quotas. Ranking template retains shared bias via exact rank-one inverse; actual complete C and all admission/4+1 gates remain authoritative.",
     "FORECAST": "UAV/map principal covariance submatrix only in pure admission forecasts, no Schur conditioning; coupled-clone covariance equality checked. Actual joint navigation, measurements and fitting unchanged.",
     "OFFLINE": "Truth coordinates, bias and return endpoints export only after MotionWorld.finish; independent Python audit reconstructs errors, conditional witnesses and completion."
   },
   "evidence": {
-    "checks": "results/scope_review_20261120/entry_component_checks_v1.json",
+    "checks": "results/scope_review_20261120/nominal18_component_checks_v2.json",
     "all_passed": true,
     "new_missions_in_checks": 0,
-    "source_file_count": 156,
+    "source_file_count": 159,
     "requirement_audit": "results/current_overview.json",
     "phase_diagnostic": "results/scope_review_20261120/phase_handover_diagnostic.json",
     "independent_evaluation_cases": 0,
@@ -53,17 +53,28 @@
       "entry_rejections": 16,
       "bytes": 737648,
       "independent_audit_passed": true
-    }
+    },
+    "joint_nominal18": {
+      "all_passed": true,
+      "mission_count": 0,
+      "height_m": 18,
+      "inner_entry_margin_px": 7.746733875955158,
+      "outer_entry_margin_px": 89.58374589653535,
+      "nominal_quality_radius_m": 18.578534130181225,
+      "pressure_quality_radius_m": 29.083686199840592,
+      "fixed_fresh_heldout_passed": true,
+      "scope": "optimistic noiseless fixed input only; no task feasibility or population coverage claim"
+    },
+    "independent_information_check": "Direct covariance inverse on 96 recorded fixed candidates passed; +0.001 corrupted gain rejected."
   },
   "open_items": [
-    "All three current engineering additions have bounded/component evidence; latest actual regression has 8/10 correct plus return, not full completion.",
-    "Diagnose joint camera/RTT/quality feasibility and rejected-proposal quota usage before another task run; no additional planner innovation modules.",
-    "Height 18/20 m fixed inputs improve entry margin but are not approved replacements for the confirmed 15 m baseline or evidence of task feasibility.",
-    "Freeze stable source/config/unseen seeds before paired 5/10 evaluation; independent evaluation remains zero."
+    "Validate one full ten-node development case under explicit nominal18 configuration; do not infer success from fixed inputs.",
+    "Freeze unchanged source/config and unseen seeds for paired comparison after integration; all negative results retained.",
+    "10 m upper-envelope pressure comparison must use same final algorithms/geometry, not pooled old-version outcomes."
   ],
   "pending_preference": {
-    "question": "nominal 5 m model as main versus retained conservative 10 m online envelope",
-    "optional": true,
-    "default_until_reply": "retain current 10 m online model; physical 5 m unchanged"
+    "resolved": true,
+    "height": "user permits candidates; not a fixed scene constraint",
+    "noise": "user confirmed matched nominal 5 m main; upper 10 m pressure comparison; physical noise and 20 m/3 m unchanged"
   }
 }

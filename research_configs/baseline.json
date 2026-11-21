@@ -26,7 +26,7 @@
       10,
       0
     ],
-    "flight_height_m": 15,
+    "flight_height_m": 18,
     "terminal_height_m": 0,
     "reference_centers_xy_m": [
       [
@@ -206,7 +206,7 @@
     }
   },
   "ranging": {
-    "range_white_std_m": 10,
+    "range_white_std_m": 5,
     "device_persistent_bias_std_m": 3,
     "initial_clock_ratio_std_ppm": 0.2,
     "clock_ratio_random_walk_ppm_per_sqrt_s": 0.02,
@@ -237,7 +237,8 @@
       "link_bad_state_probability": 0.25,
       "bad_state_mean_duration_s": 5
     },
-    "no_double_count": "range_white_std excludes separately modeled clock residual; persistent bias enters joint covariance, not each diagonal as independent noise"
+    "no_double_count": "range_white_std excludes separately modeled clock residual; persistent bias enters joint covariance, not each diagonal as independent noise",
+    "noise_assumption": "Matched nominal model: online white noise 5 m equals physical 5 m; retain 10 m upper-envelope results as stress history, not a main-model guarantee."
   },
   "navigation_candidate": {
     "profile": "VIS-A_user_confirmed_simulation_reference; detailed_sensor_parameters_remain_assumptions",
@@ -418,7 +419,7 @@
     "radio_truth_range_white_std_m": 5
   },
   "stage": {
-    "version": "priority-envelope-perimeter-v8",
+    "version": "minimal-nominal-18m",
     "profile": "nominal",
     "protocol": "REQUEST_RESPONSE_META_COLD2_WARM1",
     "route_xy_m": [
@@ -573,7 +574,7 @@
   },
   "priority": {
     "method": "priority",
-    "white_std_upper_m": 10,
+    "white_std_upper_m": 5,
     "datum_translation_bound_m": 2,
     "cold_services_per_position": 4,
     "services_per_atomic_block": 2,
@@ -608,6 +609,7 @@
       ]
     ],
     "datum_assumption": "additional unknown fixed horizontal translation bounded by two metres",
-    "burst_recovery_blocks": 4
+    "burst_recovery_blocks": 4,
+    "noise_model": "matched_nominal"
   }
 }

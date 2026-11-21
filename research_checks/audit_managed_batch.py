@@ -50,6 +50,35 @@ def read_lines(path: Path) -> list[dict]:
     return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line]
 
 
+def check_information_prediction(choice: dict, cfg: dict) -> None:
+    """Direct covariance inverses independently check the rank-one proxy."""
+    import numpy as np
+
+    x = np.asarray(choice["estimate_xy_m"], dtype=float).reshape(2)
+    observed = np.asarray(choice["observed_xy_m"], dtype=float).reshape(-1, 2)
+    height = cfg["scene"]["flight_height_m"] - cfg["scene"]["terminal_height_m"]
+    s2 = cfg["ranging"]["range_white_std_m"]**2 / cfg["priority"]["cold_services_per_position"]
+    b2 = cfg["ranging"]["device_persistent_bias_std_m"]**2
+    def rows(points):
+        delta = x - points
+        return delta / np.sqrt(np.sum(delta**2, axis=1) + height**2)[:, None]
+    def minimum(H):
+        if not len(H):
+            return 0.0
+        C = s2*np.eye(len(H)) + b2*np.ones((len(H), len(H)))
+        return max(0.0, float(np.linalg.eigvalsh(H.T @ np.linalg.solve(C, H)).min()))
+    H = rows(observed)
+    before = minimum(H)
+    for row in choice["candidates"]:
+        q = np.asarray(row[2:4]).reshape(1, 2)
+        expected_gain = max(0.0, minimum(np.vstack([H, rows(q)]))-before) / (1+row[7])
+        assert math.isclose(row[9], expected_gain, rel_tol=1e-7, abs_tol=1e-10)
+        slant = math.sqrt(float(np.sum((x-q.reshape(2))**2)) + height**2)
+        assert math.isclose(row[6], slant, rel_tol=1e-10, abs_tol=1e-10)
+        risk = max(0.0, slant+choice["radius_proxy_m"]-cfg["scene"]["design_service_slant_m"])
+        assert math.isclose(row[8], risk, abs_tol=1e-9)
+
+
 def audit(directory: Path) -> dict:
     manifest = json.loads((directory / "manifest.json").read_text(encoding="utf-8"))
     seeds = manifest["seeds"]
@@ -100,6 +129,8 @@ def audit(directory: Path) -> dict:
                     qualified.add(data["address"])
             elif kind == "POSITION_FEEDBACK" and "alternatives" in data["choice"]:
                 choice = data["choice"]
+                if choice.get("information_proxy") == "white_plus_common_bias":
+                    check_information_prediction(choice, cfg)
                 rows = choice["alternatives"]
                 if rows and isinstance(rows[0], (int, float)):
                     rows = [rows]

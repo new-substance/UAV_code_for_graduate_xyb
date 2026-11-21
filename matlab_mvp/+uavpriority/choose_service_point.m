@@ -5,20 +5,22 @@ function choice=choose_service_point(nav,stage,fit,observed_xy,attempts,cfg,rule
 % Actual navigation, distinct-position and return admission follow execution.
 if nargin<7,rule='stage';end
 assert(ismember(stage,{'LOCALIZE','VERIFY'}) && ismember(rule,{'stage','cost'}));
-points=[cfg.scene.reference_centers_xy_m;uavpriority.inset_candidates(cfg)];
-n=size(points,1);nr=size(cfg.scene.reference_centers_xy_m,1);
+[points,references]=uavpriority.service_candidates(cfg);
+n=size(points,1);
 assert(isequal(size(attempts),[n,1]) && all(attempts>=0 & attempts==floor(attempts)));
 assert(isempty(observed_xy) || size(observed_xy,2)==2);
 choice=struct('available',false,'candidate_id',NaN,'reference_id',NaN,'xy_m',[], ...
-    'stage',stage,'rule',rule,'estimate_xy_m',[],'eligible_count',0,'candidates',[]);
+    'stage',stage,'rule',rule,'estimate_xy_m',[],'eligible_count',0,'candidates',[], ...
+    'observed_xy_m',observed_xy,'radius_proxy_m',0,'information_proxy','white_plus_common_bias');
 if isempty(fit) || any(~isfinite(fit.x)) || ~isfinite(nav.last_reference_id),return;end
 x=fit.x(:);assert(numel(x)==2);choice.estimate_xy_m=x;
 radius=0;if isfield(fit,'radius') && isfinite(fit.radius),radius=max(0,fit.radius);end
-H=jacobian(observed_xy,x,cfg);base=lambda_min(H'*H);best=[Inf,Inf,Inf,Inf];
+choice.radius_proxy_m=radius;
+H=jacobian(observed_xy,x,cfg);base=lambda_min(uavpriority.ranging_information(H,cfg));best=[Inf,Inf,Inf,Inf];
 % Columns: ID, reference, x, y, eligible, attempts, slant, cost, risk, gain.
 table=zeros(n,10);
 for k=1:n
-    ref=mod(k-1,nr)+1;q=points(k,:);eligible=true;
+    ref=references(k);q=points(k,:);eligible=true;
     if attempts(k)>=cfg.stage.navigation_recovery_cap,eligible=false;end
     if ~isempty(observed_xy) && min(vecnorm(observed_xy-q,2,2))< ...
             cfg.localization.distinct_horizontal_separation_m+1,eligible=false;end
@@ -30,7 +32,7 @@ for k=1:n
     cost=path.time_proxy_s+2*offset/cfg.motion_and_budget.horizontal_max_speed_mps+.05*d;
     % Declared radius is a nominal quality quantity, not a guaranteed bound.
     risk=max(0,d+radius-cfg.scene.design_service_slant_m);
-    h=jacobian(q,x,cfg);gain=max(0,lambda_min(H'*H+h'*h)-base)/(1+cost);
+    h=jacobian(q,x,cfg);gain=max(0,lambda_min(uavpriority.ranging_information([H;h],cfg))-base)/(1+cost);
     table(k,:)=[k,ref,q,eligible,attempts(k),d,cost,risk,gain];
     if ~eligible,continue;end
     choice.eligible_count=choice.eligible_count+1;

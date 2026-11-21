@@ -2,7 +2,7 @@
 
 GNSS受限军用演训区临时监测节点定位的研究代码与现行设计文档。项目仅作仿真研究，不代表硬件实测或一般军用环境性能认证。
 
-**单终端与5终端已有开发闭环；10终端完整闭环与独立性能尚未验证。当前先做物理可行性诊断，暂停新增航次。** 物理数值与定位优化保持不变；质量/核验采用显式新版，不把组件检查当作任务成功。具体研究边界和既有负结果见[论文总纲](论文总纲.md)。
+**已有单终端/5终端历史开发闭环；新名义模型的10终端完整闭环与独立性能待验证。** 用户已确认主线采用物理一致的5 m名义噪声，高度允许候选；当前联合诊断选18 m进行限定开发。实际噪声、精度目标和定位优化不变，不把组件检查当作任务成功。研究边界与负结果见[论文总纲](论文总纲.md)。
 
 ## 研究范围
 
@@ -23,7 +23,7 @@ GNSS受限军用演训区临时监测节点定位的研究代码与现行设计�
 | [论文总纲.md](论文总纲.md) | 唯一研究规格：场景、约束、实际公式、代码接口和评价口径 |
 | [AGENTS.md](AGENTS.md) | 协作、数学审查、版本及输出预算规则 |
 | [matlab_mvp/](matlab_mvp/README.md) | 唯一MATLAB主工程，含基础、定位核验与聚合服务三个包 |
-| [research_configs/baseline.json](research_configs/baseline.json) | 唯一展开配置：继承V8数值，明确采用grid_conditional质量/核验 |
+| [research_configs/baseline.json](research_configs/baseline.json) | 唯一展开配置：5 m名义模型、18 m候选；相对V8三处数值变化见总纲 |
 | [research_configs/review.json](research_configs/review.json) | 审查状态、指纹与限定开发规模/种子 |
 | [research_checks/capture_migration_reference.m](research_checks/capture_migration_reference.m) | 独立于历史大数据的固定输入拟合、核验、测距与投影检查 |
 

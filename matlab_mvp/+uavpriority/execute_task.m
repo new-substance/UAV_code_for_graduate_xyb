@@ -8,7 +8,7 @@ w=uavmvp.MotionWorld(cfg,seed);w.configure_radio(count,17);
 book=uavmvp.ProtocolBook(cfg,count,17);states=cell(1,count);histories=states;macros=states;
 for id=1:count,histories{id}=uavmvp.radio_history_init(cfg);macros{id}={};end
 deadline=cfg.stage.platform_resource_s;r=uavpriority.reservation(cfg);
-nr=size(cfg.scene.reference_centers_xy_m,1);attempts=zeros(2*nr,count);
+candidate_points=uavpriority.service_candidates(cfg);attempts=zeros(size(candidate_points,1),count);
 extra_fit=zeros(1,count);extra_verify=zeros(1,count);feedback_count=0;
 feedback_delivered=0;coverage_fit_plans=0;feedback_phase_entered=false;
 cover=cfg.stage.route_xy_m;cover_index=0;last_extra=false;reason='ROUTE_EXHAUSTED';
@@ -71,8 +71,7 @@ try
                     end
                 end
                 if owner~=id
-                    candidates=[cfg.scene.reference_centers_xy_m;uavpriority.inset_candidates(cfg)];
-                    k=find(vecnorm(candidates-q,2,2)<1e-6,1);
+                    k=find(vecnorm(candidate_points-q,2,2)<1e-6,1);
                     if ~isempty(k),attempts(k,id)=attempts(k,id)+1;end
                 end
                 node_phase='LOCALIZE';node_pool_count=0;
