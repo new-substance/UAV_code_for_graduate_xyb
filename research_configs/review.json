@@ -2,10 +2,10 @@
   "status": "approved_for_bounded_development",
   "mission_enabled": true,
   "specification": "论文总纲.md",
-  "specification_sha256": "7ec9094a49b900117f0ebee84ff5b8bde3f5922984c8f56593bfd32e4d09e867",
+  "specification_sha256": "eba789fec14802f4b295cfbaf0bab1258ed4ef8da06b0cc76e668d507f0dac16",
   "configuration": "research_configs/baseline.json",
-  "configuration_sha256": "13a532f47499dafaa1a7a21e951642805410b65e6f62284bf710c9e5cd634566",
-  "source_sha256": "d80d90a49b9a1a14ceaadc02c2e2f8ffd489c215f275f13142693a5d2c45724f",
+  "configuration_sha256": "1540f4b1bd3a4c925a5047f5904151d874d2efeec489a17520f77a8b60eb93ed",
+  "source_sha256": "458e5d9f1d8132fb254a8f83b0f2c45051723c31540d1f7a1a1c8381e4305bfd",
   "development_scope": {
     "terminal_counts": [
       10
@@ -14,7 +14,7 @@
     "allowed_seeds": [
       2026112302
     ],
-    "purpose": "known_seed_seeded_coverage_and_effective_observation_quotas_nominal18_not_independent"
+    "purpose": "known_seed_nominal18_shared_service_2400s_development_not_independent"
   },
   "budgets_bytes": {
     "development_batch": 52428800,
@@ -30,14 +30,15 @@
     "PLANNER": "P01 96 shared center/inward/outward candidates; outward half-ray clearance capped by existing inset length. Stage/cost same candidates/quotas. Ranking template retains shared bias via exact rank-one inverse; actual complete C and all admission/4+1 gates remain authoritative.",
     "FORECAST": "UAV/map principal covariance submatrix only in pure admission forecasts, no Schur conditioning; coupled-clone covariance equality checked. Actual joint navigation, measurements and fitting unchanged.",
     "OFFLINE": "Truth coordinates, bias and return endpoints export only after MotionWorld.finish; independent Python audit reconstructs errors, conditional witnesses and completion.",
-    "SEARCH_PRIORITY": "Keep current/next-reference restriction while any ID is undiscovered or has no finite fit. Fit/verify on the spine remain allowed. Finite-estimate LOCALIZE waits for planned improvement at ordinary coverage points; targeted points retain shared service.",
-    "QUOTAS": "6 fit / 3 heldout quotas count owned qualified new spatial records, not rejected plans. Per-candidate attempt cap and total-position/task-return limits remain unchanged. Plans and delivered positions are logged separately; Python reconstructs delivered counters from complete events."
+    "SEARCH_PRIORITY": "Current/next reference restriction until all IDs have finite initial fits; ordinary and focused points retain shared legal observations. Seed coverage does not block fitting/verifying on the spine.",
+    "QUOTAS": "6 fit / 3 heldout quotas count owned qualified new spatial records, not rejected plans. Per-candidate attempt cap and total-position/task-return limits remain unchanged. Plans and delivered positions are logged separately; Python reconstructs delivered counters from complete events.",
+    "ALLOWANCE": "2400 s explicit simulation time allowance, not measured battery endurance; full duration remains the efficiency metric. Motion noise horizon extends to 3000 s; old 2400 s path prefix is identical and later noise remains active."
   },
   "evidence": {
-    "checks": "results/scope_review_20261120/effective_quota_component_checks.json",
+    "checks": "results/scope_review_20261120/allowance_component_checks.json",
     "all_passed": true,
     "new_missions_in_checks": 0,
-    "source_file_count": 159,
+    "source_file_count": 160,
     "requirement_audit": "results/current_overview.json",
     "phase_diagnostic": "results/scope_review_20261120/phase_handover_diagnostic.json",
     "independent_evaluation_cases": 0,
@@ -68,10 +69,18 @@
       "scope": "optimistic noiseless fixed input only; no task feasibility or population coverage claim"
     },
     "independent_information_check": "Direct covariance inverse on 96 recorded fixed candidates passed; +0.001 corrupted gain rejected.",
-    "search_priority_checks_passed": true
+    "search_priority_checks_passed": true,
+    "noise_horizon": {
+      "all_passed": true,
+      "mission_count": 0,
+      "old_horizon_s": 2400,
+      "new_horizon_s": 3000,
+      "max_prefix_difference": 0,
+      "future_noise_not_clamped": true
+    }
   },
   "open_items": [
-    "Validate one full ten-node known-seed case with seed-coverage priority and effective-observation quotas; latest prior case closes 5/10. No further physical or numeric changes.",
+    "Validate one explicit 2400 s known-seed development case after restoring useful shared observations; no prior 1800 s failure is reclassified.",
     "Freeze unchanged source/config and unseen seeds for paired comparison after integration; all negative results retained.",
     "10 m upper-envelope pressure comparison must use same final algorithms/geometry, not pooled old-version outcomes."
   ],

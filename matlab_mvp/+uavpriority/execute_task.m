@@ -64,10 +64,6 @@ try
             % All first contacts precede supplemental work at this point.
             for id=find(responded)
                 if book.nodes(id).completed,continue;end
-                if owner==0 && ~isempty(states{id}) && strcmp(states{id}.phase,'LOCALIZE') && ...
-                        ~isempty(states{id}.fit) && all(isfinite(states{id}.fit.x))
-                    emit('SERVICE_SKIPPED',struct('address',id,'reason','WAITING_FOR_FOCUSED_IMPROVEMENT'));continue;
-                end
                 if ~isempty(states{id}) && ~isempty(states{id}.pool_ids)
                     previous=uavpriority.bundle(book.nodes(id).range_records,w.nav,histories{id}, ...
                         macros{id},states{id}.pool_ids,cfg);

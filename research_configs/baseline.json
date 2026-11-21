@@ -318,7 +318,7 @@
     "horizontal_acceleration_mps2": 1,
     "vertical_speed_mps": 1,
     "settle_s": 1,
-    "time_limit_s": 1800,
+    "time_limit_s": 2400,
     "time_limit_sensitivity_s": [
       300,
       600,
@@ -560,7 +560,7 @@
     "navigation_radius_limit_m": 8,
     "navigation_max_reference_age_s": 25,
     "navigation_recovery_cap": 2,
-    "platform_resource_s": 1800,
+    "platform_resource_s": 2400,
     "reference_success_conditional_return": true,
     "region_gamma": 7.5697452555943325,
     "local_geometry_level": 5.991464547,
@@ -570,7 +570,8 @@
     "calibration_quantile": 0.95,
     "navigation_covariance_scale": 1.8643715619912962,
     "region_kind": "whole-domain-sampled-likelihood-difference-with-grid-padding",
-    "publication": "first completion snapshot; no post-completion re-ranging or silent revisions"
+    "publication": "first completion snapshot; no post-completion re-ranging or silent revisions",
+    "resource_assumption": "2400 s simulation time allowance, not calibrated battery endurance; full duration remains the efficiency metric; finite return reservation remains mandatory."
   },
   "priority": {
     "method": "priority",
