@@ -1,6 +1,6 @@
 {
   "schema_version": "strategy-design-v2",
-  "status": "legacy_visual_numeric_inputs_civil_model_migration_not_released",
+  "status": "legacy_visual_numeric_inputs_forest_model_migration_not_released",
   "provenance": "All numeric values below are development assumptions, not measured CSS, IMU, camera or aircraft specifications. Literature supports mechanisms, not this combined profile.",
   "confirmation_record": {
     "completed_on": "2026-11-12",
@@ -15,7 +15,7 @@
     ],
     "scope": "User-confirmed simulation development conditions: visual markers plus IMU; uncertain surveyed launch pose; continuous pre-wake listening without receive-power study; obstacle-free 120x80 m at 15 m, 5 then 10 terminals; 20 m per-terminal position target; 600 s full mission and 3 m return tolerance. Detailed sensor/radio/noise parameters remain assumptions; feasibility is unverified.",
     "superseded_by": "../论文总纲.md",
-    "historical_note": "Historical visual-model confirmation retained for provenance only. The 2026-11-23 civil design removes visual markers and introduces known/unknown terminal roles. Numeric values below remain legacy inputs, not an approved new navigation/protocol profile. See 论文总纲.md and project_context."
+    "historical_note": "Historical visual-model confirmation retained for provenance only. The latest 2026-11-23 user-selected scene is forest ecological monitoring without mission GNSS or visual markers. Known-reference CSS ranging aids inertial navigation; numeric values below remain legacy inputs, not an approved forest-model profile. See 论文总纲.md and project_context."
   },
   "scene": {
     "width_m": 120,
@@ -614,10 +614,11 @@
     "noise_model": "matched_nominal"
   },
   "project_context": {
-    "design_id": "civil_css_isac_20261123",
+    "design_id": "forest_css_isac_20261123",
     "title": "基于啁啾扩频的通感一体化的协议相关技术",
     "updated_on": "2026-11-23",
-    "application_domain": "civil_gnss_denied_canyon_mountain_monitoring",
+    "application_domain": "civil_gnss_denied_forest_ecological_monitoring",
+    "scene_name": "GNSS不可用林区生态监测：临时节点部署验收与位置登记",
     "visual_markers_used": false,
     "terminal_roles": [
       "known_position_reference",
@@ -625,9 +626,12 @@
     ],
     "navigation_status": "confirmed_css_known_reference_ranging_aids_imu_not_implemented",
     "gnss_policy": "not_used_during_mission",
-    "numeric_inputs_scope": "retained_legacy_visual_model_not_current_civil_wireless_model",
+    "known_reference_role": "css_ranging_constraint_for_uav_inertial_navigation",
+    "workflow_strategy_status": "documented_working_strategy_pending_model_protocol_review",
+    "workflow_specification": "论文总纲.md",
+    "business_phase_status": "proposed_deployment_acceptance_with_later_monitoring_wakeup",
+    "numeric_inputs_scope": "retained_legacy_visual_model_not_current_forest_wireless_model",
     "known_reference_model_implemented": false,
-    "new_protocol_model_implemented": false,
-    "known_reference_role": "css_ranging_constraint_for_uav_inertial_navigation"
+    "new_protocol_model_implemented": false
   }
 }

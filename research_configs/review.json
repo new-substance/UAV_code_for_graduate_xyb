@@ -2,10 +2,11 @@
   "status": "design_pending_model_review",
   "mission_enabled": false,
   "current_design": {
-    "design_id": "civil_css_isac_20261123",
+    "design_id": "forest_css_isac_20261123",
     "title": "基于啁啾扩频的通感一体化的协议相关技术",
     "updated_on": "2026-11-23",
-    "application_domain": "civil_gnss_denied_canyon_mountain_monitoring",
+    "application_domain": "civil_gnss_denied_forest_ecological_monitoring",
+    "scene_name": "GNSS不可用林区生态监测：临时节点部署验收与位置登记",
     "visual_markers_used": false,
     "terminal_roles": [
       "known_position_reference",
@@ -13,15 +14,18 @@
     ],
     "navigation_status": "confirmed_css_known_reference_ranging_aids_imu_not_implemented",
     "gnss_policy": "not_used_during_mission",
-    "known_reference_role": "css_ranging_constraint_for_uav_inertial_navigation"
+    "known_reference_role": "css_ranging_constraint_for_uav_inertial_navigation",
+    "workflow_strategy_status": "documented_working_strategy_pending_model_protocol_review",
+    "workflow_specification": "论文总纲.md",
+    "business_phase_status": "proposed_deployment_acceptance_with_later_monitoring_wakeup"
   },
-  "implementation_status": "legacy_visual_engine_pending_civil_wireless_reference_migration",
-  "reason": "Known-reference CSS ranging aided IMU navigation in a GNSS-denied civil canyon is confirmed, but its navigation/protocol model is not yet implemented or reviewed.",
+  "implementation_status": "legacy_visual_engine_pending_forest_wireless_reference_protocol_migration",
+  "reason": "Forest ecological monitoring and the wake/discover/reference-navigation strategy are documented; the new navigation/protocol model remains unimplemented and unreviewed.",
   "specification": "论文总纲.md",
-  "specification_sha256": "40c927c3af8db6069283f80ec08ec417d4ec999987567b173cfe95baa6f4d3ec",
+  "specification_sha256": "46d9ca9c9b39a77ab7c538819a3618e230cfd9e41c0c757958a4cc181f82d48e",
   "configuration": "research_configs/baseline.json",
-  "configuration_sha256": "d81d1a9648a4725590296055936c5e447ea86aaa8bc7c039f52534370a986650",
-  "source_sha256": "473ffe0a07b1a1b6a3e7c50b552a81e70f1bcdf034a514990bedc618fd7f8770",
+  "configuration_sha256": "a9df22946a6a3a75ac0fa540bd207fca9c6d01216e8f1b8d77bea182b1d43a14",
+  "source_sha256": "130968e0c679d3a50dd89747993bc0c87629a2bf1aed1914584b7fc45daf000e",
   "development_scope": {
     "terminal_counts": [],
     "max_cases_per_batch": 0,
@@ -49,17 +53,25 @@
     "legacy_summary": "evidence/development_cases.json",
     "legacy_geometry": "evidence/geometry_hypotheses.json",
     "source_file_count": 160,
-    "migration_entry_checks": {
+    "forest_entry_check_status": "passed_entry_and_gate_only",
+    "forest_document_checks": {
       "checked_on": "2026-11-23",
-      "matlab_r2023a_entry_passed": true,
-      "current_design_status_and_configuration_match": true,
-      "exact_fingerprints_match": true,
-      "run_refused_before_task_creation": true,
-      "new_missions": 0,
-      "output_directories_unchanged": true,
+      "canonical_scenario_and_contexts_match": true,
+      "documented_workflow_steps": 11,
+      "local_links_resolved": 13,
       "legacy_numeric_values_unchanged": true,
       "legacy_public_evidence_unchanged": true,
-      "scope": "entry_and_migration_checks_only_not_navigation_or_protocol_validation"
+      "scope": "document_and_metadata_consistency_only_not_protocol_or_navigation_validation"
+    },
+    "forest_entry_checks": {
+      "checked_on": "2026-11-23",
+      "entry_checks_passed": true,
+      "run_refused_before_task": true,
+      "new_missions": 0,
+      "fingerprints_match": true,
+      "output_directories_unchanged": true,
+      "design_id": "forest_css_isac_20261123",
+      "scope": "entry_and_gate_only_not_model_validation"
     }
   },
   "legacy_release": {
@@ -70,9 +82,27 @@
     "scope": "historical_visual_model_only_not_current_design_approval"
   },
   "pending_decisions": [
-    "canyon_elevation_model_2d_known_height_or_3d",
+    "forest_terrain_and_node_installation_height_model",
     "reference_target_counts_layout_prior_errors_and_initial_uav_state",
-    "terrain_flight_space_occlusion_nlos_and_reference_outage_models",
-    "css_band_hardware_timestamp_interface_payload_and_frame_budget"
-  ]
+    "forest_corridor_link_occlusion_correlated_bias_and_outage_models",
+    "css_hardware_rtt_interface_listening_slot_guards_and_payload",
+    "navigation_quality_age_candidate_recovery_limits_and_return_termination_interfaces"
+  ],
+  "working_strategy": {
+    "status": "documented_not_implemented",
+    "bootstrap": "actual_known_reference_service_before_unknown_coverage",
+    "discovery": "valid_identity_plus_first_qualified_unknown_rtt",
+    "navigation": "continuous_imu_with_actual_known_reference_updates_through_return",
+    "data": "actual_delivery_before_final_unknown_verification",
+    "completion": "unknown_rtt_stops_on_verification_then_bounded_notice_and_full_sleep",
+    "reference_lifecycle": "keep_required_service_available_through_return",
+    "next_action": "resource_gate_then_reference_quality_then_coverage_and_target_service",
+    "wakeup": "proposed_periodic_listening_pending_device_and_frame_review",
+    "unknown_prior": "use_legitimate_uncertain_deployment_prior_without_truth"
+  },
+  "previous_design": {
+    "revision": "1229466",
+    "design_id": "civil_css_isac_20261123",
+    "scope": "superseded_general_canyon_design_not_current_forest_specification"
+  }
 }
