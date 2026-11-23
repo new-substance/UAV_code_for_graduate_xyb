@@ -627,11 +627,13 @@
     "navigation_status": "confirmed_css_known_reference_ranging_aids_imu_not_implemented",
     "gnss_policy": "not_used_during_mission",
     "known_reference_role": "css_ranging_constraint_for_uav_inertial_navigation",
-    "workflow_strategy_status": "documented_working_strategy_pending_model_protocol_review",
+    "workflow_strategy_status": "literature_reviewed_coverage_periodic_feedback_design_not_implemented",
     "workflow_specification": "论文总纲.md",
     "business_phase_status": "proposed_deployment_acceptance_with_later_monitoring_wakeup",
     "numeric_inputs_scope": "retained_legacy_visual_model_not_current_forest_wireless_model",
     "known_reference_model_implemented": false,
-    "new_protocol_model_implemented": false
+    "new_protocol_model_implemented": false,
+    "strategy_revision": "coverage_periodic_feedback_v1",
+    "principles_and_literature": "文献与原理依据.md"
   }
 }

@@ -15,16 +15,18 @@
     "navigation_status": "confirmed_css_known_reference_ranging_aids_imu_not_implemented",
     "gnss_policy": "not_used_during_mission",
     "known_reference_role": "css_ranging_constraint_for_uav_inertial_navigation",
-    "workflow_strategy_status": "documented_working_strategy_pending_model_protocol_review",
+    "workflow_strategy_status": "literature_reviewed_coverage_periodic_feedback_design_not_implemented",
     "workflow_specification": "论文总纲.md",
-    "business_phase_status": "proposed_deployment_acceptance_with_later_monitoring_wakeup"
+    "business_phase_status": "proposed_deployment_acceptance_with_later_monitoring_wakeup",
+    "strategy_revision": "coverage_periodic_feedback_v1",
+    "principles_and_literature": "文献与原理依据.md"
   },
   "implementation_status": "legacy_visual_engine_pending_forest_wireless_reference_protocol_migration",
-  "reason": "Forest ecological monitoring and the wake/discover/reference-navigation strategy are documented; the new navigation/protocol model remains unimplemented and unreviewed.",
+  "reason": "Literature-reviewed initial coverage, periodic reference/wake interaction and bounded multi-terminal feedback are specified; forest navigation/protocol parameters and implementation remain unreviewed.",
   "specification": "论文总纲.md",
-  "specification_sha256": "46d9ca9c9b39a77ab7c538819a3618e230cfd9e41c0c757958a4cc181f82d48e",
+  "specification_sha256": "c4069c98aec49df752f83a736846f9aae005d2b34dcce166470e1524159a4255",
   "configuration": "research_configs/baseline.json",
-  "configuration_sha256": "a9df22946a6a3a75ac0fa540bd207fca9c6d01216e8f1b8d77bea182b1d43a14",
+  "configuration_sha256": "0fdbcb3bf6940b2df050f40acc7950b7cadf6267bfc4bda4acc98e4a803ad204",
   "source_sha256": "130968e0c679d3a50dd89747993bc0c87629a2bf1aed1914584b7fc45daf000e",
   "development_scope": {
     "terminal_counts": [],
@@ -53,25 +55,56 @@
     "legacy_summary": "evidence/development_cases.json",
     "legacy_geometry": "evidence/geometry_hypotheses.json",
     "source_file_count": 160,
-    "forest_entry_check_status": "passed_entry_and_gate_only",
-    "forest_document_checks": {
-      "checked_on": "2026-11-23",
-      "canonical_scenario_and_contexts_match": true,
-      "documented_workflow_steps": 11,
-      "local_links_resolved": 13,
-      "legacy_numeric_values_unchanged": true,
-      "legacy_public_evidence_unchanged": true,
-      "scope": "document_and_metadata_consistency_only_not_protocol_or_navigation_validation"
-    },
+    "forest_entry_check_status": "passed_current_literature_strategy_entry_only",
     "forest_entry_checks": {
       "checked_on": "2026-11-23",
       "entry_checks_passed": true,
       "run_refused_before_task": true,
       "new_missions": 0,
-      "fingerprints_match": true,
+      "exact_fingerprints_match": true,
       "output_directories_unchanged": true,
       "design_id": "forest_css_isac_20261123",
-      "scope": "entry_and_gate_only_not_model_validation"
+      "scope": "entry_only_not_forest_model_or_algorithm_validation"
+    },
+    "literature_strategy_review": {
+      "checked_on": "2026-11-23",
+      "principles_file": "文献与原理依据.md",
+      "principles_sha256": "8afe17c4142757cf0f361075d2b28fc3c50d9a2d78519d3c1f4b0fe23e459047",
+      "paper_entries": 10,
+      "read_scope": "selected_body_sections_or_explicit_abstract_only",
+      "workflow_steps": 11,
+      "local_links_resolved": 21,
+      "local_historical_entries_redirected": 4,
+      "legacy_numeric_values_unchanged": true,
+      "legacy_public_evidence_unchanged": true,
+      "algorithm_implemented": false,
+      "new_missions": 0
+    },
+    "forest_strategy_algebra": {
+      "checker": "research_checks/check_forest_strategy_algebra.py",
+      "checker_sha256": "2a7f70b094d860df84825df982f840ee83680fc8e2464429c5f699154dee0629",
+      "all_passed": true,
+      "new_missions": 0,
+      "scope": "fixed_input_algebra_not_forest_navigation_or_protocol_validation",
+      "reference": {
+        "jacobian_max_abs_difference": 1.2712465524700178e-09,
+        "common_translation_range_difference": 0.0,
+        "joint_covariance_expansion_difference": 0.0,
+        "omitting_cross_term_changes_variance": 0.7647875532135688
+      },
+      "wakeup": {
+        "checked_phases": 2001,
+        "packet_count": 12,
+        "rounded_train_meets_bound": true,
+        "short_window_counterexample_misses_all_packets": true,
+        "scope": "timing_opportunity_only_not_channel_or_decode_success"
+      },
+      "decision": {
+        "end_before_reference_deadline_is_insufficient": true,
+        "next_reference_reservation_rejects_counterexample": true,
+        "multi_node_key_selects_candidate": 2,
+        "scope": "finite_design_examples_not_route_performance"
+      }
     }
   },
   "legacy_release": {
@@ -82,23 +115,29 @@
     "scope": "historical_visual_model_only_not_current_design_approval"
   },
   "pending_decisions": [
-    "forest_terrain_and_node_installation_height_model",
-    "reference_target_counts_layout_prior_errors_and_initial_uav_state",
-    "forest_corridor_link_occlusion_correlated_bias_and_outage_models",
-    "css_hardware_rtt_interface_listening_slot_guards_and_payload",
-    "navigation_quality_age_candidate_recovery_limits_and_return_termination_interfaces"
+    "forest_terrain_node_installation_height_prior_and_initial_uav_state",
+    "reference_target_counts_layout_coordinate_bias_and_link_models",
+    "css_hardware_phy_ranging_transactions_and_payload_fields",
+    "reference_wakeup_listening_periods_and_clock_guard_bounds",
+    "navigation_gates_return_conditions_and_finite_attempt_rescan_limits"
   ],
   "working_strategy": {
-    "status": "documented_not_implemented",
+    "status": "literature_reviewed_design_not_implemented",
     "bootstrap": "actual_known_reference_service_before_unknown_coverage",
     "discovery": "valid_identity_plus_first_qualified_unknown_rtt",
     "navigation": "continuous_imu_with_actual_known_reference_updates_through_return",
     "data": "actual_delivery_before_final_unknown_verification",
     "completion": "unknown_rtt_stops_on_verification_then_bounded_notice_and_full_sleep",
     "reference_lifecycle": "keep_required_service_available_through_return",
-    "next_action": "resource_gate_then_reference_quality_then_coverage_and_target_service",
+    "next_action": "hard_admission_then_reference_due_wake_due_else_multi_node_lexicographic_stage_selection",
     "wakeup": "proposed_periodic_listening_pending_device_and_frame_review",
-    "unknown_prior": "use_legitimate_uncertain_deployment_prior_without_truth"
+    "unknown_prior": "use_legitimate_uncertain_deployment_prior_without_truth",
+    "initial_route": "region_corridor_reference_uncertainty_supported_coverage_and_return",
+    "periodic_reference": "max_age_and_predicted_navigation_deadline_with_next_reference_time_reserved",
+    "periodic_wakeup": "periodic_control_train_with_receive_window_overlap_and_relative_reply_slots",
+    "session": "lease_then_periodic_listen_until_final_full_sleep",
+    "coverage_protection": "current_next_spine_candidates_max_one_executed_insertion_per_edge_until_initial_support_or_spine_exhaustion",
+    "comparison": "same_foundation_fixed_periodic_round_robin_vs_feedback_with_same_hard_guards"
   },
   "previous_design": {
     "revision": "1229466",
