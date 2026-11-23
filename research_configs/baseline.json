@@ -1,6 +1,6 @@
 {
   "schema_version": "strategy-design-v2",
-  "status": "development_grid_conditional_not_independently_evaluated",
+  "status": "legacy_visual_numeric_inputs_civil_model_migration_not_released",
   "provenance": "All numeric values below are development assumptions, not measured CSS, IMU, camera or aircraft specifications. Literature supports mechanisms, not this combined profile.",
   "confirmation_record": {
     "completed_on": "2026-11-12",
@@ -15,7 +15,7 @@
     ],
     "scope": "User-confirmed simulation development conditions: visual markers plus IMU; uncertain surveyed launch pose; continuous pre-wake listening without receive-power study; obstacle-free 120x80 m at 15 m, 5 then 10 terminals; 20 m per-terminal position target; 600 s full mission and 3 m return tolerance. Detailed sensor/radio/noise parameters remain assumptions; feasibility is unverified.",
     "superseded_by": "../论文总纲.md",
-    "historical_note": "Original 2026-11-12 record retained for provenance only; the 600 s cutoff was superseded. Current scope and timing rules are in 论文总纲.md."
+    "historical_note": "Historical visual-model confirmation retained for provenance only. The 2026-11-23 civil design removes visual markers and introduces known/unknown terminal roles. Numeric values below remain legacy inputs, not an approved new navigation/protocol profile. See 论文总纲.md and project_context."
   },
   "scene": {
     "width_m": 120,
@@ -612,5 +612,22 @@
     "datum_assumption": "additional unknown fixed horizontal translation bounded by two metres",
     "burst_recovery_blocks": 4,
     "noise_model": "matched_nominal"
+  },
+  "project_context": {
+    "design_id": "civil_css_isac_20261123",
+    "title": "基于啁啾扩频的通感一体化的协议相关技术",
+    "updated_on": "2026-11-23",
+    "application_domain": "civil_gnss_denied_canyon_mountain_monitoring",
+    "visual_markers_used": false,
+    "terminal_roles": [
+      "known_position_reference",
+      "unknown_position_target"
+    ],
+    "navigation_status": "confirmed_css_known_reference_ranging_aids_imu_not_implemented",
+    "gnss_policy": "not_used_during_mission",
+    "numeric_inputs_scope": "retained_legacy_visual_model_not_current_civil_wireless_model",
+    "known_reference_model_implemented": false,
+    "new_protocol_model_implemented": false,
+    "known_reference_role": "css_ranging_constraint_for_uav_inertial_navigation"
   }
 }

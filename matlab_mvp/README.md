@@ -1,19 +1,16 @@
 # 唯一MATLAB主工程
 
-研究规格与公式只看根目录[论文总纲](../论文总纲.md)，执行规则看[AGENTS.md](../AGENTS.md)。
+最新规格见根目录[论文总纲](../论文总纲.md)，执行规则见[AGENTS](../AGENTS.md)。当前主题为无GNSS峡谷山区的民用CSS通感协议，采用已知/未知两类终端，不使用视觉标志；已知终端CSS测距辅助无人机惯性导航，再定位未知终端。
+
+**迁移尚未完成，任务未放行。** +uavmvp、+uavstage、+uavpriority保留旧数值实现；camera_model、nav_update_reference及旧视觉返回/候选路径仍是历史代码，不因更新题目而成为无线参考导航。旧结果保持不变。
 
 ```matlab
 addpath('matlab_mvp');
 setup_project;
-project('status'); % 只读状态，含当前审查限制
-cfg = project('config'); % 唯一展开配置，含显式质量方法
-project('check'); % 小型确定性检查，不运行航次
+project('status'); % 当前设计、旧实现状态及未放行原因
+cfg = project('config'); % project_context标明旧数值输入的范围
 ```
 
-主工程内保留+uavmvp基础、+uavstage定位/核验、+uavpriority聚合/服务包，包名暂保留以避免改变数值实现；不再跨两个阶段目录加载源码。setup_stage/setup_priority仅为兼容别名。
+project('check')仅针对现有保留组件的固定输入/限额检查，任务数为0；尚不验证新协议、已知节点辅助导航或新场景性能。project('run', options)先检查review.json，当前在创建任务和输出前拒绝运行。
 
-物理数值与非线性似然优化不变；当前grid_conditional使用四点名义网格区域和相关预测核验，不要求内点估计器敏感度。新增ResultWriter和choose_service_point分别完成有界写入与位置/阶段反馈提案的组件检查；后者仍须实际导航/返回准入。execute_task接入共享一次飞行的多终端协调，性能仍待验证；不为C1/C2/C3标签分别新建算法。
-
-project('run', options)按review.json及规格/配置/源码指纹限定开发运行，首轮仅单终端；不自动放行独立评价。project('check')含确定性的写入限额及候选提案检查，任务数为0。旧运行/全量快照入口已停用，不能直接绕过执行。不要运行全部旧测试来替代本次小型检查，其中含任务过程。
-
-历史执行器、计划和正式结果仅保留在原工作区本地，未随本仓库发布，也不是基础检查的依赖。版本由根Git提交标识，不再每例复制源码。tests/保留既有模块测试源码，部分历史用例依赖旧环境；首版可独立运行的检查以根README列出的命令为准。
+后续继续使用本工程迁移测距、两类节点协议、导航输入与返回模型；不另建阶段工程，不直接将视觉标志坐标改名为无线参考。按总纲先推导和审查，再实现与限定仿真。源码由Git标识，结果采用字节限额，不复制每例源码。

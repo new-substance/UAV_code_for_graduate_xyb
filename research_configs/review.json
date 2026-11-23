@@ -1,20 +1,32 @@
 {
-  "status": "approved_for_bounded_development",
-  "mission_enabled": true,
+  "status": "design_pending_model_review",
+  "mission_enabled": false,
+  "current_design": {
+    "design_id": "civil_css_isac_20261123",
+    "title": "基于啁啾扩频的通感一体化的协议相关技术",
+    "updated_on": "2026-11-23",
+    "application_domain": "civil_gnss_denied_canyon_mountain_monitoring",
+    "visual_markers_used": false,
+    "terminal_roles": [
+      "known_position_reference",
+      "unknown_position_target"
+    ],
+    "navigation_status": "confirmed_css_known_reference_ranging_aids_imu_not_implemented",
+    "gnss_policy": "not_used_during_mission",
+    "known_reference_role": "css_ranging_constraint_for_uav_inertial_navigation"
+  },
+  "implementation_status": "legacy_visual_engine_pending_civil_wireless_reference_migration",
+  "reason": "Known-reference CSS ranging aided IMU navigation in a GNSS-denied civil canyon is confirmed, but its navigation/protocol model is not yet implemented or reviewed.",
   "specification": "论文总纲.md",
-  "specification_sha256": "7bcf98aa066753f338ba4dfb3894d490492a34d0983b8d5a8ff9b017b6643501",
+  "specification_sha256": "40c927c3af8db6069283f80ec08ec417d4ec999987567b173cfe95baa6f4d3ec",
   "configuration": "research_configs/baseline.json",
-  "configuration_sha256": "1540f4b1bd3a4c925a5047f5904151d874d2efeec489a17520f77a8b60eb93ed",
-  "source_sha256": "458e5d9f1d8132fb254a8f83b0f2c45051723c31540d1f7a1a1c8381e4305bfd",
+  "configuration_sha256": "d81d1a9648a4725590296055936c5e447ea86aaa8bc7c039f52534370a986650",
+  "source_sha256": "473ffe0a07b1a1b6a3e7c50b552a81e70f1bcdf034a514990bedc618fd7f8770",
   "development_scope": {
-    "terminal_counts": [
-      10
-    ],
-    "max_cases_per_batch": 1,
-    "allowed_seeds": [
-      2026112302
-    ],
-    "purpose": "known_seed_nominal18_shared_service_2400s_development_not_independent"
+    "terminal_counts": [],
+    "max_cases_per_batch": 0,
+    "allowed_seeds": [],
+    "purpose": "design_migration_no_mission_release"
   },
   "budgets_bytes": {
     "development_batch": 52428800,
@@ -22,99 +34,45 @@
     "default_case": 5242880,
     "active_new_results": 1073741824
   },
-  "reviewed_interfaces": {
-    "MODEL_STATE": "Q01/V01 nominal grid/conditional region; four-only fit, fresh raw-disjoint heldout, common navigation version. No strict task risk guarantee.",
-    "WRITER": "Live UTF-8 case/batch/active quotas; reserved outcome plus bounded actual return on quota failure; no source copies or full covariance traces.",
-    "RETURN": "Conditional reference return reserves, actual images/posterior recheck, bounded departure recovery; no terminal RTT pose update.",
-    "ENTRY": "Require first-frame on-site pixel envelope as well as return forecast before leaving a reference for an inset point. At most two arrival images then immediately recenter on failure before another finite attempt; do not spend an unchecked second wait. Fixed input distinguishes a passing return from rejected first frame.",
-    "PLANNER": "P01 96 shared center/inward/outward candidates; outward half-ray clearance capped by existing inset length. Stage/cost same candidates/quotas. Ranking template retains shared bias via exact rank-one inverse; actual complete C and all admission/4+1 gates remain authoritative.",
-    "FORECAST": "UAV/map principal covariance submatrix only in pure admission forecasts, no Schur conditioning; coupled-clone covariance equality checked. Actual joint navigation, measurements and fitting unchanged.",
-    "OFFLINE": "Truth coordinates, bias and return endpoints export only after MotionWorld.finish; independent Python audit reconstructs errors, conditional witnesses and completion.",
-    "SEARCH_PRIORITY": "Current/next reference restriction until all IDs have finite initial fits; ordinary and focused points retain shared legal observations. Seed coverage does not block fitting/verifying on the spine.",
-    "QUOTAS": "6 fit / 3 heldout quotas count owned qualified new spatial records, not rejected plans. Per-candidate attempt cap and total-position/task-return limits remain unchanged. Plans and delivered positions are logged separately; Python reconstructs delivered counters from complete events.",
-    "ALLOWANCE": "2400 s explicit simulation time allowance, not measured battery endurance; full duration remains the efficiency metric. Motion noise horizon extends to 3000 s; old 2400 s path prefix is identical and later noise remains active."
-  },
+  "reviewed_interfaces": {},
+  "unreviewed_interfaces": [
+    "known_reference_layout_coordinates_and_uncertainty",
+    "navigation_inputs_observability_and_return",
+    "communication_payload_and_frame_transactions",
+    "css_timestamps_ranging_and_correlated_errors",
+    "two_role_scheduling_and_sleep",
+    "unknown_node_quality_heldout_and_comparison_metrics"
+  ],
   "evidence": {
-    "checks": "results/scope_review_20261120/allowance_component_checks.json",
-    "all_passed": true,
-    "new_missions_in_checks": 0,
+    "new_design_missions": 0,
+    "new_design_validated": false,
+    "legacy_summary": "evidence/development_cases.json",
+    "legacy_geometry": "evidence/geometry_hypotheses.json",
     "source_file_count": 160,
-    "requirement_audit": "results/current_overview.json",
-    "phase_diagnostic": "results/scope_review_20261120/phase_handover_diagnostic.json",
-    "independent_evaluation_cases": 0,
-    "public_development_summary": "evidence/development_cases.json",
-    "geometry_hypotheses": "evidence/geometry_hypotheses.json",
-    "entry_regression": {
-      "source_revision": "a327161",
-      "all_discovered": true,
-      "online_completed": 8,
-      "false_accept_count": 0,
-      "returned": true,
-      "return_error_m": 0.39761306456839035,
-      "full_task_passed": false,
-      "phase_switch_triggered": true,
-      "entry_rejections": 16,
-      "bytes": 737648,
-      "independent_audit_passed": true
-    },
-    "joint_nominal18": {
-      "all_passed": true,
-      "mission_count": 0,
-      "height_m": 18,
-      "inner_entry_margin_px": 7.746733875955158,
-      "outer_entry_margin_px": 89.58374589653535,
-      "nominal_quality_radius_m": 18.578534130181225,
-      "pressure_quality_radius_m": 29.083686199840592,
-      "fixed_fresh_heldout_passed": true,
-      "scope": "optimistic noiseless fixed input only; no task feasibility or population coverage claim"
-    },
-    "independent_information_check": "Direct covariance inverse on 96 recorded fixed candidates passed; +0.001 corrupted gain rejected.",
-    "search_priority_checks_passed": true,
-    "noise_horizon": {
-      "all_passed": true,
-      "mission_count": 0,
-      "old_horizon_s": 2400,
-      "new_horizon_s": 3000,
-      "max_prefix_difference": 0,
-      "future_noise_not_clamped": true
-    },
-    "nominal18_fullwindow_development": {
-      "label": "dev_2026112302_n10_fullwindow",
-      "seed": 2026112302,
-      "source_sha256": "458e5d9f1d8132fb254a8f83b0f2c45051723c31540d1f7a1a1c8381e4305bfd",
-      "configuration_sha256": "1540f4b1bd3a4c925a5047f5904151d874d2efeec489a17520f77a8b60eb93ed",
-      "model": {
-        "flight_height_m": 18,
-        "online_range_white_std_m": 5,
-        "physical_range_white_std_m": 5,
-        "time_allowance_s": 2400
-      },
-      "complete": true,
-      "discovered": 10,
-      "online_completed": 10,
-      "false_accept_count": 0,
-      "best_accepted_true_error_m": 0.6404145158846507,
-      "worst_accepted_true_error_m": 13.656178883705474,
-      "returned": true,
-      "return_error_m": 0.3848121861911543,
-      "total_time_s": 1815.1289033837645,
-      "feedback_decisions": 12,
-      "feedback_delivered": 7,
-      "batch_bytes": 619177,
-      "audit_passed": true,
-      "all_stop_ack": true,
-      "all_deep_sleep": true,
-      "independent_evaluation": false
+    "migration_entry_checks": {
+      "checked_on": "2026-11-23",
+      "matlab_r2023a_entry_passed": true,
+      "current_design_status_and_configuration_match": true,
+      "exact_fingerprints_match": true,
+      "run_refused_before_task_creation": true,
+      "new_missions": 0,
+      "output_directories_unchanged": true,
+      "legacy_numeric_values_unchanged": true,
+      "legacy_public_evidence_unchanged": true,
+      "scope": "entry_and_migration_checks_only_not_navigation_or_protocol_validation"
     }
   },
-  "open_items": [
-    "One known-seed N10 main-model task has closed; current-version N5/N10 unseen-seed paired evaluation remains unrun and unreleased.",
-    "Freeze unchanged final source/config, unseen seeds, comparison rules and matched upper-10 profile before any independent evaluation.",
-    "Upper-10 means online 10 m with physical 5 m, unchanged geometry/resources/4+1; no pooled old-version substitute or claim of physical 10 m noise."
-  ],
-  "pending_preference": {
-    "resolved": true,
-    "height": "user permits candidates; not a fixed scene constraint",
-    "noise": "user confirmed matched nominal 5 m main; upper 10 m pressure comparison; physical noise and 20 m/3 m unchanged"
-  }
+  "legacy_release": {
+    "revision": "fd76b74",
+    "specification_sha256": "7bcf98aa066753f338ba4dfb3894d490492a34d0983b8d5a8ff9b017b6643501",
+    "configuration_sha256": "1540f4b1bd3a4c925a5047f5904151d874d2efeec489a17520f77a8b60eb93ed",
+    "source_sha256": "458e5d9f1d8132fb254a8f83b0f2c45051723c31540d1f7a1a1c8381e4305bfd",
+    "scope": "historical_visual_model_only_not_current_design_approval"
+  },
+  "pending_decisions": [
+    "canyon_elevation_model_2d_known_height_or_3d",
+    "reference_target_counts_layout_prior_errors_and_initial_uav_state",
+    "terrain_flight_space_occlusion_nlos_and_reference_outage_models",
+    "css_band_hardware_timestamp_interface_payload_and_frame_budget"
+  ]
 }
