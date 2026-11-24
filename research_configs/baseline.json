@@ -645,6 +645,51 @@
     "independent_altimetry_used": false,
     "initialization": "surveyed_home_and_calibrated_heading_with_uncertain_priors",
     "css_hardware_status": "unselected_candidates_under_review",
-    "model_derivation_status": "first_symbolic_pass_and_fixed_algebra_not_full_model_approval"
+    "model_derivation_status": "source_annotated_timing_geometry_and_feedback_algebra_not_full_model_approval",
+    "unknown_terminal_role": "interaction_and_position_service_state_drives_next_waypoint_not_uav_pose_update",
+    "execution_scope": "documents_parameters_and_fixed_input_algebra_only",
+    "parameter_registry": "论文总纲.md",
+    "protocol_draft_version": "application_fields_v1",
+    "analytical_profile": {
+      "id": "protocol_geometry_analytical_v1",
+      "usage": "fixed_input_algebra_only_not_mission_configuration",
+      "radio_reference": "SX1280",
+      "radio_source": "D1_Semtech_Rev3.2_2020-03",
+      "ordinary_phy": {
+        "sf": 8,
+        "bandwidth_hz": 406250,
+        "cr_index": 1,
+        "preamble_symbols": 12,
+        "explicit_header": true,
+        "crc_enabled": true,
+        "long_interleaving": false
+      },
+      "manufacturer_ranging_fixture": {
+        "sf": 6,
+        "bandwidth_hz": 1625000,
+        "preamble_symbols": 12,
+        "ranging_symbols": 15,
+        "quoted_exchange_ms": 2.53
+      },
+      "imu_datasheet_fixture": {
+        "device": "BMI088",
+        "source": "D2_Bosch_Rev1.9_2024-01",
+        "acc_condition": "plus_minus_3g_25C_normal_mode",
+        "acc_xy_micro_g_per_sqrt_hz": 160,
+        "acc_z_micro_g_per_sqrt_hz": 190,
+        "gyro_deg_per_s_per_sqrt_hz": 0.014,
+        "gyro_example_bandwidth_hz": 47,
+        "gyro_quoted_rms_deg_per_s": 0.1
+      },
+      "formal_radio_and_imu_selected": false,
+      "forest_link_or_navigation_performance_established": false,
+      "ranging_phy": {
+        "sf": 8,
+        "bandwidth_hz": 406250,
+        "preamble_symbols": 12,
+        "ranging_symbols": 15
+      }
+    },
+    "analytical_profile_id": "protocol_geometry_analytical_v1"
   }
 }

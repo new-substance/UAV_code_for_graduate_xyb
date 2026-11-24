@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import json
 import math
+from pathlib import Path
 
 import numpy as np
 
@@ -203,11 +204,129 @@ def first_model_checks() -> dict:
             "scope": "fixed_algebra_not_full_ins_observability_or_forest_validation"}
 
 
+def css_packet_time_s(payload_bytes: int, phy: dict) -> float:
+    """C01-a, restricted analytical branch; not a radio driver."""
+    if (not 7 <= phy["sf"] <= 10 or phy["long_interleaving"]
+            or not 1 <= payload_bytes <= 255 or not 1 <= phy["cr_index"] <= 4):
+        raise ValueError("Unsupported analytical packet mode or length")
+    header_bits = 20 if phy["explicit_header"] else 0
+    crc_bits = 16 if phy["crc_enabled"] else 0
+    sf = phy["sf"]
+    blocks = math.ceil(max(8 * payload_bytes + crc_bits - 4 * sf + 8 + header_bits, 0)
+                       / (4 * sf))
+    symbols = phy["preamble_symbols"] + 4.25 + 8 + blocks * (phy["cr_index"] + 4)
+    return symbols * 2**sf / phy["bandwidth_hz"]
+
+
+def protocol_parameter_checks() -> dict:
+    """D1/D2 and N02-c/P01-a fixed-input calculations; zero task runs."""
+    config = json.loads((Path(__file__).resolve().parents[1]
+                         / "research_configs/baseline.json").read_text(encoding="utf-8"))
+    profile = config["project_context"]["analytical_profile"]
+    assert profile["usage"] == "fixed_input_algebra_only_not_mission_configuration"
+    assert not profile["formal_radio_and_imu_selected"]
+    phy = profile["ordinary_phy"]
+    fixture = profile["manufacturer_ranging_fixture"]
+    symbol = 2**fixture["sf"] / fixture["bandwidth_hz"]
+    total = symbol * (fixture["preamble_symbols"] + 2 * fixture["ranging_symbols"] + 22.25)
+    master = symbol * (fixture["preamble_symbols"] + fixture["ranging_symbols"] + 20.25)
+    slave = symbol * fixture["ranging_symbols"]
+    assert abs(total - master - slave - 2 * symbol) < 1e-12
+    assert abs(total * 1000 - fixture["quoted_exchange_ms"]) < 0.005
+
+    # Application byte ledger excludes PHY header and CRC.
+    header = sum([1, 1, 2, 2, 2, 2, 2, 1, 1])
+    wake_fixed = header + sum([2, 4, 4, 4, 1])
+    member = sum([2, 1, 2])
+    maximum_members = (255 - wake_fixed) // member
+    assert header == 14 and wake_fixed == 29 and maximum_members == 45
+    assert wake_fixed + 45 * member <= 255 < wake_fixed + 46 * member
+    sizes = {"wake_four_members": wake_fixed + 4 * member,
+             "id_status": header + sum([2, 2, 2, 2, 4]),
+             "data_four_sample_bytes": header + sum([2, 1, 1, 4, 2, 4]),
+             "range_control": header + sum([2, 1, 1, 2, 1, 1, 2, 4]),
+             "range_report": header + sum([2, 4, 2, 2, 4]),
+             "ack": header + sum([1, 2, 1]),
+             "complete": header + sum([2, 1, 4])}
+    durations = {name: 1000 * css_packet_time_s(size, phy) for name, size in sizes.items()}
+    assert abs(durations["ack"] - 31.035076923076925) < 1e-10
+    ranging = profile["ranging_phy"]
+    ranging_time = (2**ranging["sf"] / ranging["bandwidth_hz"]
+                    * (ranging["preamble_symbols"] + 2 * ranging["ranging_symbols"] + 22.25))
+    pair_radio = (2 * durations["range_control"] + 2 * ranging_time * 1000
+                  + durations["range_report"] + durations["ack"])
+    assert abs(pair_radio - 233.47199999999998) < 1e-9
+    unsupported = {**phy, "sf": 6}
+    try:
+        css_packet_time_s(18, unsupported)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("SF6 must not use the SF7-10 ordinary-packet branch")
+
+    # Two worst-case bounded response intervals, not a channel simulation.
+    reply = css_packet_time_s(sizes["id_status"], phy)
+    bound, rx_gap = 0.003, 0.001  # illustrative seconds, not frozen timing bounds
+    slot = reply + 2 * bound + rx_gap
+    assert bound + reply + rx_gap <= slot - bound + 1e-12
+    assert bound + reply + rx_gap > reply + rx_gap - bound
+
+    # N02-c: symmetric reference geometry without an INS or trajectory.
+    lx, ly, height = 2.0, 2.0, 1.0
+    anchors = np.array([[-lx, -ly, 0], [lx, -ly, 0],
+                        [lx, ly, 0], [-lx, ly, 0]])
+    vectors = np.array([0.0, 0.0, height]) - anchors
+    geometry = vectors / np.linalg.norm(vectors, axis=1)[:, None]
+    exact = 4 * np.diag([lx**2, ly**2, height**2]) / (lx**2 + ly**2 + height**2)
+    layout_difference = float(np.max(np.abs(geometry.T @ geometry - exact)))
+    assert layout_difference < 1e-12
+    covariance_position = np.linalg.inv(exact)
+    height_ratio = math.sqrt(covariance_position[2, 2] / covariance_position[0, 0])
+    assert abs(height_ratio - lx / height) < 1e-12
+
+    # P01-a: hypothetical fit candidate only; never absorb held-out data.
+    fit = np.array([[1, 0], [0, 1], [-0.8, 0.6], [0.6, 0.8]], dtype=float)
+    candidate = np.array([[0.6, -0.8]])
+    joint_noise = np.diag([1, 1.2, 0.8, 1.1, 0.9]) + 0.8 * np.ones((5, 5))
+    cff, cfq = joint_noise[:4, :4], joint_noise[:4, 4:]
+    conditional = joint_noise[4:, 4:] - cfq.T @ np.linalg.solve(cff, cfq)
+    adjusted = candidate - cfq.T @ np.linalg.solve(cff, fit)
+    added = adjusted.T @ np.linalg.solve(conditional, adjusted)
+    information_fit = fit.T @ np.linalg.solve(cff, fit)
+    joint_design = np.vstack([fit, candidate])
+    information_joint = joint_design.T @ np.linalg.solve(joint_noise, joint_design)
+    information_difference = float(np.max(np.abs(
+        information_joint - information_fit - added)))
+    assert information_difference < 1e-12
+    assert np.min(np.linalg.eigvalsh(added)) > -1e-12
+
+    imu = profile["imu_datasheet_fixture"]
+    acc_xy = imu["acc_xy_micro_g_per_sqrt_hz"] * 1e-6 * 9.80665
+    acc_z = imu["acc_z_micro_g_per_sqrt_hz"] * 1e-6 * 9.80665
+    gyro = math.radians(imu["gyro_deg_per_s_per_sqrt_hz"])
+    rms_deg = imu["gyro_deg_per_s_per_sqrt_hz"] * math.sqrt(
+        imu["gyro_example_bandwidth_hz"])
+    assert abs(rms_deg - imu["gyro_quoted_rms_deg_per_s"]) < 0.005
+    return {"profile_id": profile["id"], "manufacturer_exchange_ms": total * 1000,
+            "profile_ranging_exchange_ms": ranging_time * 1000,
+            "pair_radio_lower_bound_ms": pair_radio,
+            "application_bytes": sizes, "ordinary_packet_ms": durations,
+            "wake_maximum_members": maximum_members,
+            "bounded_slot_guard_checked": True,
+            "reference_geometry_information_difference": layout_difference,
+            "height_horizontal_std_ratio_fixture": height_ratio,
+            "correlated_candidate_information_difference": information_difference,
+            "acc_xy_si_asd": acc_xy, "acc_z_si_asd": acc_z, "gyro_si_asd": gyro,
+            "gyro_47hz_ideal_rms_deg_per_s": rms_deg,
+            "scope": "fixed_datasheet_and_matrix_calculations_not_forest_performance"}
+
+
 def run_checks() -> dict:
     return {"all_passed": True, "new_missions": 0,
             "scope": "fixed_input_algebra_not_forest_navigation_or_protocol_validation",
             "reference": reference_checks(), "wakeup": wake_checks(),
-            "decision": decision_checks(), "first_model": first_model_checks()}
+            "decision": decision_checks(), "first_model": first_model_checks(),
+            "protocol_parameters": protocol_parameter_checks()}
 
 
 if __name__ == "__main__":

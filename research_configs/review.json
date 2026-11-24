@@ -30,20 +30,25 @@
     "independent_altimetry_used": false,
     "initialization": "surveyed_home_and_calibrated_heading_with_uncertain_priors",
     "css_hardware_status": "unselected_candidates_under_review",
-    "model_derivation_status": "first_symbolic_pass_and_fixed_algebra_not_full_model_approval"
+    "model_derivation_status": "source_annotated_timing_geometry_and_feedback_algebra_not_full_model_approval",
+    "unknown_terminal_role": "interaction_and_position_service_state_drives_next_waypoint_not_uav_pose_update",
+    "execution_scope": "documents_parameters_and_fixed_input_algebra_only",
+    "parameter_registry": "论文总纲.md",
+    "protocol_draft_version": "application_fields_v1",
+    "analytical_profile_id": "protocol_geometry_analytical_v1"
   },
   "implementation_status": "legacy_visual_engine_pending_forest_wireless_reference_protocol_migration",
-  "reason": "Confirmed low-mounted targets, uncertain terrain/height priors, nominal level flight with IMU/CSS only, and uncertain initial home/heading. First symbolic measurement/navigation/time-budget derivations are documented; hardware, numeric priors, full model and implementation remain unreviewed.",
+  "reason": "Source-annotated analytical radio/IMU examples, reference geometry, packet/slot timing and correlated waypoint benefit are specified. Unknown interactions drive decisions only; only known CSS references update inertial navigation. User requested no simulations. Formal hardware, priors, full model and implementation remain unapproved.",
   "specification": "论文总纲.md",
-  "specification_sha256": "5bcd8960d50c1eb0194753da8a7228732029c290b54b770c601f525540fd7513",
+  "specification_sha256": "2ae1aa9a35c2700448020737612d3dfb874b1486d47a7ed23b5044c56795ae6c",
   "configuration": "research_configs/baseline.json",
-  "configuration_sha256": "4a281a6b391256961d030e06b9c07eeca51cce8a0a647db88087d481b590dbb5",
+  "configuration_sha256": "493a783103beb0952d0a2abe5a7aa5acc6127c52008ee835cb4e23a06915261f",
   "source_sha256": "130968e0c679d3a50dd89747993bc0c87629a2bf1aed1914584b7fc45daf000e",
   "development_scope": {
     "terminal_counts": [],
     "max_cases_per_batch": 0,
     "allowed_seeds": [],
-    "purpose": "design_migration_no_mission_release"
+    "purpose": "non_simulation_model_protocol_and_parameter_design"
   },
   "budgets_bytes": {
     "development_batch": 52428800,
@@ -66,11 +71,11 @@
     "legacy_summary": "evidence/development_cases.json",
     "legacy_geometry": "evidence/geometry_hypotheses.json",
     "source_file_count": 160,
-    "forest_entry_check_status": "passed_level_flight_model_entry_only",
+    "forest_entry_check_status": "not_rerun_user_requested_no_simulation_static_identity_verified",
     "literature_strategy_review": {
       "checked_on": "2026-11-24",
       "principles_file": "文献与原理依据.md",
-      "principles_sha256": "351d9b4865931dd1bd1e25008179fad6fa812cba2b042a1d1143f1d264675b0c",
+      "principles_sha256": "5e6be03395db27ec286025cf3d3b859fa4bec652585f3ef2d5a98c7ccbcc3389",
       "paper_entries": 11,
       "read_scope": "selected_body_sections_or_explicit_abstract_only",
       "workflow_steps": 11,
@@ -79,11 +84,13 @@
       "legacy_numeric_values_unchanged": true,
       "legacy_public_evidence_unchanged": true,
       "algorithm_implemented": false,
-      "new_missions": 0
+      "new_missions": 0,
+      "manufacturer_document_entries": 2
     },
     "forest_strategy_algebra": {
       "checker": "research_checks/check_forest_strategy_algebra.py",
-      "checker_sha256": "b5d3bcb5e5fe38077d62886ce5291633a294468b358dcadabea9622540bad92e",
+      "checker_sha256": "2390e6fc4846db95a7afbd9aac33d80163c8cb374f0a52a997ad658f7f60d32c",
+      "checked_on": "2026-11-24",
       "all_passed": true,
       "new_missions": 0,
       "scope": "fixed_input_algebra_not_forest_navigation_or_protocol_validation",
@@ -106,7 +113,6 @@
         "multi_node_key_selects_candidate": 2,
         "scope": "finite_design_examples_not_route_performance"
       },
-      "checked_on": "2026-11-24",
       "first_model": {
         "affine_clock_distance_error_m": 1.2812186866995035e-08,
         "uncompensated_clock_error_exceeds_one_m": true,
@@ -121,20 +127,55 @@
         "correlated_update_covariance_difference": 0.0,
         "common_survey_translation_floor_retained": true,
         "scope": "fixed_algebra_not_full_ins_observability_or_forest_validation"
+      },
+      "protocol_parameters": {
+        "profile_id": "protocol_geometry_analytical_v1",
+        "manufacturer_exchange_ms": 2.5304615384615383,
+        "profile_ranging_exchange_ms": 40.48738461538461,
+        "pair_radio_lower_bound_ms": 233.47199999999998,
+        "application_bytes": {
+          "wake_four_members": 49,
+          "id_status": 26,
+          "data_four_sample_bytes": 28,
+          "range_control": 28,
+          "range_report": 28,
+          "ack": 18,
+          "complete": 21
+        },
+        "ordinary_packet_ms": {
+          "wake_four_members": 56.241230769230775,
+          "id_status": 37.336615384615385,
+          "data_four_sample_bytes": 40.48738461538461,
+          "range_control": 40.48738461538461,
+          "range_report": 40.48738461538461,
+          "ack": 31.03507692307692,
+          "complete": 34.18584615384616
+        },
+        "wake_maximum_members": 45,
+        "bounded_slot_guard_checked": true,
+        "reference_geometry_information_difference": 2.4671622769447922e-17,
+        "height_horizontal_std_ratio_fixture": 2.0,
+        "correlated_candidate_information_difference": 2.220446049250313e-16,
+        "acc_xy_si_asd": 0.0015690639999999998,
+        "acc_z_si_asd": 0.0018632634999999997,
+        "gyro_si_asd": 0.0002443460952792061,
+        "gyro_47hz_ideal_rms_deg_per_s": 0.09597916440561462,
+        "scope": "fixed_datasheet_and_matrix_calculations_not_forest_performance"
       }
     },
     "previous_revision_entry_checks": {
-      "revision": "aa28cfd",
-      "scope": "previous_document_identity_only",
+      "revision": "a1a18ff",
+      "scope": "previous_document_and_configuration_identity_only",
       "result": {
-        "checked_on": "2026-11-23",
+        "checked_on": "2026-11-24",
         "entry_checks_passed": true,
         "run_refused_before_task": true,
         "new_missions": 0,
         "exact_fingerprints_match": true,
         "output_directories_unchanged": true,
         "design_id": "forest_css_isac_20261123",
-        "scope": "entry_only_not_forest_model_or_algorithm_validation"
+        "model_revision": "level_flight_imu_css_v1",
+        "scope": "entry_only_not_full_ins_or_forest_model_validation"
       }
     },
     "first_model_derivation": {
@@ -151,18 +192,36 @@
       "full_ins_observability_proven": false,
       "hardware_timing_frozen": false,
       "model_approved": false,
-      "new_missions": 0
+      "new_missions": 0,
+      "basis_revision": "a1a18ff"
     },
     "forest_entry_checks": {
       "checked_on": "2026-11-24",
-      "entry_checks_passed": true,
-      "run_refused_before_task": true,
+      "runtime_entry_exercised": false,
+      "matlab_launched": false,
       "new_missions": 0,
-      "exact_fingerprints_match": true,
-      "output_directories_unchanged": true,
-      "design_id": "forest_css_isac_20261123",
-      "model_revision": "level_flight_imu_css_v1",
-      "scope": "entry_only_not_full_ins_or_forest_model_validation"
+      "scope": "static_identity_and_json_only"
+    },
+    "non_simulation_design_review": {
+      "checked_on": "2026-11-24",
+      "profile_id": "protocol_geometry_analytical_v1",
+      "formula_tags": 23,
+      "radio_source": "Semtech_Rev3.2_2020-03_DigiKey_mirror_selected_pages",
+      "radio_pages_visually_checked": [
+        50,
+        55,
+        56
+      ],
+      "imu_source": "Bosch_BMI088_Rev1.9_2024-01_specification_pages",
+      "legacy_task_numeric_inputs_unchanged": true,
+      "matlab_source_files_unchanged": 160,
+      "matlab_launched": false,
+      "new_missions": 0,
+      "formal_hardware_selected": false,
+      "performance_validated": false,
+      "scope": "source_annotated_parameters_packet_timing_layout_and_candidate_algebra",
+      "radio_source_pdf_sha256": "ff541551f0d9ac7cb84c96d0ac0e364c68689fdf4ba3d38b0ad5562b45e1fa5c",
+      "static_document_identity_checked": true
     }
   },
   "legacy_release": {
@@ -174,11 +233,11 @@
   },
   "pending_decisions": [
     "terrain_low_mount_height_prior_values_and_correlations",
-    "nominal_cruise_height_departure_tolerance_and_initial_prior_covariances",
-    "reference_target_counts_layout_coordinate_bias_and_link_models",
-    "css_hardware_phy_ranging_transactions_and_payload_fields",
-    "reference_wakeup_listening_periods_and_clock_guard_bounds",
-    "navigation_gates_return_conditions_and_finite_attempt_rescan_limits"
+    "reference_counts_real_layout_survey_priors_and_radio_coverage",
+    "initial_home_heading_velocity_tilt_and_imu_bias_covariances",
+    "imu_output_filters_noise_spectrum_calibration_and_bias_evolution",
+    "target_css_driver_raw_units_calibration_preparation_and_timeout_bounds",
+    "listening_clock_guards_finite_attempts_navigation_region_and_heldout_thresholds"
   ],
   "working_strategy": {
     "status": "literature_reviewed_design_not_implemented",
