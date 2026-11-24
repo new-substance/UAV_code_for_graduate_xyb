@@ -633,7 +633,7 @@
     "numeric_inputs_scope": "retained_legacy_visual_model_not_current_forest_wireless_model",
     "known_reference_model_implemented": false,
     "new_protocol_model_implemented": false,
-    "strategy_revision": "coverage_periodic_feedback_v1",
+    "strategy_revision": "coverage_periodic_feedback_v2_bounded_progress",
     "principles_and_literature": "文献与原理依据.md",
     "model_revision": "level_flight_imu_css_v1",
     "target_installation": "ground_or_low_mount_with_uncertain_terrain_and_mount_height_prior",
@@ -691,10 +691,12 @@
       }
     },
     "analytical_profile_id": "protocol_geometry_analytical_v1",
-    "workflow_math_revision": "initialization_discovery_grid_predictive_waypoint_v1",
+    "workflow_math_revision": "initialization_discovery_grid_predictive_waypoint_v2_review_guards",
     "position_backend_design": "finite_grid_map_with_multimodal_nominal_cost_region",
-    "validation_backend_design": "correlated_conditional_grid_mixture_scalar_cdf",
+    "validation_backend_design": "correlated_grid_mixture_cdf_with_active_component_consistency",
     "navigation_history_design": "bounded_selected_antenna_clones_known_reference_updates_only",
-    "workflow_math_status": "derived_with_fixed_input_checks_not_mission_implemented_or_approved"
+    "workflow_math_status": "derived_with_fixed_input_checks_not_mission_implemented_or_approved",
+    "grid_validation_status": "resolution_sensitivity_and_failure_rules_pending_implementation",
+    "strategy_completeness": "execution_gaps_specified_physical_parameters_and_implementation_pending"
   }
 }

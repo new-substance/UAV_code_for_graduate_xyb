@@ -503,12 +503,87 @@ def workflow_checks() -> dict:
             "scope": "fixed_initialization_state_matrix_and_probability_examples_not_a_mission"}
 
 
+def strategy_review_checks() -> dict:
+    """Section 10 counterexamples; no dynamics, random draws or mission loop."""
+    # A central mixture interval can include the gap between two narrow modes.
+    alpha, means, std = 0.1, np.array([-5.0, 5.0]), 0.2
+
+    def acceptance(z: float) -> tuple[float, bool, bool]:
+        component_cdf = np.array([
+            0.5 * (1 + math.erf((z - mean) / (math.sqrt(2) * std)))
+            for mean in means])
+        mixture_cdf = float(component_cdf.mean())
+        central = alpha / 2 <= mixture_cdf <= 1 - alpha / 2
+        compatible = bool(np.any((alpha / 2 <= component_cdf)
+                                 & (component_cdf <= 1 - alpha / 2)))
+        return mixture_cdf, central, central and compatible
+
+    gap, left_mode, tail = acceptance(0.0), acceptance(-5.0), acceptance(30.0)
+    assert gap == (0.5, True, False)
+    assert left_mode[2] and not tail[2]
+    # Even the revised scalar rule loses within-block contrasts; still pending.
+    contrast, projection = np.array([5.0, -5.0]), np.array([0.5, 0.5])
+    assert float(projection @ contrast) == 0.0 and float(contrast @ contrast) == 50.0
+
+    # A long complete train makes a periodic-only branch immediately due again.
+    period, complete_train = 1.0, 1.2
+    assert complete_train >= period
+    available_tickets = {(0, 0, 0), (1, 0, 0)}  # (cell, scan round, attempt)
+    available_tickets.remove((0, 0, 0))
+    assert not any(ticket[:2] == (0, 0) for ticket in available_tickets)
+    assert (1, 0, 0) in available_tickets
+
+    # A partial group requires new raw transactions, not duplicate packets.
+    required, raw_ids = 2, {"a", "a"}
+    remaining = required - len(raw_ids)
+    same_site = np.linalg.norm(np.array([0.01, 0.0])) <= 0.05
+    other_site = np.linalg.norm(np.array([2.0, 0.0])) <= 0.05
+    assert remaining == 1 and same_site and not other_site
+
+    # Cached quality and all covariance blocks must match the snapshot version.
+    cached_version, snapshot_version = 7, 8
+    cached_quality = True
+    quality_usable = cached_quality and cached_version == snapshot_version
+    fit_version, cross_version, holdout_version = 8, 8, 7
+    coherent = len({fit_version, cross_version, holdout_version}) == 1
+    assert not quality_usable and not coherent
+
+    # A finite coarse grid can miss a narrow second branch even with cell radii.
+    def nominal_radius(grid: np.ndarray, cell_radius: float) -> float:
+        costs = np.minimum(grid**2, ((grid - 3.0) / 0.05)**2)
+        active = costs - costs.min() <= 1.0
+        estimate = grid[int(np.argmin(costs))]
+        return float(np.max(np.abs(grid[active] - estimate)) + cell_radius)
+
+    coarse_radius = nominal_radius(np.array([0., 2., 4., 6.]), 1.0)
+    fine_radius = nominal_radius(np.arange(7, dtype=float), 1.0)
+    assert coarse_radius <= 1.5 < fine_radius
+
+    # Merely repeating feasible reference blocks leaves no progress budget.
+    reference_period, progress_block, next_reference = 10.0, 8.0, 3.0
+    assert next_reference <= reference_period < progress_block + next_reference
+    return {"mixture_gap_old_cdf_accepts": gap[1],
+            "mixture_gap_component_guard_rejects": not gap[2],
+            "valid_component_passes_and_extreme_tail_fails": True,
+            "scalar_projection_can_hide_within_block_contrast_pending_guard": True,
+            "complete_train_can_exceed_soft_period": True,
+            "consumed_cell_ticket_leaves_next_cell_available": True,
+            "partial_group_dedup_and_same_site_boundary_checked": True,
+            "stale_quality_and_mixed_versions_rejected": True,
+            "coarse_grid_can_miss_branch_despite_cell_radius": True,
+            "coarse_fixture_radius": coarse_radius,
+            "fine_fixture_radius": fine_radius,
+            "reference_only_feasibility_is_not_progress_feasibility": True,
+            "scope": "fixed_design_counterexamples_not_state_machine_or_mission_validation"}
+
+
 def run_checks() -> dict:
     return {"all_passed": True, "new_missions": 0,
             "scope": "fixed_input_algebra_not_forest_navigation_or_protocol_validation",
             "reference": reference_checks(), "wakeup": wake_checks(),
             "decision": decision_checks(), "first_model": first_model_checks(),
-            "protocol_parameters": protocol_parameter_checks(), "workflow": workflow_checks()}
+            "protocol_parameters": protocol_parameter_checks(), "workflow": workflow_checks(),
+            "strategy_review": strategy_review_checks()}
 
 
 if __name__ == "__main__":
