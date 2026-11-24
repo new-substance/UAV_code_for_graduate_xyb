@@ -1,7 +1,7 @@
 """Fixed-input checks of the forest design equations; never a mission simulator.
 
 All numeric inputs are illustrative algebra fixtures, not a radio/aircraft
-profile. See 论文总纲 sections 3.2-3.9, 4.1-4.7, 5.2 and 6.1-6.7.
+profile. See 论文总纲 sections 3.2-3.10, 4.1-4.7, 5.2, 6.1-6.7 and 11-12.
 """
 from __future__ import annotations
 
@@ -789,14 +789,448 @@ def coplanar_feasibility_checks() -> dict:
         "new_missions": 0, "physical_feasibility_validated": False}
 
 
+def hardware_and_observability_checks() -> dict:
+    """H01 and section 11.7: conversions, provenance sets and fixed matrices."""
+    def signed24(value: int) -> int:
+        if not 0 <= value < 2**24:
+            raise ValueError("A register result must contain exactly 24 unsigned bits")
+        return value - 2**24 if value >= 2**23 else value
+
+    assert [signed24(v) for v in [0, 2**23 - 1, 2**23, 2**24 - 1]] == [0, 8388607, -8388608, -1]
+    low_step, high_step = [150 / (2**12 * bw) for bw in [0.40625, 1.625]]
+    assert abs(low_step / high_step - 4) < 1e-12
+    raw = 1024
+    distance = raw * high_step
+    assert abs(distance - 23.076923076923077) < 1e-12
+    assert abs(distance * high_step - distance) > 20
+    assert abs(raw * 150 / (2**12 * 1625000) / distance - 1e-6) < 1e-15
+    four_group_sources = set(range(1, 17))
+    filtered_fifth_sources = set(range(10, 18))
+    raw_fifth_sources = set(range(17, 21))
+    assert not four_group_sources.isdisjoint(filtered_fifth_sources)
+    assert four_group_sources.isdisjoint(raw_fifth_sources)
+    directions = np.array([[4.0, 3.0], [3.0, 9.0]])
+    weights = np.array([0.5, 0.5])
+    pair_variance = float(weights @ directions @ weights)
+    assert pair_variance == 4.75 and pair_variance != np.trace(directions) / 4
+
+    gravity = 9.80665
+    transition_rate = np.zeros((15, 15))
+    transition_rate[:3, 3:6] = np.eye(3)
+    transition_rate[3:6, 6:9] = -skew(np.array([0.0, 0.0, gravity]))
+    transition_rate[3:6, 9:12] = -np.eye(3)
+    transition_rate[6:9, 12:15] = -np.eye(3)
+    observation = np.zeros((3, 15))
+    observation[:, :3] = np.eye(3)
+    power, rows = np.eye(15), []
+    for _ in range(15):
+        rows.append(observation @ power)
+        power = power @ transition_rate
+    observability = np.vstack(rows)
+    null = np.zeros((15, 4))
+    null[8, 0], null[14, 1] = 1, 1
+    null[6, 2], null[10, 2] = 1, -gravity
+    null[7, 3], null[9, 3] = 1, gravity
+    rank = int(np.linalg.matrix_rank(observability))
+    null_error = float(np.max(np.abs(observability @ null)))
+    assert rank == 11 and null_error == 0 and np.linalg.matrix_rank(null) == 4
+    # M01: zero estimated world acceleration is not zero physical acceleration
+    # when the true body attitude has a tilt error.  This is a static force check.
+    true_rotation = exp_rotation(np.array([0.0, math.radians(5.0), 0.0]))
+    actual_acceleration = true_rotation @ np.array([0.0, 0.0, gravity]) + np.array([0.0, 0.0, -gravity])
+    assert actual_acceleration[0] > 0.8 and np.linalg.norm(actual_acceleration) > 0
+    return {"scope": "fixed_raw_interface_and_stationary_observability_not_driver_or_flight_validation",
+        "raw24_signed_boundaries_checked": True, "raw_unit_step_m": [low_step, high_step],
+        "already_meter_output_must_not_be_scaled_again": True,
+        "filtered_fifth_can_overlap_four_group_raw_support": True,
+        "pair_direction_cross_covariance_retained_variance": pair_variance,
+        "stationary_position_only_observability_rank": rank,
+        "specified_four_dimensional_nullspace_error": null_error,
+        "tilted_body_zero_command_horizontal_acceleration_m_per_s2": float(actual_acceleration[0]),
+        "attitude_error_not_hidden_by_ideal_world_acceleration_injection": True,
+        "driver_timeout_or_firmware_tested": False, "new_missions": 0}
+
+
+def joint_model_candidate_checks(grid_pitch_override: float | None = None,
+                                 reference_sigma_override: float | None = None,
+                                 budget_only: bool = False) -> dict:
+    """One registered Gaussian snapshot model and ledger, never a mission."""
+    config = json.loads((Path(__file__).resolve().parents[1]
+                         / "research_configs/baseline.json").read_text(encoding="utf-8"))
+    candidate = config["project_context"]["joint_model_candidate"]
+    scene, radio, imu, service, review = [candidate[k] for k in ["scene", "radio", "imu", "service", "fixed_review"]]
+    if reference_sigma_override is not None:
+        radio = {**radio, "reference_pair_white_std_m": reference_sigma_override}
+    anchors = np.asarray(scene["known_reference_xyz_m"], dtype=float)
+    lever = np.asarray(scene["uav_antenna_lever_body_m"])
+    xy = np.asarray(review["pose_antenna_xy_m"], dtype=float)
+    antenna = np.column_stack([xy, np.full(4, scene["nominal_imu_cruise_z_m"] + lever[2])])
+    # Four selected position errors, common attitude, reference-coordinate primitives,
+    # shared device bias, five persistent link terms, current velocity and IMU biases.
+    theta, coordinate, device, links, velocity, ba, bg, dimension = 12, 15, 28, 29, 34, 37, 40, 43
+    covariance = np.zeros((dimension, dimension))
+    position_std = imu["current_relative_position_prior_std_m"]
+    shared_position_std = candidate["fixed_review"]["common_clone_translation_prior_std_m"]
+    covariance[:12, :12] = (shared_position_std**2 * np.kron(np.ones((4, 4)), np.eye(3))
+        + (position_std**2 - shared_position_std**2) * np.eye(12))
+    attitude_std = np.radians([imu["roll_pitch_std_deg"], imu["roll_pitch_std_deg"], imu["yaw_std_deg"]])
+    covariance[theta:theta+3, theta:theta+3] = np.diag(attitude_std**2)
+    coord_std = np.r_[np.repeat(scene["outer_reference_local_xy_std_m"], 8),
+        np.repeat(scene["home_local_xy_std_m"], 2), scene["common_terminal_plane_relative_height_std_m"],
+        np.repeat(scene["home_reference_relative_xy_std_m"], 2)]
+    covariance[coordinate:coordinate+13, coordinate:coordinate+13] = np.diag(coord_std**2)
+    covariance[device, device] = radio["shared_device_range_bias_std_m"]**2
+    covariance[links:links+5, links:links+5] = radio["reference_persistent_link_std_m"]**2 * np.eye(5)
+    covariance[velocity:velocity+3, velocity:velocity+3] = imu["current_velocity_std_m_per_s"]**2 * np.eye(3)
+    covariance[ba:ba+3, ba:ba+3] = imu["acc_bias_std_m_per_s2"]**2 * np.eye(3)
+    covariance[bg:bg+3, bg:bg+3] = math.radians(imu["gyro_bias_std_deg_per_s"])**2 * np.eye(3)
+    cross = imu["tilt_acc_bias_correlation"] * attitude_std[0] * imu["acc_bias_std_m_per_s2"]
+    covariance[theta, ba+1] = covariance[ba+1, theta] = -cross
+    covariance[theta+1, ba] = covariance[ba, theta+1] = cross
+    assert np.min(np.linalg.eigvalsh(covariance)) > 0
+    coordinate_map = np.zeros((5, 3, 13))
+    for j in range(5):
+        coordinate_map[j, 2, 10] = 1
+        if j < 4:
+            coordinate_map[j, 0, 2*j], coordinate_map[j, 1, 2*j+1] = 1, 1
+            coordinate_map[j, 0, 8], coordinate_map[j, 1, 9] = -1, -1
+        else:
+            coordinate_map[j, 0, 11], coordinate_map[j, 1, 12] = 1, 1
+
+    def reference_rows(points: np.ndarray) -> np.ndarray:
+        rows = []
+        for k, point in enumerate(points):
+            for j, anchor in enumerate(anchors):
+                unit = point - anchor
+                unit /= np.linalg.norm(unit)
+                row = np.zeros(dimension)
+                row[3*k:3*k+3] = unit
+                row[theta:theta+3] = -unit @ skew(lever)
+                row[coordinate:coordinate+13] = -unit @ coordinate_map[j]
+                row[device], row[links+j] = 1, 1
+                rows.append(row)
+        return np.asarray(rows)
+
+    def posterior(prior: np.ndarray, observation: np.ndarray) -> np.ndarray:
+        noise = radio["reference_pair_white_std_m"]**2 / service["pairs_per_reference"]
+        innovation = observation @ prior @ observation.T + noise * np.eye(len(observation))
+        updated = prior - prior @ observation.T @ np.linalg.solve(innovation, observation @ prior)
+        return (updated + updated.T) / 2
+
+    # Constructed zero residuals at the registered means; no random measurements.
+    updated = posterior(covariance, reference_rows(antenna))
+    navigation_before_unknown = updated.copy()
+    assert np.min(np.linalg.eigvalsh(updated)) > -1e-12
+    state_indices = np.r_[np.arange(9, 12), np.arange(velocity, velocity+3), np.arange(theta, theta+3),
+                          np.arange(ba, ba+3), np.arange(bg, bg+3)]
+    nav = updated[np.ix_(state_indices, state_indices)]
+    shared_cross_norm = float(np.linalg.norm(updated[:12, device]))
+    assert shared_cross_norm > 0 and nav[8, 8] > 0 and nav[14, 14] > 0
+
+    # Exact polynomial covariance of the frozen hover linear model, not a flight.
+    gravity = 9.80665
+    f = np.zeros((15, 15)); f[:3, 3:6] = np.eye(3)
+    f[3:6, 6:9] = -skew(np.array([0.0, 0.0, gravity])); f[3:6, 9:12] = -np.eye(3)
+    f[6:9, 12:15] = -np.eye(3)
+    powers = [np.eye(15), f, f @ f, f @ f @ f]
+    assert np.max(np.abs(powers[-1] @ f)) == 0
+    data = config["project_context"]["analytical_profile"]["imu_datasheet_fixture"]
+    qa = np.square(np.array([data["acc_xy_micro_g_per_sqrt_hz"]]*2 + [data["acc_z_micro_g_per_sqrt_hz"]]) * 1e-6 * gravity) / 2
+    qg = math.radians(data["gyro_deg_per_s_per_sqrt_hz"])**2 / 2
+    drive = np.zeros((15, 15)); drive[3:6, 3:6] = np.diag(qa); drive[6:9, 6:9] = qg * np.eye(3)
+    drive[9:12, 9:12] = imu["acc_bias_random_walk_m_per_s2_per_sqrt_s"]**2 * np.eye(3)
+    drive[12:15, 12:15] = math.radians(imu["gyro_bias_random_walk_deg_per_s_per_sqrt_s"])**2 * np.eye(3)
+
+    def covariance_at(initial: np.ndarray, time: float) -> np.ndarray:
+        transition = sum(p * time**i / math.factorial(i) for i, p in enumerate(powers))
+        noise = sum(pi @ drive @ pj.T * time**(i+j+1) / (math.factorial(i)*math.factorial(j)*(i+j+1))
+                    for i, pi in enumerate(powers) for j, pj in enumerate(powers))
+        return transition @ initial @ transition.T + noise
+
+    phy, ranging = radio["ordinary_phy"], radio["ranging_phy"]
+    packet = lambda size: css_packet_time_s(size, phy)
+    ranging_s = (2**ranging["sf"] / ranging["bandwidth_hz"]
+                 * (ranging["preamble_symbols"] + 2*ranging["ranging_symbols"] + 22.25))
+    pair_lower = 2*packet(28) + 2*ranging_s + packet(28) + packet(18)
+    assert pair_lower < radio["pair_whole_attempt_bound_s"]
+    wake = packet(29 + 5*service["responding_unknown_ids_per_wake"])
+    assert service["effective_receive_window_s"] >= service["broadcast_start_spacing_s"] + wake
+    train_count = math.ceil((service["listener_max_wait_s"] + service["effective_receive_window_s"] - wake)
+                           / service["broadcast_start_spacing_s"]) + 1
+    train = (train_count-1)*service["broadcast_start_spacing_s"] + wake
+    schedule_error = service["schedule_error_base_bound_s"] + service["relative_clock_rate_bound_ppm"]*1e-6*train
+    assert service["response_slot_s"] >= packet(26)+2*schedule_error+service["rx_gap_s"]
+    reference_attempts = len(anchors)*service["pairs_per_reference"] + service["reference_block_shared_extra_attempts"]
+    unknown_attempts = service["pairs_per_unknown_group"] + service["unknown_group_shared_extra_attempts"]
+    reference_time = reference_attempts * radio["pair_whole_attempt_bound_s"]
+    progress_time = (train + service["responding_unknown_ids_per_wake"]*service["response_slot_s"]
+        + unknown_attempts*radio["pair_whole_attempt_bound_s"] + service["data_attempts"]*service["data_attempt_bound_s"]
+        + service["shared_control_prepare_s"] + service["computation_bound_s"])
+    length, speed, acceleration = [service[k] for k in ["reference_motion_segment_candidate_m", "cruise_speed_m_per_s", "acceleration_m_per_s2"]]
+    movement = 2*math.sqrt(length/acceleration) if length <= speed**2/acceleration else length/speed + speed/acceleration
+    tracking_allowance = service["movement_tracking_and_settling_allowance_s"]
+    full_time = movement + tracking_allowance + progress_time + reference_time
+    assert full_time <= service["reference_max_age_s"]
+    predicted = covariance_at(nav, full_time)
+    # First-order maneuver envelope: horizontal acceleration is bounded and the
+    # nominal body keeps its heading, tilting by at most atan(a_max/g).  Global
+    # attitude error R*dtheta removes the skew(omega) term; compare with hover.
+    # The heading-based reference can contain both roll and pitch.  Bound the
+    # difference from I by the sum of the two rotation differences, not just tilt.
+    rotation_difference = min(2.0, 4*math.sin(math.atan(acceleration/gravity)/2))
+    for horizontal in [np.array([acceleration, 0.0]), np.array([0.0, acceleration]),
+                       acceleration*np.array([0.6, 0.8])]:
+        b3 = np.r_[horizontal, gravity]; b3 /= np.linalg.norm(b3)
+        b2 = np.cross(b3, np.array([1.0, 0.0, 0.0])); b2 /= np.linalg.norm(b2)
+        reference_rotation = np.column_stack([np.cross(b2, b3), b2, b3])
+        assert np.linalg.norm(reference_rotation-np.eye(3), 2) <= rotation_difference+1e-12
+    sigma_ba = math.sqrt(np.max(np.linalg.eigvalsh(nav[9:12, 9:12])))
+    sigma_bg = math.sqrt(np.max(np.linalg.eigvalsh(nav[12:15, 12:15])))
+    sigma_yaw = math.sqrt(nav[8, 8])
+    sigma_tilt = math.sqrt(np.max(np.linalg.eigvalsh(nav[6:8, 6:8])))
+    qba, qbg, qa_max = drive[9, 9], drive[12, 12], float(np.max(qa))
+    t = full_time
+    gyro_position = sigma_bg*t**3/6 + math.sqrt(qg*t**5/20) + math.sqrt(qbg*t**7/252)
+    basic_position = sigma_ba*t**2/2 + math.sqrt(qba*t**5/20) + math.sqrt(qa_max*t**3/3)
+    delta_horizontal = acceleration*(sigma_yaw*t**2/2 + gyro_position)
+    delta_horizontal += rotation_difference*(basic_position + gravity*gyro_position)
+    delta_vertical = math.sqrt(2)*acceleration*(sigma_tilt*t**2/2 + gyro_position)
+    delta_vertical += rotation_difference*basic_position
+    horizontal_upper = math.sqrt(np.max(np.linalg.eigvalsh(predicted[:2, :2]))) + delta_horizontal
+    vertical_upper = math.sqrt(predicted[2, 2]) + delta_vertical
+    gyro_velocity = sigma_bg*t**2/2 + math.sqrt(qg*t**3/3) + math.sqrt(qbg*t**5/20)
+    basic_velocity = sigma_ba*t + math.sqrt(qba*t**3/3) + math.sqrt(qa_max*t)
+    delta_vh = acceleration*(sigma_yaw*t + gyro_velocity)
+    delta_vh += rotation_difference*(basic_velocity + gravity*gyro_velocity)
+    delta_vz = math.sqrt(2)*acceleration*(sigma_tilt*t + gyro_velocity) + rotation_difference*basic_velocity
+    velocity_upper = (math.sqrt(np.max(np.linalg.eigvalsh(predicted[3:6, 3:6])))
+                      + math.sqrt(2*delta_vh**2 + delta_vz**2))
+    attitude_upper = (math.sqrt(np.max(np.linalg.eigvalsh(nav[6:9, 6:9]))) + t*sigma_bg
+                      + math.sqrt(qg*t) + math.sqrt(qbg*t**3/3))
+    # A separate saved input at the landing point; contact is NOT supplied to nav.
+    landing_antenna = np.array([[0.0, 0.0, scene["home_imu_xyz_m"][2]+lever[2]]])
+    landing_updated = posterior(covariance, reference_rows(landing_antenna))
+    landing_indices = np.r_[np.arange(3), state_indices[3:]]
+    landing_nav = landing_updated[np.ix_(landing_indices, landing_indices)]
+    landing_prediction = covariance_at(landing_nav, reference_time)
+    landing_proxy = (review["landing_estimated_xy_offset_candidate_m"]
+        + review["landing_nominal_sigma_multiplier"]*math.sqrt(np.max(np.linalg.eigvalsh(landing_prediction[:2, :2]))))
+    caps = candidate["navigation_admission"]
+    budget_ratio = max(horizontal_upper/caps["horizontal_max_std_m"], vertical_upper/caps["vertical_std_m"],
+        velocity_upper/caps["velocity_max_std_m_per_s"], attitude_upper/math.radians(caps["attitude_max_std_deg"]),
+        landing_proxy/candidate["landing"]["actual_return_tolerance_m"])
+    if budget_only:
+        return {"reference_pair_white_std_m": radio["reference_pair_white_std_m"], "budget_ratio": budget_ratio}
+
+    # Four-group likelihood uses the same posterior nuisance block, including the
+    # cross covariance between navigation, shared device bias and terminal plane.
+    domain, pitch = review["grid_domain_half_width_m"], review["grid_pitch_m"]
+    if grid_pitch_override is not None:
+        pitch = grid_pitch_override
+    axis = np.arange(-domain, domain+pitch/2, pitch)
+    xx, yy = np.meshgrid(axis, axis, indexing="ij")
+    points = np.column_stack([xx.ravel(), yy.ravel()]); assert len(points) <= 4096
+    widths = np.full(len(axis), pitch); widths[[0, -1]] = pitch/2
+    prior_mass = np.outer(widths, widths).ravel()/(2*domain)**2
+    raw_positions = np.repeat(antenna, service["pairs_per_unknown_group"], axis=0)
+    target = np.r_[review["target_relative_xy_input_m"], scene["terminal_antenna_plane_z_m"]]
+    observed = np.linalg.norm(raw_positions-target, axis=1) + radio["unknown_persistent_link_mean_m"]
+    vectors = raw_positions[None, :, :] - np.column_stack([points, np.full(len(points), target[2])])[:, None, :]
+    ranges = np.linalg.norm(vectors, axis=2); unit = vectors/ranges[:, :, None]
+    mapping = np.zeros((len(points), len(raw_positions), dimension))
+    for row in range(len(raw_positions)):
+        mapping[:, row, 3*(row//service["pairs_per_unknown_group"]):3*(row//service["pairs_per_unknown_group"])+3] = unit[:, row]
+    mapping[:, :, theta:theta+3] = -unit @ skew(lever)
+    mapping[:, :, coordinate+10] = -unit[:, :, 2]
+    mapping[:, :, device] = 1
+    target_covariance = mapping @ updated @ mapping.transpose(0, 2, 1)
+    target_covariance += radio["unknown_pair_white_std_m"]**2 * np.eye(len(raw_positions))
+    target_covariance += radio["unknown_persistent_link_std_m"]**2 * np.ones((len(raw_positions), len(raw_positions)))
+    chol = np.linalg.cholesky(target_covariance)
+    residual = observed[None, :]-ranges-radio["unknown_persistent_link_mean_m"]
+    whitened = np.linalg.solve(chol, residual[:, :, None])[:, :, 0]
+    costs = np.sum(whitened**2, axis=1) + 2*np.log(np.diagonal(chol, axis1=1, axis2=2)).sum(axis=1) - 2*np.log(prior_mass)
+    best = int(np.argmin(costs)); active = costs-costs[best] <= review["nominal_cost_increment"]
+    radius = float(np.max(np.linalg.norm(points[active]-points[best], axis=1)) + pitch/math.sqrt(2))
+    home_envelope = review["home_registration_nominal_sigma_multiplier"] * math.hypot(
+        scene["common_map_translation_std_m"], scene["home_local_xy_std_m"])
+    absolute_radius = radius + home_envelope
+    # Extend the same prior with the fifth selected position.  Known-reference
+    # input rows and four-point marginals stay identical; no heldout value is fit.
+    extended_prior = np.zeros((dimension+3, dimension+3))
+    extended_prior[:dimension, :dimension] = covariance
+    extended_prior[dimension:, dimension:] = position_std**2*np.eye(3)
+    for k in range(4):
+        extended_prior[3*k:3*k+3, dimension:] = shared_position_std**2*np.eye(3)
+        extended_prior[dimension:, 3*k:3*k+3] = shared_position_std**2*np.eye(3)
+    known_rows = np.pad(reference_rows(antenna), ((0, 0), (0, 3)))
+    extended = posterior(extended_prior, known_rows)
+    assert np.max(np.abs(extended[:dimension, :dimension]-updated)) < 1e-12
+    fifth = np.r_[review["fifth_antenna_xy_m"], antenna[0, 2]]
+    spatial_margins = []
+    for k, point in enumerate(antenna):
+        difference = (extended[dimension:dimension+2, dimension:dimension+2]
+            + extended[3*k:3*k+2, 3*k:3*k+2] - extended[dimension:dimension+2, 3*k:3*k+2]
+            - extended[3*k:3*k+2, dimension:dimension+2])
+        spatial_margins.append(float(np.linalg.norm(fifth[:2]-point[:2])
+            - review["spatial_sigma_multiplier_candidate"]*math.sqrt(np.max(np.linalg.eigvalsh(difference)))))
+    fv_positions = np.vstack([raw_positions, np.repeat(fifth[None, :], service["pairs_per_unknown_group"], axis=0)])
+    fv_vectors = fv_positions[None, :, :]-np.column_stack([points, np.full(len(points), target[2])])[:, None, :]
+    fv_ranges = np.linalg.norm(fv_vectors, axis=2); fv_unit = fv_vectors/fv_ranges[:, :, None]
+    joint_mapping = np.zeros((len(points), len(fv_positions), dimension+3))
+    joint_mapping[:, :len(raw_positions), :dimension] = mapping
+    joint_mapping[:, len(raw_positions):, dimension:] = fv_unit[:, len(raw_positions):]
+    joint_mapping[:, len(raw_positions):, theta:theta+3] = -fv_unit[:, len(raw_positions):] @ skew(lever)
+    joint_mapping[:, len(raw_positions):, coordinate+10] = -fv_unit[:, len(raw_positions):, 2]
+    joint_mapping[:, len(raw_positions):, device] = 1
+    joint_noise = joint_mapping @ extended @ joint_mapping.transpose(0, 2, 1)
+    joint_noise += radio["unknown_pair_white_std_m"]**2*np.eye(len(fv_positions))
+    joint_noise += radio["unknown_persistent_link_std_m"]**2*np.ones((len(fv_positions), len(fv_positions)))
+    nf = len(raw_positions)
+    assert np.max(np.abs(joint_noise[:, :nf, :nf]-target_covariance)) < 1e-11
+    cvf = joint_noise[:, nf:, :nf]
+    conditional_mean = (fv_ranges[:, nf:]+radio["unknown_persistent_link_mean_m"]
+        + (cvf @ np.linalg.solve(target_covariance, residual[:, :, None]))[:, :, 0])
+    conditional_noise = joint_noise[:, nf:, nf:] - cvf @ np.linalg.solve(target_covariance, cvf.transpose(0, 2, 1))
+    conditional_chol = np.linalg.cholesky(conditional_noise)
+    projection = np.array(review["fifth_group_projection_weights"])
+    # These entries are paired results in the fifth group, not the two directions.
+    assert service["pairs_per_unknown_group"] == len(projection) == 2
+    means = conditional_mean @ projection
+    variances = np.einsum('i,gij,j->g', projection, conditional_noise, projection)
+    four_weights = np.exp(-0.5*(costs-costs.min())); four_weights /= four_weights.sum()
+    frozen_weights = four_weights.copy()
+    alpha = review["predictive_alpha_candidate"]; quantile = -2*math.log(alpha)
+    nominal_fifth = np.full(2, np.linalg.norm(fifth-target)+radio["unknown_persistent_link_mean_m"])
+    verification = []
+    for values in [nominal_fifth, nominal_fifth+np.asarray(review["heldout_contrast_fixture_m"])]:
+        projected = float(projection @ values)
+        component_cdf = np.array([0.5*(1+math.erf((projected-mean)/math.sqrt(2*variance)))
+            for mean, variance in zip(means, variances)])
+        mixed_cdf = float(four_weights @ component_cdf)
+        full_whitened = np.linalg.solve(conditional_chol, (values[None, :]-conditional_mean)[:, :, None])[:, :, 0]
+        statistic = np.sum(full_whitened**2, axis=1)
+        same_component = active & (alpha/2 <= component_cdf) & (component_cdf <= 1-alpha/2) & (statistic <= quantile)
+        passed = alpha/2 <= mixed_cdf <= 1-alpha/2 and bool(same_component.any())
+        verification.append({"mixed_cdf": mixed_cdf, "passed": passed,
+                             "minimum_active_full_vector_statistic": float(np.min(statistic[active]))})
+    assert np.array_equal(four_weights, frozen_weights)
+    assert np.array_equal(updated, navigation_before_unknown)
+    assert set(range(1, 17)).isdisjoint(set(range(17, 21)))
+
+    frozen_navigation_proxy = bool(
+        np.sqrt(np.max(np.linalg.eigvalsh(predicted[:2, :2]))) <= caps["horizontal_max_std_m"]
+        and np.sqrt(predicted[2, 2]) <= caps["vertical_std_m"]
+        and np.sqrt(np.max(np.linalg.eigvalsh(predicted[3:6, 3:6]))) <= caps["velocity_max_std_m_per_s"]
+        and np.sqrt(np.max(np.linalg.eigvalsh(predicted[6:9, 6:9]))) <= math.radians(caps["attitude_max_std_deg"]))
+    maneuver_proxy = bool(horizontal_upper <= caps["horizontal_max_std_m"]
+        and vertical_upper <= caps["vertical_std_m"] and velocity_upper <= caps["velocity_max_std_m_per_s"]
+        and attitude_upper <= math.radians(caps["attitude_max_std_deg"]))
+    nominal_conditions = {"radio_lower_within_assumed_deadline": pair_lower < radio["pair_whole_attempt_bound_s"],
+        "full_action_within_reference_age": full_time <= service["reference_max_age_s"],
+        "frozen_navigation_proxy_within_caps": frozen_navigation_proxy,
+        "restricted_first_order_maneuver_envelope_within_caps": maneuver_proxy,
+        "absolute_nominal_region_with_home_envelope_within_candidate_cap": absolute_radius <= review["quality_radius_candidate_m"],
+        "landing_horizontal_proxy_within_threshold": landing_proxy <= candidate["landing"]["actual_return_tolerance_m"]}
+    nominal_conditions.update({"fifth_position_separation_proxy_met": min(spatial_margins) >= review["spatial_separation_candidate_m"],
+        "joint_fifth_nominal_input_passes": verification[0]["passed"],
+        "joint_fifth_contrast_rejected": not verification[1]["passed"]})
+    prerequisites = bool(review["data_delivery_precondition_for_fixed_verification"]
+        and absolute_radius <= review["quality_radius_candidate_m"]
+        and min(spatial_margins) >= review["spatial_separation_candidate_m"])
+    nominal_conditions["fifth_quality_data_and_spatial_prerequisites_met"] = prerequisites
+    channel_rows = {}
+    for kind in ["control_channel", "data_channel", "ranging_exchange_validity"]:
+        channel = radio[kind]
+        probabilities = [channel["probability_at_short_distance"] / (1 + math.exp(
+            (distance-channel["half_probability_distance_m"])/channel["transition_scale_m"]))
+            for distance in [0, 30, 80]]
+        assert 0 < probabilities[-1] < probabilities[1] < probabilities[0] < 1
+        channel_rows[kind] = probabilities
+    return {"scope": "one_explicit_joint_saved_input_model_not_closed_loop_feasibility_or_performance_validation",
+        "joint_prior_dimension": dimension, "reference_group_rows": len(reference_rows(antenna)),
+        "reference_pair_white_std_m": radio["reference_pair_white_std_m"],
+        "shared_navigation_device_cross_norm": shared_cross_norm,
+        "current_reference_position_std_xyz_m": np.sqrt(np.diag(nav)[:3]).tolist(),
+        "pair_radio_lower_s": pair_lower, "pair_assumed_bound_s": radio["pair_whole_attempt_bound_s"],
+        "wake_train_s": train, "bounded_next_reference_s": reference_time,
+        "bounded_progress_s": progress_time, "movement_s": movement, "move_tracking_allowance_s": tracking_allowance,
+        "full_action_and_next_reference_s": full_time,
+        "reference_age_budget_s": service["reference_max_age_s"],
+        "frozen_model_predicted_position_std_xyz_m": np.sqrt(np.diag(predicted)[:3]).tolist(),
+        "restricted_maneuver_position_std_upper_xy_z_m": [horizontal_upper, vertical_upper],
+        "restricted_maneuver_velocity_std_upper_m_per_s": velocity_upper,
+        "restricted_maneuver_attitude_std_upper_deg": math.degrees(attitude_upper),
+        "maneuver_envelope_scope": "first_order_fixed_heading_level_cruise_tilt_and_acceleration_bounds_not_arbitrary_flight_guarantee",
+        "fixed_four_group_map_xy_m": points[best].tolist(), "relative_nominal_cost_region_radius_m": radius,
+        "grid_pitch_m": pitch, "grid_points": len(points),
+        "nominal_home_registration_radius_m": home_envelope,
+        "absolute_nominal_region_radius_m": absolute_radius,
+        "fifth_position_spatial_margins_m": spatial_margins,
+        "joint_fifth_nominal_and_contrast_cases": verification,
+        "fifth_prerequisites_met_in_saved_input": prerequisites,
+        "heldout_does_not_change_four_group_weights": True,
+        "unknown_fit_and_verification_do_not_change_navigation_posterior": True,
+        "candidate_quality_radius_m": review["quality_radius_candidate_m"],
+        "landing_nominal_horizontal_proxy_m": landing_proxy,
+        "actual_return_threshold_m": candidate["landing"]["actual_return_tolerance_m"],
+        "nominal_conditions": nominal_conditions,
+        "nominal_conditions_all_met": all(nominal_conditions.values()),
+        "navigation_and_landing_budget_ratio": budget_ratio,
+        "minimum_remaining_resource_s": full_time+service["return_reservation_candidate_s"],
+        "distinct_channel_probability_examples_at_0_30_80m": channel_rows,
+        "whole_mission_navigation_clone_history_validated": False,
+        "physical_or_closed_loop_success_confirmed": False, "new_missions": 0}
+
+
 def run_checks() -> dict:
+    joint = joint_model_candidate_checks()
+    config = json.loads((Path(__file__).resolve().parents[1]
+                         / "research_configs/baseline.json").read_text(encoding="utf-8"))
+    limits = config["project_context"]["joint_model_candidate"]["fixed_review"]
+    coarse = joint_model_candidate_checks(grid_pitch_override=limits["grid_check_coarse_pitch_m"])
+    stress = joint_model_candidate_checks(reference_sigma_override=limits["reference_white_noise_stress_m"])
+    stress_summary = {"scope": "same_model_fixed_input_pressure_only_reference_white_noise_changed_not_a_mission",
+        "reference_pair_white_std_m": stress["reference_pair_white_std_m"],
+        "absolute_nominal_region_radius_m": stress["absolute_nominal_region_radius_m"],
+        "landing_nominal_horizontal_proxy_m": stress["landing_nominal_horizontal_proxy_m"],
+        "restricted_maneuver_position_std_upper_xy_z_m": stress["restricted_maneuver_position_std_upper_xy_z_m"],
+        "fifth_prerequisites_met": stress["fifth_prerequisites_met_in_saved_input"],
+        "nominal_conditions": stress["nominal_conditions"],
+        "nominal_conditions_all_met": stress["nominal_conditions_all_met"]}
+    shift = float(np.linalg.norm(np.array(joint["fixed_four_group_map_xy_m"])-coarse["fixed_four_group_map_xy_m"]))
+    radius_change = abs(joint["absolute_nominal_region_radius_m"]-coarse["absolute_nominal_region_radius_m"])
+    sensitivity = {"scope": "same_registered_input_two_resolutions_not_continuous_global_enclosure",
+        "fine_pitch_m": joint["grid_pitch_m"], "coarse_pitch_m": coarse["grid_pitch_m"],
+        "fine_points": joint["grid_points"], "coarse_points": coarse["grid_points"],
+        "map_shift_m": shift, "absolute_radius_change_m": radius_change,
+        "nominal_tolerances_met": shift <= limits["grid_map_change_tolerance_m"]
+            and radius_change <= limits["grid_region_change_tolerance_m"]}
+    lower, upper = limits["reference_noise_budget_root_bracket_m"]
+    low_budget = joint_model_candidate_checks(reference_sigma_override=lower, budget_only=True)["budget_ratio"]
+    high_budget = joint_model_candidate_checks(reference_sigma_override=upper, budget_only=True)["budget_ratio"]
+    assert low_budget < 1 < high_budget
+    for _ in range(limits["reference_noise_budget_root_iterations"]):
+        middle = (lower+upper)/2
+        ratio = joint_model_candidate_checks(reference_sigma_override=middle, budget_only=True)["budget_ratio"]
+        if ratio <= 1:
+            lower = middle
+        else:
+            upper = middle
+    capability = {"scope": "scalar_inverse_of_registered_navigation_landing_proxies_not_a_sensor_specification_or_mission_success_bound",
+        "reference_white_std_budget_transition_bracket_m": [lower, upper],
+        "other_parameters_unchanged": True,
+        "root_method": "bounded_bisection_of_saved_covariance_budget_no_random_or_time_simulation"}
     return {"all_passed": True, "new_missions": 0,
             "scope": "fixed_input_algebra_not_forest_navigation_or_protocol_validation",
             "reference": reference_checks(), "wakeup": wake_checks(),
             "decision": decision_checks(), "first_model": first_model_checks(),
             "protocol_parameters": protocol_parameter_checks(), "workflow": workflow_checks(),
             "strategy_review": strategy_review_checks(),
-            "coplanar_feasibility": coplanar_feasibility_checks()}
+            "coplanar_feasibility": coplanar_feasibility_checks(),
+            "hardware_and_observability": hardware_and_observability_checks(),
+            "joint_model_candidate": joint, "joint_grid_sensitivity": sensitivity,
+            "joint_reference_noise_pressure": stress_summary, "joint_reference_capability_budget": capability}
 
 
 if __name__ == "__main__":

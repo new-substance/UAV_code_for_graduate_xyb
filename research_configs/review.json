@@ -1,5 +1,5 @@
 {
-  "status": "design_pending_model_review",
+  "status": "model_defined_pending_implementation_review",
   "mission_enabled": false,
   "current_design": {
     "design_id": "forest_css_isac_20261123",
@@ -30,34 +30,36 @@
     "independent_altimetry_used": false,
     "initialization": "surveyed_home_and_calibrated_heading_with_uncertain_priors",
     "css_hardware_status": "unselected_candidates_under_review",
-    "model_derivation_status": "source_annotated_timing_geometry_and_feedback_algebra_not_full_model_approval",
+    "model_derivation_status": "simulation_model_v1_sources_assumptions_and_joint_fixed_conditions_reviewed_implementation_pending",
     "unknown_terminal_role": "interaction_and_position_service_state_drives_next_waypoint_not_uav_pose_update",
     "execution_scope": "documents_parameters_and_fixed_input_algebra_only",
     "parameter_registry": "论文总纲.md",
     "protocol_draft_version": "application_fields_v1",
     "analytical_profile_id": "protocol_geometry_analytical_v1",
-    "workflow_math_revision": "coplanar_feasibility_and_correlated_full_vector_holdout_v3",
+    "workflow_math_revision": "joint_coplanar_simulation_model_raw_interface_and_conditional_budgets_v4",
     "position_backend_design": "finite_grid_map_with_multimodal_nominal_cost_region",
     "validation_backend_design": "conditional_mixture_cdf_and_same_active_component_projection_full_vector_guard",
     "navigation_history_design": "bounded_selected_antenna_clones_known_reference_updates_only",
     "workflow_math_status": "derived_with_fixed_input_checks_not_mission_implemented_or_approved",
-    "grid_validation_status": "resolution_sensitivity_and_failure_rules_pending_implementation",
-    "strategy_completeness": "execution_gaps_specified_physical_parameters_and_implementation_pending",
+    "grid_validation_status": "same_joint_input_two_resolution_check_passed_production_guards_pending",
+    "strategy_completeness": "model_v1_specified_production_migration_and_mission_validation_pending",
     "terminal_plane_model": "provisional_common_nominal_horizontal_plane_with_registered_height_errors",
-    "feasibility_status": "coplanar_structure_supported_joint_calibrated_navigation_timing_and_3d_return_unverified"
+    "feasibility_status": "conditional_joint_simulation_model_nominal_margins_found_not_closed_loop_verified",
+    "feasibility_evidence_scope": "simulation_model_consistency_with_cited_capabilities_and_explicit_assumptions_no_hardware_test_required",
+    "joint_model_id": "coplanar_css_imu_joint_model_v1"
   },
   "implementation_status": "legacy_visual_engine_pending_forest_wireless_reference_protocol_migration",
-  "reason": "Provisional coplanar terminal geometry supports local 3D ranging away from the plane, but symmetric layouts confound height and common ranging bias. Static diagnostics, closed-form inertial gap calculations and a complete radio ledger do not establish one physically calibrated joint baseline or 3m actual return/landing. Conditional full-vector holdout equations and fixed counterexamples are added. No MATLAB or mission simulation; user restriction and the closed mission gate remain.",
+  "reason": "User clarified simulation-model evidence is sufficient at this stage; hardware or flight tests are not required. One cited, assumption-registered coplanar model has compatible nominal fixed-input reference, timing, restricted-maneuver, four-group absolute-region, fresh heldout and landing proxies. Reference 1m is a conditional modeling assumption, not a manufacturer guarantee; the same model with 5m reference noise fails navigation/landing proxies. MATLAB remains legacy visual code; no closed-loop performance claim or mission release. User no-simulation constraint remains.",
   "specification": "论文总纲.md",
-  "specification_sha256": "4c7942f079dd97524d4fd7150195cbd46e2dbe22418e4d187e792ef7b8c24480",
+  "specification_sha256": "bb59104ee50d8cab3be9a0e040c50896ef9024382e8727de4e523e101045f7cd",
   "configuration": "research_configs/baseline.json",
-  "configuration_sha256": "5bd2c20c9bbcde9543794be4ae91ca654b4b2157af1eedf129bc99e2cd807352",
+  "configuration_sha256": "a2547bbcab9990da416cee1ede5d3411753f2ea256e76dfe2c7184508469dd27",
   "source_sha256": "130968e0c679d3a50dd89747993bc0c87629a2bf1aed1914584b7fc45daf000e",
   "development_scope": {
     "terminal_counts": [],
     "max_cases_per_batch": 0,
     "allowed_seeds": [],
-    "purpose": "non_simulation_end_to_end_workflow_mathematical_review"
+    "purpose": "non_simulation_registered_joint_model_and_fixed_input_review"
   },
   "budgets_bytes": {
     "development_batch": 52428800,
@@ -65,14 +67,23 @@
     "default_case": 5242880,
     "active_new_results": 1073741824
   },
-  "reviewed_interfaces": {},
+  "reviewed_interfaces": {
+    "joint_simulation_model_definition": {
+      "status": "reviewed_with_explicit_conditions_for_implementation_only",
+      "model_id": "coplanar_css_imu_joint_model_v1",
+      "specification_sha256": "bb59104ee50d8cab3be9a0e040c50896ef9024382e8727de4e523e101045f7cd",
+      "configuration_sha256": "a2547bbcab9990da416cee1ede5d3411753f2ea256e76dfe2c7184508469dd27",
+      "evidence": "evidence.joint_simulation_model_review",
+      "mission_execution_approved": false
+    }
+  },
   "unreviewed_interfaces": [
-    "known_reference_layout_coordinates_and_uncertainty",
-    "navigation_inputs_observability_and_return",
-    "communication_payload_and_frame_transactions",
-    "css_timestamps_ranging_and_correlated_errors",
-    "two_role_scheduling_and_sleep",
-    "unknown_node_quality_heldout_and_comparison_metrics"
+    "known_reference_navigation_and_actual_position_history_implementation",
+    "ranging_result_adapter_clock_recipe_and_provenance_implementation",
+    "protocol_job_timing_and_retry_state_machine_implementation",
+    "quality_heldout_and_stage_policy_production_implementation",
+    "motion_control_contact_and_return_production_implementation",
+    "formal_run_configuration_and_storage_entry_integration"
   ],
   "evidence": {
     "new_design_missions": 0,
@@ -84,22 +95,23 @@
     "literature_strategy_review": {
       "checked_on": "2026-11-24",
       "principles_file": "文献与原理依据.md",
-      "principles_sha256": "f72f209451566cffe0c25db685523dd11efa0baf10684a2955add622cf5865b9",
+      "principles_sha256": "3667f2034f8a0156966acff44cefc7755932745734a9faf58bc1185b8605cf58",
       "paper_entries": 12,
       "read_scope": "selected_body_sections_or_explicit_abstract_only",
       "workflow_steps": 11,
-      "local_links_resolved": 20,
+      "local_links_resolved": 19,
       "local_historical_entries_redirected": 4,
       "legacy_numeric_values_unchanged": true,
       "legacy_public_evidence_unchanged": true,
       "algorithm_implemented": false,
       "new_missions": 0,
       "manufacturer_document_entries": 3,
-      "method_note_entries": 2
+      "method_note_entries": 3,
+      "software_reference_entries": 1
     },
     "forest_strategy_algebra": {
       "checker": "research_checks/check_forest_strategy_algebra.py",
-      "checker_sha256": "813737c677e33e4b4b9e18b21770dd90761b8f9558afd645f7f98654e98147b6",
+      "checker_sha256": "ecae67eed2698ff2b62c1e8cc50a1b2795a19f9edb952967985ae320d7e14fbb",
       "checked_on": "2026-11-24",
       "all_passed": true,
       "new_missions": 0,
@@ -347,6 +359,167 @@
         "heldout_full_vector_rejects_zero_average_contrast": true,
         "new_missions": 0,
         "physical_feasibility_validated": false
+      },
+      "hardware_and_observability": {
+        "scope": "fixed_raw_interface_and_stationary_observability_not_driver_or_flight_validation",
+        "raw24_signed_boundaries_checked": true,
+        "raw_unit_step_m": [
+          0.09014423076923077,
+          0.022536057692307692
+        ],
+        "already_meter_output_must_not_be_scaled_again": true,
+        "filtered_fifth_can_overlap_four_group_raw_support": true,
+        "pair_direction_cross_covariance_retained_variance": 4.75,
+        "stationary_position_only_observability_rank": 11,
+        "specified_four_dimensional_nullspace_error": 0.0,
+        "tilted_body_zero_command_horizontal_acceleration_m_per_s2": 0.8547058646163219,
+        "attitude_error_not_hidden_by_ideal_world_acceleration_injection": true,
+        "driver_timeout_or_firmware_tested": false,
+        "new_missions": 0
+      },
+      "joint_model_candidate": {
+        "scope": "one_explicit_joint_saved_input_model_not_closed_loop_feasibility_or_performance_validation",
+        "joint_prior_dimension": 43,
+        "reference_group_rows": 20,
+        "reference_pair_white_std_m": 1.0,
+        "shared_navigation_device_cross_norm": 0.1709997629271391,
+        "current_reference_position_std_xyz_m": [
+          0.6094517198781653,
+          0.6628720843053574,
+          0.7838587419440466
+        ],
+        "pair_radio_lower_s": 0.11909907692307692,
+        "pair_assumed_bound_s": 0.25,
+        "wake_train_s": 0.5640603076923077,
+        "bounded_next_reference_s": 3.0,
+        "bounded_progress_s": 1.894060307692308,
+        "movement_s": 4.5,
+        "move_tracking_allowance_s": 1.0,
+        "full_action_and_next_reference_s": 10.394060307692307,
+        "reference_age_budget_s": 12.0,
+        "frozen_model_predicted_position_std_xyz_m": [
+          2.1430917055419227,
+          2.158891291021982,
+          1.4102349945781063
+        ],
+        "restricted_maneuver_position_std_upper_xy_z_m": [
+          3.462648456237056,
+          1.912274391578812
+        ],
+        "restricted_maneuver_velocity_std_upper_m_per_s": 0.7819239636960047,
+        "restricted_maneuver_attitude_std_upper_deg": 1.243666432189724,
+        "maneuver_envelope_scope": "first_order_fixed_heading_level_cruise_tilt_and_acceleration_bounds_not_arbitrary_flight_guarantee",
+        "fixed_four_group_map_xy_m": [
+          5.0,
+          5.0
+        ],
+        "relative_nominal_cost_region_radius_m": 9.309432048229175,
+        "grid_pitch_m": 1.0,
+        "grid_points": 1681,
+        "nominal_home_registration_radius_m": 1.5297058540778354,
+        "absolute_nominal_region_radius_m": 10.83913790230701,
+        "fifth_position_spatial_margins_m": [
+          15.861861209331071,
+          15.861861209331071,
+          40.58322075932686,
+          40.58322075932687
+        ],
+        "joint_fifth_nominal_and_contrast_cases": [
+          {
+            "mixed_cdf": 0.5108062190565834,
+            "passed": true,
+            "minimum_active_full_vector_statistic": 0.0
+          },
+          {
+            "mixed_cdf": 0.5108062190565834,
+            "passed": false,
+            "minimum_active_full_vector_statistic": 32.0
+          }
+        ],
+        "fifth_prerequisites_met_in_saved_input": true,
+        "heldout_does_not_change_four_group_weights": true,
+        "unknown_fit_and_verification_do_not_change_navigation_posterior": true,
+        "candidate_quality_radius_m": 15.0,
+        "landing_nominal_horizontal_proxy_m": 2.0933395495160023,
+        "actual_return_threshold_m": 3.0,
+        "nominal_conditions": {
+          "radio_lower_within_assumed_deadline": true,
+          "full_action_within_reference_age": true,
+          "frozen_navigation_proxy_within_caps": true,
+          "restricted_first_order_maneuver_envelope_within_caps": true,
+          "absolute_nominal_region_with_home_envelope_within_candidate_cap": true,
+          "landing_horizontal_proxy_within_threshold": true,
+          "fifth_position_separation_proxy_met": true,
+          "joint_fifth_nominal_input_passes": true,
+          "joint_fifth_contrast_rejected": true,
+          "fifth_quality_data_and_spatial_prerequisites_met": true
+        },
+        "nominal_conditions_all_met": true,
+        "navigation_and_landing_budget_ratio": 0.9893281303534446,
+        "minimum_remaining_resource_s": 190.3940603076923,
+        "distinct_channel_probability_examples_at_0_30_80m": {
+          "control_channel": [
+            0.9984477741417134,
+            0.9965298494665219,
+            0.969717081479395
+          ],
+          "data_channel": [
+            0.9975003189255197,
+            0.9923138419266395,
+            0.9232176781587778
+          ],
+          "ranging_exchange_validity": [
+            0.9937353388182341,
+            0.9857306204516586,
+            0.7874345153105853
+          ]
+        },
+        "whole_mission_navigation_clone_history_validated": false,
+        "physical_or_closed_loop_success_confirmed": false,
+        "new_missions": 0
+      },
+      "joint_grid_sensitivity": {
+        "scope": "same_registered_input_two_resolutions_not_continuous_global_enclosure",
+        "fine_pitch_m": 1.0,
+        "coarse_pitch_m": 2.0,
+        "fine_points": 1681,
+        "coarse_points": 441,
+        "map_shift_m": 1.4142135623730951,
+        "absolute_radius_change_m": 1.0490534241430804,
+        "nominal_tolerances_met": true
+      },
+      "joint_reference_noise_pressure": {
+        "scope": "same_model_fixed_input_pressure_only_reference_white_noise_changed_not_a_mission",
+        "reference_pair_white_std_m": 5.0,
+        "absolute_nominal_region_radius_m": 11.45635709255727,
+        "landing_nominal_horizontal_proxy_m": 6.397812542868545,
+        "restricted_maneuver_position_std_upper_xy_z_m": [
+          4.08536551679747,
+          2.770825511193609
+        ],
+        "fifth_prerequisites_met": true,
+        "nominal_conditions": {
+          "radio_lower_within_assumed_deadline": true,
+          "full_action_within_reference_age": true,
+          "frozen_navigation_proxy_within_caps": true,
+          "restricted_first_order_maneuver_envelope_within_caps": false,
+          "absolute_nominal_region_with_home_envelope_within_candidate_cap": true,
+          "landing_horizontal_proxy_within_threshold": false,
+          "fifth_position_separation_proxy_met": true,
+          "joint_fifth_nominal_input_passes": true,
+          "joint_fifth_contrast_rejected": true,
+          "fifth_quality_data_and_spatial_prerequisites_met": true
+        },
+        "nominal_conditions_all_met": false
+      },
+      "joint_reference_capability_budget": {
+        "scope": "scalar_inverse_of_registered_navigation_landing_proxies_not_a_sensor_specification_or_mission_success_bound",
+        "reference_white_std_budget_transition_bracket_m": [
+          1.2384945154190068,
+          1.238494807481766
+        ],
+        "other_parameters_unchanged": true,
+        "root_method": "bounded_bisection_of_saved_covariance_budget_no_random_or_time_simulation"
       }
     },
     "previous_revision_entry_checks": {
@@ -412,8 +585,8 @@
     },
     "workflow_math_review": {
       "checked_on": "2026-11-24",
-      "revision": "coplanar_feasibility_and_correlated_full_vector_holdout_v3",
-      "formula_tags_total": 45,
+      "revision": "joint_coplanar_simulation_model_raw_interface_and_conditional_budgets_v4",
+      "formula_tags_total": 49,
       "coverage": {
         "initialization": [
           "I01-a",
@@ -454,6 +627,16 @@
           "F01-a",
           "F02-a",
           "F03-a"
+        ],
+        "hardware_distance_interface": [
+          "H01-a",
+          "H01-b"
+        ],
+        "restricted_maneuver_budget": [
+          "F04-a"
+        ],
+        "motion_surrogate": [
+          "M01-a"
         ]
       },
       "fixed_input_checks_passed": true,
@@ -493,7 +676,8 @@
       "matlab_launched": false,
       "new_missions": 0,
       "full_strategy_physically_validated": false,
-      "fixed_counterexamples_evidence": "evidence.forest_strategy_algebra.strategy_review"
+      "fixed_counterexamples_evidence": "evidence.forest_strategy_algebra.strategy_review",
+      "scope_after_user_clarification": "model_specification_review_complete_for_simulation_research_runtime_implementation_pending"
     },
     "coplanar_feasibility_review": {
       "checked_on": "2026-11-24",
@@ -506,21 +690,55 @@
         "R2_NIST_and_MATLAB_gammaincinv"
       ],
       "single_physically_calibrated_joint_baseline_frozen": false,
-      "reference_and_home_survey_priors_available": false,
-      "calibrated_forest_range_error_and_complete_driver_timing_available": false,
-      "imu_residual_priors_and_return_landing_interface_validated": false,
       "grid_resolution_and_quality_thresholds_approved": false,
       "new_missions": 0,
       "matlab_launched": false,
       "full_task_feasibility_confirmed": false,
       "next_required_evidence": [
-        "reference_and_home_layout_joint_survey_prior",
-        "target_driver_calibrated_range_components_and_transaction_bounds",
-        "imu_alignment_bias_and_temperature_priors",
-        "actual_return_approach_and_landing_controller_interface"
+        "production_mapping_of_registered_model_and_dynamic_interfaces",
+        "fixed_input_regression_of_navigation_protocol_holdout_and_truth_isolation",
+        "future_separately_authorized_closed_loop_simulation"
       ],
       "scope": "conditional_design_diagnostics_not_physical_or_whole_mission_validation",
-      "algebra_evidence": "evidence.forest_strategy_algebra.coplanar_feasibility"
+      "algebra_evidence": "evidence.forest_strategy_algebra.coplanar_feasibility",
+      "required_evidence_scope": "registered_simulation_model_not_hardware_measurement_or_real_flight",
+      "empirical_reference_and_home_survey_priors_available": false,
+      "empirical_calibrated_forest_range_error_and_complete_driver_timing_available": false,
+      "empirical_imu_residual_priors_and_return_landing_interface_validated": false,
+      "registered_simulation_priors_and_interfaces_available": true,
+      "hardware_measurement_is_current_hard_gate": false
+    },
+    "joint_simulation_model_review": {
+      "checked_on": "2026-11-24",
+      "model_id": "coplanar_css_imu_joint_model_v1",
+      "specification_section": "12",
+      "user_confirmed_scope": "simulation_research_joint_model_first_no_hardware_or_flight_testing_required",
+      "source_and_assumption_registry": "research_configs/baseline.json:project_context.joint_model_candidate",
+      "fixed_evidence": "evidence.forest_strategy_algebra.joint_model_candidate",
+      "resolution_evidence": "evidence.forest_strategy_algebra.joint_grid_sensitivity",
+      "pressure_evidence": "evidence.forest_strategy_algebra.joint_reference_noise_pressure",
+      "capability_budget_evidence": "evidence.forest_strategy_algebra.joint_reference_capability_budget",
+      "hardware_interface_evidence": "evidence.forest_strategy_algebra.hardware_and_observability",
+      "scope_checks": {
+        "same_plane_imu_css_only": true,
+        "known_reference_and_unknown_target_roles_separate": true,
+        "raw_units_calibration_and_support_provenance_specified": true,
+        "one_joint_parameter_set_with_nonzero_correlated_errors": true,
+        "finite_timing_retry_coverage_and_failure_rules_specified": true,
+        "nominal_navigation_region_heldout_and_landing_conditions_compatible": true,
+        "reference_five_meter_pressure_failure_retained": true,
+        "true_twenty_meter_and_three_meter_metrics_unchanged": true,
+        "source_code_not_migrated_or_performance_validated": true
+      },
+      "implementation_required_next": true,
+      "closed_loop_success_confirmed": false,
+      "matlab_launched": false,
+      "new_missions": 0,
+      "nominal_condition_count": 10,
+      "nominal_conditions_met": true,
+      "reference_noise_budget_transition_m": 1.2384946614503864,
+      "model_review_complete_for_user_confirmed_scope": true,
+      "matlab_implementation_or_closed_loop_validation_claimed": false
     }
   },
   "legacy_release": {
@@ -531,18 +749,12 @@
     "scope": "historical_visual_model_only_not_current_design_approval"
   },
   "pending_decisions": [
-    "terrain_low_mount_height_prior_values_and_correlations",
-    "reference_counts_real_layout_survey_priors_and_radio_coverage",
-    "alignment_criteria_initial_home_heading_velocity_tilt_bias_and_lever_covariances",
-    "imu_filters_calibration_and_bias_evolution",
-    "target_css_driver_raw_units_calibration_preparation_and_timeout_bounds",
-    "navigation_std_caps_spatial_separation_and_finite_clone_buffer_limits",
-    "finite_grid_pitch_cap_cost_increment_quality_radius_and_predictive_tail_values",
-    "listening_clock_guards_attempt_caps_and_conditional_return_resources",
-    "grid_resolution_sensitivity_validity_and_timeout_rules",
-    "wake_ticket_scan_recontact_and_no_progress_caps",
-    "recovery_domain_and_actual_return_landing_interface",
-    "implement_conditioned_full_vector_holdout_and_freeze_alpha_and_numerical_failure_rules"
+    "translate_joint_model_to_formal_config_with_whitelist_and_truth_isolation",
+    "implement_known_reference_navigation_covariance_and_actual_selected_position_history",
+    "implement_RAW_pair_units_status_support_and_bounded_protocol_jobs",
+    "implement_motion_and_landing_interfaces_without_truth_feedback",
+    "apply_registered_grid_quality_heldout_version_and_finite_failure_guards",
+    "freeze_code_and_evaluation_inputs_before_any_separately_authorized_mission"
   ],
   "working_strategy": {
     "status": "literature_reviewed_design_not_implemented",
@@ -570,7 +782,11 @@
     "partial_group": "complete_remaining_raw_transactions_only_within_same_site_conditions",
     "quality_cache": "invalidate_on_reference_prior_or_calibration_revision_before_recomputation",
     "recovery": "finite_current_reference_then_admitted_contact_points_else_actual_return_or_explicit_failure",
-    "coplanar_feasibility": "same_plane_provisional_height_bias_and_return_approach_need_joint_physical_evidence"
+    "coplanar_feasibility": "same_plane_provisional_height_bias_and_return_approach_need_joint_physical_evidence",
+    "hardware_observation": "single_RAW_two_direction_pair_with_calibration_and_unique_support_no_hidden_sliding_filter",
+    "evidence_scope": "simulation_model_assumptions_sufficient_current_phase_not_empirical_performance_claim",
+    "model_status": "one_model_v1_reviewed_conditionally_implementation_pending",
+    "return_model": "true_contact_in_environment_only_estimated_feedback_thrust_attitude_control_css_through_descent"
   },
   "previous_design": {
     "revision": "1229466",

@@ -645,7 +645,7 @@
     "independent_altimetry_used": false,
     "initialization": "surveyed_home_and_calibrated_heading_with_uncertain_priors",
     "css_hardware_status": "unselected_candidates_under_review",
-    "model_derivation_status": "source_annotated_timing_geometry_and_feedback_algebra_not_full_model_approval",
+    "model_derivation_status": "simulation_model_v1_sources_assumptions_and_joint_fixed_conditions_reviewed_implementation_pending",
     "unknown_terminal_role": "interaction_and_position_service_state_drives_next_waypoint_not_uav_pose_update",
     "execution_scope": "documents_parameters_and_fixed_input_algebra_only",
     "parameter_registry": "论文总纲.md",
@@ -795,14 +795,316 @@
       }
     },
     "analytical_profile_id": "protocol_geometry_analytical_v1",
-    "workflow_math_revision": "coplanar_feasibility_and_correlated_full_vector_holdout_v3",
+    "workflow_math_revision": "joint_coplanar_simulation_model_raw_interface_and_conditional_budgets_v4",
     "position_backend_design": "finite_grid_map_with_multimodal_nominal_cost_region",
     "validation_backend_design": "conditional_mixture_cdf_and_same_active_component_projection_full_vector_guard",
     "navigation_history_design": "bounded_selected_antenna_clones_known_reference_updates_only",
     "workflow_math_status": "derived_with_fixed_input_checks_not_mission_implemented_or_approved",
-    "grid_validation_status": "resolution_sensitivity_and_failure_rules_pending_implementation",
-    "strategy_completeness": "execution_gaps_specified_physical_parameters_and_implementation_pending",
+    "grid_validation_status": "same_joint_input_two_resolution_check_passed_production_guards_pending",
+    "strategy_completeness": "model_v1_specified_production_migration_and_mission_validation_pending",
     "terminal_plane_model": "provisional_common_nominal_horizontal_plane_with_registered_height_errors",
-    "feasibility_status": "coplanar_structure_supported_joint_calibrated_navigation_timing_and_3d_return_unverified"
+    "feasibility_status": "conditional_joint_simulation_model_nominal_margins_found_not_closed_loop_verified",
+    "feasibility_evidence_scope": "simulation_model_consistency_with_cited_capabilities_and_explicit_assumptions_no_hardware_test_required",
+    "joint_model_candidate": {
+      "id": "coplanar_css_imu_joint_model_v1",
+      "status": "reviewed_model_v1_for_implementation_only_not_mission_approved",
+      "usage": "single_joint_simulation_model_candidate_no_task_execution",
+      "scene": {
+        "home_imu_xyz_m": [
+          0,
+          0,
+          0
+        ],
+        "terminal_antenna_plane_z_m": -0.2,
+        "uav_antenna_lever_body_m": [
+          0,
+          0,
+          0.1
+        ],
+        "nominal_imu_cruise_z_m": 17.7,
+        "known_reference_xyz_m": [
+          [
+            -20,
+            -20,
+            -0.2
+          ],
+          [
+            20,
+            -20,
+            -0.2
+          ],
+          [
+            20,
+            20,
+            -0.2
+          ],
+          [
+            -20,
+            20,
+            -0.2
+          ],
+          [
+            0,
+            0,
+            -0.2
+          ]
+        ],
+        "allowed_corridor_half_width_m": 30.0,
+        "unknown_deployment_half_width_m": 20.0,
+        "reference_mission_receive_policy": "available_control_receiver_during_mission_except_own_transactions",
+        "common_map_translation_std_m": 0.5,
+        "home_local_xy_std_m": 0.1,
+        "outer_reference_local_xy_std_m": 0.1,
+        "home_reference_relative_xy_std_m": 0.02,
+        "common_terminal_plane_relative_height_std_m": 0.02,
+        "true_terminal_plane_shared_in_first_model": true,
+        "source": "declared_local_flat_forest_and_mechanical_survey_assumptions_not_measured_site",
+        "study_unknown_terminal_counts": [
+          5,
+          10
+        ],
+        "unknown_prior": "uniform_in_declared_deployment_region_no_per_ID_geotag_in_first_model_use_it_if_available"
+      },
+      "radio": {
+        "ordinary_phy": {
+          "sf": 8,
+          "bandwidth_hz": 1625000,
+          "cr_index": 1,
+          "preamble_symbols": 12,
+          "explicit_header": true,
+          "crc_enabled": true,
+          "long_interleaving": false
+        },
+        "ranging_phy": {
+          "sf": 10,
+          "bandwidth_hz": 1625000,
+          "preamble_symbols": 12,
+          "ranging_symbols": 15
+        },
+        "result_mode": "single_exchange_raw_not_internal_sliding_window",
+        "pair_raw_directions": 2,
+        "reference_pair_white_std_m": 1.0,
+        "unknown_pair_white_std_m": 5.0,
+        "shared_device_range_bias_std_m": 0.25,
+        "reference_persistent_link_std_m": 0.25,
+        "unknown_persistent_link_std_m": 3.0,
+        "noise_source": "role_specific_simulation_assumptions_LOS_calibrated_reference_vs_vegetated_unknown_not_manufacturer_std_guarantees",
+        "hardware_capability_source": "D1_D3_and_S1_interface_evidence",
+        "pair_whole_attempt_bound_s": 0.25,
+        "attempt_bound_status": "application_deadline_assumption_requires_bounded_abort_not_default_blocking_API",
+        "reference_persistent_link_mean_m": 0.0,
+        "unknown_persistent_link_mean_m": 3.0,
+        "pair_direction_weights": [
+          0.5,
+          0.5
+        ],
+        "pair_recipe": "mode_matched_two_direction_RAW_to_meters_once_after_board_calibration_remaining_clock_in_shared_bias_prior",
+        "explicit_FEI_payload_assumed": false,
+        "control_channel": {
+          "probability_at_short_distance": 0.999,
+          "half_probability_distance_m": 150.0,
+          "transition_scale_m": 20.0
+        },
+        "data_channel": {
+          "probability_at_short_distance": 0.999,
+          "half_probability_distance_m": 130.0,
+          "transition_scale_m": 20.0
+        },
+        "ranging_exchange_validity": {
+          "probability_at_short_distance": 0.995,
+          "half_probability_distance_m": 100.0,
+          "transition_scale_m": 15.0
+        },
+        "channel_source": "distinct_smooth_simulation_models_not_fitted_forest_statistics_not_an_ideal_radio_circle",
+        "raw_representation": "signed24_sign_extended_int32_counts",
+        "raw_numeric_policy": "keep_representable_signed_values_overflow_or_invalid_status_rejected_no_zero_clipping",
+        "bias_temporal_model": "shared_device_and_per_link_primitives_constant_in_nominal_mission",
+        "channel_temporal_model": "conditionally_independent_given_current_distance_and_kind_nominal_burst_pressure_separately_registered"
+      },
+      "imu": {
+        "current_relative_position_prior_std_m": 3.5,
+        "current_velocity_std_m_per_s": 0.1,
+        "roll_pitch_std_deg": 0.2,
+        "yaw_std_deg": 1.0,
+        "acc_bias_std_m_per_s2": 0.01,
+        "gyro_bias_std_deg_per_s": 0.02,
+        "tilt_acc_bias_correlation": 0.5,
+        "acc_bias_random_walk_m_per_s2_per_sqrt_s": 0.0005,
+        "gyro_bias_random_walk_deg_per_s_per_sqrt_s": 0.0002,
+        "white_noise_source": "D2_conditional_ASD_and_declared_one_sided_conversion",
+        "other_priors_source": "simulation_calibration_and_snapshot_assumptions_not_reinitialized_after_each_reference"
+      },
+      "service": {
+        "pairs_per_reference": 2,
+        "pairs_per_unknown_group": 2,
+        "responding_unknown_ids_per_wake": 4,
+        "max_attempts_per_pair": 3,
+        "reference_block_shared_extra_attempts": 2,
+        "unknown_group_shared_extra_attempts": 2,
+        "listener_max_wait_s": 0.5,
+        "effective_receive_window_s": 0.05,
+        "broadcast_start_spacing_s": 0.025,
+        "response_slot_s": 0.02,
+        "data_attempt_bound_s": 0.05,
+        "data_attempts": 2,
+        "shared_control_prepare_s": 0.1,
+        "computation_bound_s": 0.05,
+        "reference_max_age_s": 12.0,
+        "unknown_wake_soft_target_s": 1.0,
+        "reference_motion_segment_candidate_m": 5.0,
+        "cruise_speed_m_per_s": 2.0,
+        "acceleration_m_per_s2": 1.0,
+        "task_resource_deadline_s": 1800.0,
+        "return_reservation_candidate_s": 180.0,
+        "source": "explicit_protocol_resource_assumptions_before_any_mission_results",
+        "schedule_error_base_bound_s": 0.002,
+        "relative_clock_rate_bound_ppm": 40.0,
+        "rx_gap_s": 0.001,
+        "movement_tracking_and_settling_allowance_s": 1.0
+      },
+      "fixed_review": {
+        "pose_antenna_xy_m": [
+          [
+            20,
+            0
+          ],
+          [
+            0,
+            20
+          ],
+          [
+            -20,
+            0
+          ],
+          [
+            0,
+            -20
+          ]
+        ],
+        "target_relative_xy_input_m": [
+          5.0,
+          5.0
+        ],
+        "grid_domain_half_width_m": 20.0,
+        "grid_pitch_m": 1.0,
+        "nominal_cost_increment": 5.0,
+        "quality_radius_candidate_m": 15.0,
+        "predictive_alpha_candidate": 0.1,
+        "scope": "constructed_saved_input_not_hidden_truth_used_by_online_policy",
+        "common_clone_translation_prior_std_m": 3.0,
+        "landing_estimated_xy_offset_candidate_m": 0.2,
+        "landing_nominal_sigma_multiplier": 3.0,
+        "clone_prior_scope": "constructed_positive_joint_saved_input_not_a_replacement_for_actual_N03_history",
+        "home_registration_nominal_sigma_multiplier": 3.0,
+        "fifth_antenna_xy_m": [
+          20.0,
+          20.0
+        ],
+        "spatial_separation_candidate_m": 10.0,
+        "spatial_sigma_multiplier_candidate": 2.0,
+        "heldout_contrast_fixture_m": [
+          20.0,
+          -20.0
+        ],
+        "data_delivery_precondition_for_fixed_verification": true,
+        "fifth_group_projection_weights": [
+          0.5,
+          0.5
+        ],
+        "grid_check_coarse_pitch_m": 2.0,
+        "grid_map_change_tolerance_m": 2.0,
+        "grid_region_change_tolerance_m": 2.0,
+        "reference_white_noise_stress_m": 5.0,
+        "reference_noise_budget_root_bracket_m": [
+          0.1,
+          5.0
+        ],
+        "reference_noise_budget_root_iterations": 24
+      },
+      "landing": {
+        "body_rest_plane_through_true_home": true,
+        "contact_event_is_plant_and_offline_only": true,
+        "reference_service_continues_during_descent": true,
+        "descent_speed_m_per_s": 0.3,
+        "online_completion_is_not_physical_landing": true,
+        "actual_return_tolerance_m": 3.0,
+        "source": "existing_point_mass_contact_semantics_and_explicit_new_CSS_return_interface",
+        "current_status": "model_interface_only_not_implemented",
+        "controller_input": "navigation_estimate_IMU_and_commanded_setpoints_only",
+        "point_mass_actuation": "true_body_vertical_thrust_generated_from_estimated_state_attitude_command_and_rate_actuator",
+        "online_contact_flag_is_only_candidate": true,
+        "no_ground_truth_contact_or_zero_height_nav_update": true
+      },
+      "formal_numeric_baseline_replaced": false,
+      "new_missions": 0,
+      "navigation_admission": {
+        "horizontal_max_std_m": 3.5,
+        "vertical_std_m": 3.5,
+        "velocity_max_std_m_per_s": 1.5,
+        "attitude_max_std_deg": 5.0,
+        "scope": "nominal_online_caps_full_actual_N01_prediction_required_not_frozen_hover_guarantee"
+      },
+      "initialization": {
+        "imu_sample_interval_s": 0.01,
+        "stationary_duration_s": 3.0,
+        "initial_relative_velocity_std_m_per_s": 0.05,
+        "external_yaw_std_deg": 1.0,
+        "acc_calibration_prior_std_m_per_s2": 0.01,
+        "gyro_calibration_residual_prior_std_deg_per_s": 0.02,
+        "home_prior": "shared_map_translation_and_local_home_variables_from_scene",
+        "attitude_and_bias_covariance": "I01_jacobian_from_stationary_mean_and_calibration_primitives_not_independent_reset",
+        "noise_sampling": "continuous_white_intensity_integrated_over_interval_mean_q_over_dt",
+        "source": "declared_simulation_alignment_and_ideal_interval_averaging_model"
+      },
+      "motion_model": {
+        "name": "thrust_and_attitude_point_mass_surrogate",
+        "velocity_feedback_time_constant_s": 0.6,
+        "attitude_error_gain_per_s": 4.0,
+        "body_rate_time_constant_s": 0.05,
+        "body_rate_limit_rad_per_s": 1.0,
+        "maximum_normalized_thrust_m_per_s2": 14.709975,
+        "nominal_yaw_command_rad": 0.0,
+        "nominal_external_acceleration_m_per_s2": [
+          0,
+          0,
+          0
+        ],
+        "estimated_arrival_position_tolerance_m": 0.3,
+        "estimated_arrival_speed_tolerance_m_per_s": 0.1,
+        "input": "estimated_state_and_setpoints_only",
+        "truth_dynamics": "p_dot_v_v_dot_R_true_e3_T_plus_g_R_dot_R_omega",
+        "source": "standard_frame_and_cascade_model_with_explicit_simulation_gains_not_PX4_default_or_flight_validated",
+        "vertical_cruise_speed_limit_m_per_s": 1.0,
+        "vertical_acceleration_limit_m_per_s2": 1.0,
+        "reference_attitude_design": "fixed_heading_reference_with_overdamped_small_angle_rate_surrogate_kR_tau_less_than_quarter"
+      },
+      "finite_policy_limits": {
+        "coverage_grid_step_m": 10.0,
+        "service_candidate_grid_step_m": 5.0,
+        "scan_rounds": 2,
+        "wake_attempts_per_cell_per_round": 1,
+        "recontact_attempts_per_node": 3,
+        "verification_rounds_per_node": 3,
+        "notice_attempts_per_node": 3,
+        "fit_reselection_attempts_per_node": 6,
+        "reference_recovery_blocks": 3,
+        "max_insertions_per_coverage_edge": 1,
+        "max_active_extra_waypoints": 60,
+        "max_consecutive_no_progress_decisions": 8,
+        "max_initial_alignment_retries": 2,
+        "max_startup_reference_blocks": 3,
+        "max_grid_points": 4096,
+        "source": "finite_engineering_limits_fixed_before_any_mission_result_not_performance_targets"
+      },
+      "evaluation": {
+        "per_terminal_true_horizontal_error_limit_m": 20.0,
+        "require_each_terminal_not_population_rmse": true,
+        "actual_return_threshold_source": "landing.actual_return_tolerance_m",
+        "require_true_physical_landing": true,
+        "all_incomplete_false_acceptance_timeouts_and_failures_retained": true,
+        "online_nominal_quality_is_not_true_error_or_strict_probability_guarantee": true
+      }
+    },
+    "joint_model_id": "coplanar_css_imu_joint_model_v1"
   }
 }
