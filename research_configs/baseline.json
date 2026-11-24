@@ -690,6 +690,11 @@
         "ranging_symbols": 15
       }
     },
-    "analytical_profile_id": "protocol_geometry_analytical_v1"
+    "analytical_profile_id": "protocol_geometry_analytical_v1",
+    "workflow_math_revision": "initialization_discovery_grid_predictive_waypoint_v1",
+    "position_backend_design": "finite_grid_map_with_multimodal_nominal_cost_region",
+    "validation_backend_design": "correlated_conditional_grid_mixture_scalar_cdf",
+    "navigation_history_design": "bounded_selected_antenna_clones_known_reference_updates_only",
+    "workflow_math_status": "derived_with_fixed_input_checks_not_mission_implemented_or_approved"
   }
 }

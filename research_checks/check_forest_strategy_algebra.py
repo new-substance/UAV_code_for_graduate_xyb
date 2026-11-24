@@ -1,7 +1,7 @@
 """Fixed-input checks of the forest design equations; never a mission simulator.
 
 All numeric inputs are illustrative algebra fixtures, not a radio/aircraft
-profile. See 论文总纲 sections 3.2-3.7, 5.2 and 6.1-6.5.
+profile. See 论文总纲 sections 3.2-3.9, 4.1-4.7, 5.2 and 6.1-6.7.
 """
 from __future__ import annotations
 
@@ -321,12 +321,194 @@ def protocol_parameter_checks() -> dict:
             "scope": "fixed_datasheet_and_matrix_calculations_not_forest_performance"}
 
 
+def workflow_checks() -> dict:
+    """I01/N03/D01/L02/Q01/V02/P02 fixed matrices, never a flight replay."""
+    def alignment(f: np.ndarray, yaw: float) -> tuple:
+        radial = math.hypot(f[1], f[2])
+        norm = float(np.linalg.norm(f))
+        if radial < 1e-8 or norm < 1e-8:
+            raise ValueError("Degenerate stationary alignment")
+        roll, pitch = math.atan2(f[1], f[2]), math.atan2(-f[0], radial)
+        rx = np.array([[1, 0, 0], [0, math.cos(roll), -math.sin(roll)],
+                       [0, math.sin(roll), math.cos(roll)]])
+        ry = np.array([[math.cos(pitch), 0, math.sin(pitch)], [0, 1, 0],
+                       [-math.sin(pitch), 0, math.cos(pitch)]])
+        rz = np.array([[math.cos(yaw), -math.sin(yaw), 0],
+                       [math.sin(yaw), math.cos(yaw), 0], [0, 0, 1]])
+        return rz @ ry @ rx, roll, pitch
+
+    f, yaw = np.array([0.8, 1.1, 9.7]), 0.3
+    rotation, roll, pitch = alignment(f, yaw)
+    radial, norm2 = math.hypot(f[1], f[2]), float(f @ f)
+    euler_derivative = np.array([
+        [0, f[2] / radial**2, -f[1] / radial**2, 0],
+        [-radial / norm2, f[0] * f[1] / (radial * norm2),
+         f[0] * f[2] / (radial * norm2), 0], [0, 0, 0, 1]])
+    local_map = np.array([[1, 0, -math.sin(pitch)],
+                          [0, math.cos(roll), math.sin(roll) * math.cos(pitch)],
+                          [0, -math.sin(roll), math.cos(roll) * math.cos(pitch)]])
+    attitude_jacobian = local_map @ euler_derivative
+    lever = np.array([0.1, -0.04, -0.2])
+    step, finite, finite_position = 1e-6, np.zeros((3, 4)), np.zeros((3, 4))
+    for j in range(4):
+        delta = np.eye(4)[j] * step
+        plus = alignment(f + delta[:3], yaw + delta[3])[0]
+        minus = alignment(f - delta[:3], yaw - delta[3])[0]
+        body_derivative = rotation.T @ ((plus - minus) / (2 * step))
+        finite[:, j] = [body_derivative[2, 1], body_derivative[0, 2],
+                        body_derivative[1, 0]]
+        finite_position[:, j] = (-plus @ lever + minus @ lever) / (2 * step)
+    alignment_error = float(np.max(np.abs(finite - attitude_jacobian)))
+    assert alignment_error < 2e-8
+    assert np.max(np.abs(rotation.T[:, 2] - f / np.linalg.norm(f))) < 1e-12
+    lever_error = float(np.max(np.abs(
+        finite_position - rotation @ skew(lever) @ attitude_jacobian)))
+    assert lever_error < 2e-8
+    try:
+        alignment(np.zeros(3), yaw)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("Zero specific force cannot initialize orientation")
+    # Primitive order: home, accel mean, accel bias, gyro mean, yaw, lever, velocity.
+    j0 = np.zeros((15, 19))
+    j0[:3, :3], j0[3:6, 16:19] = np.eye(3), np.eye(3)
+    j0[6:9, 3:6], j0[6:9, 6:9] = attitude_jacobian[:, :3], -attitude_jacobian[:, :3]
+    j0[6:9, 12] = attitude_jacobian[:, 3]
+    j0[9:12, 6:9], j0[12:15, 9:12] = np.eye(3), np.eye(3)
+    j0[:3, 3:13] = rotation @ skew(lever) @ j0[6:9, 3:13]
+    j0[:3, 13:16] = -rotation
+    primitive_std = np.r_[np.repeat(0.2, 3), np.repeat(0.02, 3),
+                          np.repeat(0.03, 3), np.repeat(0.004, 3), 0.02,
+                          np.repeat(0.01, 3), np.repeat(0.05, 3)]
+    p0 = j0 @ np.diag(primitive_std**2) @ j0.T
+    assert np.linalg.norm(p0[:3, 6:9]) > 0 and np.linalg.norm(p0[6:9, 9:12]) > 0
+    assert np.min(np.linalg.eigvalsh(p0)) > -1e-12
+    correlated_mean_variance = float(np.ones(2) @ np.array([[1, 0.8], [0.8, 1]])
+                                     @ np.ones(2) / 4)
+    assert abs(correlated_mean_variance - 0.9) < 1e-12
+
+    # N03 augmentation preserves marginal information and nonzero cross blocks.
+    base = np.array([[2, 0.3, 0.1], [0.3, 1.5, 0.2], [0.1, 0.2, 1.0]])
+    clone_map = np.array([[1, 0.2, 0], [0, 0, 1]])
+    augmentation = np.vstack([np.eye(3), clone_map])
+    augmented = augmentation @ base @ augmentation.T
+    assert np.linalg.matrix_rank(augmented) == 3 and np.linalg.norm(augmented[:3, 3:]) > 0
+    observation = np.array([[1, -0.3, 0.2, 0, 0]])
+    innovation = (observation @ augmented @ observation.T).item() + 0.1
+    gain = augmented @ observation.T / innovation
+    updated = augmented - gain @ observation @ augmented
+    direct_h = observation[:, :3]
+    direct = base - base @ direct_h.T @ direct_h @ base / innovation
+    clone_marginal_error = float(np.max(np.abs(updated[:3, :3] - direct)))
+    assert clone_marginal_error < 1e-12 and np.linalg.norm(gain[3:]) > 0
+
+    # Identity, qualified transactions, spatial groups and raw holdout differ.
+    identity_seen, raw_ids, required = True, {"txn1"}, 2
+    assert not (identity_seen and len(set()) > 0)
+    assert identity_seen and len(raw_ids) > 0 and len(raw_ids) < required
+    raw_ids.add("txn1")
+    assert len(raw_ids) == 1
+    raw_ids.add("txn2")
+    assert len(raw_ids) == required
+    fit_ids, holdout_ids = {"a", "b", "c", "d"}, {"e"}
+    assert fit_ids.isdisjoint(holdout_ids) and not fit_ids.isdisjoint({"d", "e"})
+    difference_covariance = 5 * np.eye(2) + 5 * np.eye(2) - 4 * np.eye(2) - 4 * np.eye(2)
+    assert 5 - math.sqrt(np.max(np.linalg.eigvalsh(difference_covariance))) >= 3
+    assert 5 - math.sqrt(10) < 3
+
+    # A three-cell fixed likelihood has two equal separated branches.
+    grid = np.array([[-1.0, 0], [0, 0], [1.0, 0]])
+    observed = np.array([1.0, 2.0])
+    means_fit = np.array([[1, 2], [4, 5], [1, 2]], dtype=float)
+    cff = np.array([[1.0, 0.4], [0.4, 1.3]])
+    residuals = observed - means_fit
+    costs = np.array([e @ np.linalg.solve(cff, e) for e in residuals])
+    costs += np.linalg.slogdet(cff)[1] - 2 * math.log(1 / 3)
+    weights = np.exp(-0.5 * (costs - costs.min()))
+    weights /= weights.sum()
+    active = costs - costs.min() <= 5.0  # algebra fixture, not a frozen gamma_Q
+    estimate = grid[int(np.argmin(costs))].copy()
+    radius = float(np.max(np.linalg.norm(grid[active] - estimate, axis=1)) + 0.1)
+    assert active.tolist() == [True, False, True] and radius > 0.5
+    weights_before = weights.copy()
+    cvf, cvv = np.array([[0.3, 0.2]]), 0.9
+    conditional_variance = cvv - (cvf @ np.linalg.solve(cff, cvf.T)).item()
+    assert 0 < conditional_variance < cvv
+    means_new = np.array([2.0, 3.0, 4.0])
+    predictive_means = means_new + residuals @ np.linalg.solve(cff, cvf.T).ravel()
+
+    def predictive_cdf(z: float) -> float:
+        values = np.array([0.5 * (1 + math.erf(
+            (z - mean) / math.sqrt(2 * conditional_variance))) for mean in predictive_means])
+        return float(weights @ values)
+
+    central, extreme = predictive_cdf(3.0), predictive_cdf(30.0)
+    assert 0.05 <= central <= 0.95 and extreme > 0.95
+    assert np.array_equal(weights, weights_before) and np.array_equal(estimate, grid[0])
+    recomputed = np.exp(-0.5 * (costs - costs.min()))
+    recomputed /= recomputed.sum()
+    incorrectly_reused_posterior = weights**2 / np.sum(weights**2)
+    assert np.array_equal(recomputed, weights)
+    assert np.max(np.abs(incorrectly_reused_posterior - weights)) > 1e-6
+    mixture_variance = float(weights @ (conditional_variance + predictive_means**2)
+                             - (weights @ predictive_means)**2)
+    assert mixture_variance > conditional_variance
+    # L02-a conditions a shared primitive once rather than adding an independent prior.
+    shared = np.array([[1.0, 0.2], [0.2, 0.8]])
+    position_prior = np.diag([0.5, 0.7])
+    shared_cross = np.array([[0.1, 0.02], [0.03, -0.08]])
+    conditional_primitive = shared - shared_cross @ np.linalg.solve(
+        position_prior, shared_cross.T)
+    conditional_mean = shared_cross @ np.linalg.solve(position_prior, np.array([0.2, -0.1]))
+    assert np.min(np.linalg.eigvalsh(conditional_primitive)) > 0
+    assert np.linalg.norm(conditional_mean) > 0
+    assert np.linalg.norm(conditional_primitive - shared) > 0
+
+    # P02 full reservations reject a tempting late reference; no movement is run.
+    candidates = {1: {"counts": (0, 1, 1, 0, 0), "service": 6, "reference": 3},
+                  2: {"counts": (0, 2, 0, 0, 0), "service": 8, "reference": 3},
+                  3: {"counts": (0, 2, 0, 0, 0), "service": 7, "reference": 2}}
+    admitted = {key: value for key, value in candidates.items()
+                if value["service"] + value["reference"] <= 10 and value["service"] + 5 <= 20}
+    selected = max(admitted, key=lambda key: (
+        *admitted[key]["counts"], -admitted[key]["service"], -key))
+    assert 2 not in admitted and selected == 3
+    # Shared control/move is paid once; individually adding every node is tested.
+    reserved, service = [], 2
+    for node, duration in [(1, 4), (2, 4), (3, 1)]:
+        if service + duration + 2 <= 10:
+            reserved.append(node)
+            service += duration
+    assert reserved == [1, 3] and service == 7
+    def segment_time(length: float) -> float:
+        return 2 * math.sqrt(length) if length <= 4 else length / 2 + 2
+    assert segment_time(0) == 0 and segment_time(4) == 4 and segment_time(9) == 6.5
+    assert abs(segment_time(4 + 1e-8) - segment_time(4 - 1e-8)) < 2e-8
+    return {"alignment_local_jacobian_difference": alignment_error,
+            "initial_position_lever_jacobian_difference": lever_error,
+            "initial_position_attitude_bias_cross_terms_retained": True,
+            "correlated_static_mean_variance": correlated_mean_variance,
+            "clone_navigation_marginal_difference": clone_marginal_error,
+            "identity_discovery_group_and_raw_holdout_checked": True,
+            "multimodal_grid_region_rejects_tight_quality_fixture": True,
+            "conditional_predictive_cdf_central": central,
+            "conditional_predictive_cdf_extreme": extreme,
+            "heldout_does_not_modify_four_point_weights_or_estimate": True,
+            "external_prior_not_replaced_by_same_data_posterior": True,
+            "mixture_position_uncertainty_retained": True,
+            "correlated_position_prior_conditioned_once": True,
+            "piecewise_move_time_boundary_checked": True,
+            "selected_fixed_candidate": selected, "reserved_fixed_nodes": reserved,
+            "scope": "fixed_initialization_state_matrix_and_probability_examples_not_a_mission"}
+
+
 def run_checks() -> dict:
     return {"all_passed": True, "new_missions": 0,
             "scope": "fixed_input_algebra_not_forest_navigation_or_protocol_validation",
             "reference": reference_checks(), "wakeup": wake_checks(),
             "decision": decision_checks(), "first_model": first_model_checks(),
-            "protocol_parameters": protocol_parameter_checks()}
+            "protocol_parameters": protocol_parameter_checks(), "workflow": workflow_checks()}
 
 
 if __name__ == "__main__":
