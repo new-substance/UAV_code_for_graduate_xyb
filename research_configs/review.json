@@ -36,20 +36,22 @@
     "parameter_registry": "论文总纲.md",
     "protocol_draft_version": "application_fields_v1",
     "analytical_profile_id": "protocol_geometry_analytical_v1",
-    "workflow_math_revision": "initialization_discovery_grid_predictive_waypoint_v2_review_guards",
+    "workflow_math_revision": "coplanar_feasibility_and_correlated_full_vector_holdout_v3",
     "position_backend_design": "finite_grid_map_with_multimodal_nominal_cost_region",
-    "validation_backend_design": "correlated_grid_mixture_cdf_with_active_component_consistency",
+    "validation_backend_design": "conditional_mixture_cdf_and_same_active_component_projection_full_vector_guard",
     "navigation_history_design": "bounded_selected_antenna_clones_known_reference_updates_only",
     "workflow_math_status": "derived_with_fixed_input_checks_not_mission_implemented_or_approved",
     "grid_validation_status": "resolution_sensitivity_and_failure_rules_pending_implementation",
-    "strategy_completeness": "execution_gaps_specified_physical_parameters_and_implementation_pending"
+    "strategy_completeness": "execution_gaps_specified_physical_parameters_and_implementation_pending",
+    "terminal_plane_model": "provisional_common_nominal_horizontal_plane_with_registered_height_errors",
+    "feasibility_status": "coplanar_structure_supported_joint_calibrated_navigation_timing_and_3d_return_unverified"
   },
   "implementation_status": "legacy_visual_engine_pending_forest_wireless_reference_protocol_migration",
-  "reason": "Strategy audit specified bounded wake/coverage progress, early planning-region updates, same-site partial groups, unique phases, stale-quality invalidation, immutable one-decision holdout snapshots and an active-component consistency guard. Fixed-input counterexamples pass; physical parameters, numerical resolution checks and mission implementation remain pending. User no-simulation constraint remains binding.",
+  "reason": "Provisional coplanar terminal geometry supports local 3D ranging away from the plane, but symmetric layouts confound height and common ranging bias. Static diagnostics, closed-form inertial gap calculations and a complete radio ledger do not establish one physically calibrated joint baseline or 3m actual return/landing. Conditional full-vector holdout equations and fixed counterexamples are added. No MATLAB or mission simulation; user restriction and the closed mission gate remain.",
   "specification": "论文总纲.md",
-  "specification_sha256": "89392b78bd4e7e76d588709fe2f010ae37e3e962d98ae19b79ad3e7f22d11e3b",
+  "specification_sha256": "4c7942f079dd97524d4fd7150195cbd46e2dbe22418e4d187e792ef7b8c24480",
   "configuration": "research_configs/baseline.json",
-  "configuration_sha256": "b8780f3c43be66a0cadf148033615ef0f32f200cbc82814060c99d73a269c71e",
+  "configuration_sha256": "5bd2c20c9bbcde9543794be4ae91ca654b4b2157af1eedf129bc99e2cd807352",
   "source_sha256": "130968e0c679d3a50dd89747993bc0c87629a2bf1aed1914584b7fc45daf000e",
   "development_scope": {
     "terminal_counts": [],
@@ -82,22 +84,22 @@
     "literature_strategy_review": {
       "checked_on": "2026-11-24",
       "principles_file": "文献与原理依据.md",
-      "principles_sha256": "8f7f9641c4b4abd2303c288133420639c2b7f565e4b1e40c009e4aca789ef6ca",
+      "principles_sha256": "f72f209451566cffe0c25db685523dd11efa0baf10684a2955add622cf5865b9",
       "paper_entries": 12,
       "read_scope": "selected_body_sections_or_explicit_abstract_only",
       "workflow_steps": 11,
-      "local_links_resolved": 21,
+      "local_links_resolved": 20,
       "local_historical_entries_redirected": 4,
       "legacy_numeric_values_unchanged": true,
       "legacy_public_evidence_unchanged": true,
       "algorithm_implemented": false,
       "new_missions": 0,
-      "manufacturer_document_entries": 2,
-      "method_note_entries": 1
+      "manufacturer_document_entries": 3,
+      "method_note_entries": 2
     },
     "forest_strategy_algebra": {
       "checker": "research_checks/check_forest_strategy_algebra.py",
-      "checker_sha256": "2f3ca0f70c09c0b78811520f12002e8734c933531cb1ec4b28782bc52d823b2f",
+      "checker_sha256": "813737c677e33e4b4b9e18b21770dd90761b8f9558afd645f7f98654e98147b6",
       "checked_on": "2026-11-24",
       "all_passed": true,
       "new_missions": 0,
@@ -196,7 +198,7 @@
         "mixture_gap_old_cdf_accepts": true,
         "mixture_gap_component_guard_rejects": true,
         "valid_component_passes_and_extreme_tail_fails": true,
-        "scalar_projection_can_hide_within_block_contrast_pending_guard": true,
+        "scalar_projection_can_hide_within_block_contrast": true,
         "complete_train_can_exceed_soft_period": true,
         "consumed_cell_ticket_leaves_next_cell_available": true,
         "partial_group_dedup_and_same_site_boundary_checked": true,
@@ -206,6 +208,145 @@
         "fine_fixture_radius": 4.0,
         "reference_only_feasibility_is_not_progress_feasibility": true,
         "scope": "fixed_design_counterexamples_not_state_machine_or_mission_validation"
+      },
+      "coplanar_feasibility": {
+        "scope": "static_geometry_closed_polynomial_and_radio_ledger_not_a_navigation_simulation",
+        "coplanar_layouts": [
+          {
+            "relative_height_m": 18.0,
+            "height_horizontal_std_ratio_white_only": 1.1111111111111112,
+            "white_only_local_rms3d_m": 5.329498042284663,
+            "common_bias_local_height_std_floor_m": 5.587684871413404,
+            "position_rank": 3,
+            "position_plus_free_common_bias_rank": 3
+          },
+          {
+            "relative_height_m": 2.0,
+            "height_horizontal_std_ratio_white_only": 10.0,
+            "white_only_local_rms3d_m": 25.31180554602931,
+            "common_bias_local_height_std_floor_m": 42.532340636273474,
+            "position_rank": 3,
+            "position_plus_free_common_bias_rank": 3
+          },
+          {
+            "relative_height_m": 0.5,
+            "height_horizontal_std_ratio_white_only": 40.0,
+            "white_only_local_rms3d_m": 100.07811402224765,
+            "common_bias_local_height_std_floor_m": 169.73214191778763,
+            "position_rank": 3,
+            "position_plus_free_common_bias_rank": 3
+          }
+        ],
+        "plane_height_position_rank": 2,
+        "exact_symmetric_height_bias_ambiguity_m": 2.801526237005991,
+        "different_horizontal_radii_position_plus_common_bias_rank": 4,
+        "home_reference_capability_examples": [
+          {
+            "horizontal_offset_m": 0.0,
+            "local_height_std_m": 1.0277870948036898,
+            "local_rms3d_m": 1.4341055791834187
+          },
+          {
+            "horizontal_offset_m": 2.0,
+            "local_height_std_m": 5.080342897543316,
+            "local_rms3d_m": 5.17740493630915
+          }
+        ],
+        "illustrative_inertial_gaps": [
+          {
+            "gap_s": 2.0,
+            "illustrative_one_axis_position_std_m": 1.022309119645981
+          },
+          {
+            "gap_s": 5.0,
+            "illustrative_one_axis_position_std_m": 1.2059459690942902
+          },
+          {
+            "gap_s": 10.0,
+            "illustrative_one_axis_position_std_m": 2.34942212666054
+          }
+        ],
+        "full_train_packets": 23,
+        "full_train_s": 2.256241230769231,
+        "paired_transaction_radio_lower_s": 0.23347199999999999,
+        "time_ledger_examples": [
+          {
+            "move_length_m": 0.0,
+            "instruction_move_s": 0.0,
+            "radio_plus_move_lower_s": 4.811830153846154,
+            "assumed_bounded_progress_and_next_reference_s": 13.156241230769233
+          },
+          {
+            "move_length_m": 10.0,
+            "instruction_move_s": 7.0,
+            "radio_plus_move_lower_s": 11.811830153846152,
+            "assumed_bounded_progress_and_next_reference_s": 20.156241230769233
+          }
+        ],
+        "precision_candidate_ranging_exchange_s": 0.04048738461538461,
+        "precision_candidate_same_ranging_airtime_not_an_accuracy_claim": true,
+        "fixed_four_group_grid_resolution": [
+          {
+            "fixed_input_index": 0,
+            "pitch_m": 2.0,
+            "grid_points": 961,
+            "map_xy_m": [
+              0.0,
+              0.0
+            ],
+            "nominal_cost_region_radius_m": 9.660424813608415,
+            "active_cells": 57,
+            "active_touches_domain_boundary": false,
+            "resolution_or_quality_approved": false
+          },
+          {
+            "fixed_input_index": 0,
+            "pitch_m": 1.0,
+            "grid_points": 3721,
+            "map_xy_m": [
+              0.0,
+              0.0
+            ],
+            "nominal_cost_region_radius_m": 8.953318032421869,
+            "active_cells": 221,
+            "active_touches_domain_boundary": false,
+            "resolution_or_quality_approved": false
+          },
+          {
+            "fixed_input_index": 1,
+            "pitch_m": 2.0,
+            "grid_points": 961,
+            "map_xy_m": [
+              0.0,
+              0.0
+            ],
+            "nominal_cost_region_radius_m": 9.899494936611664,
+            "active_cells": 61,
+            "active_touches_domain_boundary": false,
+            "resolution_or_quality_approved": false
+          },
+          {
+            "fixed_input_index": 1,
+            "pitch_m": 1.0,
+            "grid_points": 3721,
+            "map_xy_m": [
+              0.0,
+              0.0
+            ],
+            "nominal_cost_region_radius_m": 9.309432048229175,
+            "active_cells": 241,
+            "active_touches_domain_boundary": false,
+            "resolution_or_quality_approved": false
+          }
+        ],
+        "heldout_contrast_mahalanobis": 250.0000000000001,
+        "heldout_df2_fixture_quantile": 4.605170185988091,
+        "conditional_block_quadratic_identity_difference": 5.684341886080802e-14,
+        "same_active_component_required_by_both_tests": true,
+        "singular_heldout_covariance_rejected_without_jitter": true,
+        "heldout_full_vector_rejects_zero_average_contrast": true,
+        "new_missions": 0,
+        "physical_feasibility_validated": false
       }
     },
     "previous_revision_entry_checks": {
@@ -271,8 +412,8 @@
     },
     "workflow_math_review": {
       "checked_on": "2026-11-24",
-      "revision": "initialization_discovery_grid_predictive_waypoint_v2_review_guards",
-      "formula_tags_total": 41,
+      "revision": "coplanar_feasibility_and_correlated_full_vector_holdout_v3",
+      "formula_tags_total": 45,
       "coverage": {
         "initialization": [
           "I01-a",
@@ -298,7 +439,8 @@
         ],
         "fresh_verification": [
           "V02-a",
-          "V02-b"
+          "V02-b",
+          "V02-c"
         ],
         "next_waypoint": [
           "P02-a",
@@ -307,6 +449,11 @@
         ],
         "online_service_closure": [
           "S02-a"
+        ],
+        "coplanar_feasibility": [
+          "F01-a",
+          "F02-a",
+          "F03-a"
         ]
       },
       "fixed_input_checks_passed": true,
@@ -320,7 +467,8 @@
       "external_prior_and_four_point_fit_inputs_separated": true,
       "current_document_identity_checked": true,
       "online_closure_separated_from_physical_success": true,
-      "service_loop_exits_before_return_phase": true
+      "service_loop_exits_before_return_phase": true,
+      "full_vector_holdout_formula_added": true
     },
     "strategy_completeness_review": {
       "checked_on": "2026-11-24",
@@ -331,34 +479,48 @@
         "single_mutually_exclusive_stage_table",
         "quality_cache_invalidation_and_pending_holdout_snapshot_once",
         "active_component_guard_for_mixture_cdf_gap",
-        "finite_reference_recovery_and_positive_progress_budget"
+        "finite_reference_recovery_and_positive_progress_budget",
+        "same_active_component_full_vector_conditioned_holdout_residual"
       ],
-      "fixed_counterexamples": {
-        "mixture_gap_old_cdf_accepts": true,
-        "mixture_gap_component_guard_rejects": true,
-        "valid_component_passes_and_extreme_tail_fails": true,
-        "scalar_projection_can_hide_within_block_contrast_pending_guard": true,
-        "complete_train_can_exceed_soft_period": true,
-        "consumed_cell_ticket_leaves_next_cell_available": true,
-        "partial_group_dedup_and_same_site_boundary_checked": true,
-        "stale_quality_and_mixed_versions_rejected": true,
-        "coarse_grid_can_miss_branch_despite_cell_radius": true,
-        "coarse_fixture_radius": 1.0,
-        "fine_fixture_radius": 4.0,
-        "reference_only_feasibility_is_not_progress_feasibility": true,
-        "scope": "fixed_design_counterexamples_not_state_machine_or_mission_validation"
-      },
       "open_blockers": [
         "joint_navigation_unknown_position_and_3d_return_physical_feasibility",
         "forest_radio_hardware_and_complete_transaction_timing",
         "grid_resolution_thresholds_and_bounded_failure_interfaces",
         "production_migration_and_candidate_protocol_contribution_validation",
-        "within_holdout_group_correlated_residual_check_for_multiple_transactions"
+        "production_implementation_of_conditioned_full_vector_holdout_and_frozen_threshold"
       ],
       "state_machine_implemented_or_validated": false,
       "matlab_launched": false,
       "new_missions": 0,
-      "full_strategy_physically_validated": false
+      "full_strategy_physically_validated": false,
+      "fixed_counterexamples_evidence": "evidence.forest_strategy_algebra.strategy_review"
+    },
+    "coplanar_feasibility_review": {
+      "checked_on": "2026-11-24",
+      "specification_section": "11",
+      "manufacturer_precision_candidate_source": "D3_Semtech_official_FAQ",
+      "sources_rechecked": [
+        "L3_sections_III_V_VI",
+        "D2_pages_9_10",
+        "D3_ranging_calibration_and_modes",
+        "R2_NIST_and_MATLAB_gammaincinv"
+      ],
+      "single_physically_calibrated_joint_baseline_frozen": false,
+      "reference_and_home_survey_priors_available": false,
+      "calibrated_forest_range_error_and_complete_driver_timing_available": false,
+      "imu_residual_priors_and_return_landing_interface_validated": false,
+      "grid_resolution_and_quality_thresholds_approved": false,
+      "new_missions": 0,
+      "matlab_launched": false,
+      "full_task_feasibility_confirmed": false,
+      "next_required_evidence": [
+        "reference_and_home_layout_joint_survey_prior",
+        "target_driver_calibrated_range_components_and_transaction_bounds",
+        "imu_alignment_bias_and_temperature_priors",
+        "actual_return_approach_and_landing_controller_interface"
+      ],
+      "scope": "conditional_design_diagnostics_not_physical_or_whole_mission_validation",
+      "algebra_evidence": "evidence.forest_strategy_algebra.coplanar_feasibility"
     }
   },
   "legacy_release": {
@@ -380,7 +542,7 @@
     "grid_resolution_sensitivity_validity_and_timeout_rules",
     "wake_ticket_scan_recontact_and_no_progress_caps",
     "recovery_domain_and_actual_return_landing_interface",
-    "within_holdout_group_correlated_residual_gate_and_failure_rules"
+    "implement_conditioned_full_vector_holdout_and_freeze_alpha_and_numerical_failure_rules"
   ],
   "working_strategy": {
     "status": "literature_reviewed_design_not_implemented",
@@ -401,13 +563,14 @@
     "comparison": "same_foundation_fixed_periodic_round_robin_vs_feedback_with_same_hard_guards",
     "position_backend": "finite_grid_map_from_four_spatial_groups",
     "quality": "multimodal_cost_region_with_grid_margin_nominal_only",
-    "verification": "fresh_disjoint_raw_group_same_version_snapshot_once_cdf_and_active_component_consistency",
+    "verification": "immutable_snapshot_once_mixture_cdf_and_same_active_component_projected_and_full_vector_conditional_residual",
     "navigation_history": "selected_antenna_clones_with_known_reference_only_updates",
     "next_waypoint": "capacity_reserved_multi_node_phase_lexicographic_first_graph_waypoint",
     "planning_region": "updated_before_four_groups_from_legal_prior_and_deduplicated_non_holdout_raw_data",
     "partial_group": "complete_remaining_raw_transactions_only_within_same_site_conditions",
     "quality_cache": "invalidate_on_reference_prior_or_calibration_revision_before_recomputation",
-    "recovery": "finite_current_reference_then_admitted_contact_points_else_actual_return_or_explicit_failure"
+    "recovery": "finite_current_reference_then_admitted_contact_points_else_actual_return_or_explicit_failure",
+    "coplanar_feasibility": "same_plane_provisional_height_bias_and_return_approach_need_joint_physical_evidence"
   },
   "previous_design": {
     "revision": "1229466",

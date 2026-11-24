@@ -688,15 +688,121 @@
         "bandwidth_hz": 406250,
         "preamble_symbols": 12,
         "ranging_symbols": 15
+      },
+      "feasibility_fixture": {
+        "usage": "fixed_input_capability_diagnostics_not_measured_parameters_or_mission_configuration",
+        "reference_square_half_span_m": 20.0,
+        "relative_antenna_heights_m": [
+          18.0,
+          2.0,
+          0.5
+        ],
+        "white_range_std_m": 5.0,
+        "samples_per_reference": 2,
+        "common_range_bias_std_m": 3.0,
+        "geometry_noise_provenance": "historical_5m_white_and_3m_bias_stress_values_not_forest_calibration",
+        "home_reference_capability_std_m": 1.0,
+        "home_common_bias_capability_std_m": 0.25,
+        "home_horizontal_offsets_m": [
+          0.0,
+          2.0
+        ],
+        "home_capability_provenance": "hypothetical_precision_contract_not_a_claim_of_SX1280_accuracy",
+        "imu_gap_seconds": [
+          2.0,
+          5.0,
+          10.0
+        ],
+        "post_reference_std": {
+          "position_m": 1.0,
+          "velocity_m_per_s": 0.1,
+          "tilt_deg": 0.2,
+          "acc_bias_m_per_s2": 0.01,
+          "gyro_bias_deg_per_s": 0.02
+        },
+        "imu_prior_provenance": "illustrative_post_update_prior_requires_joint_calibration_and_reference_evidence",
+        "imu_bias_random_walk_in_fixture": false,
+        "timing": {
+          "listener_max_wait_s": 2.0,
+          "effective_receive_window_s": 0.2,
+          "broadcast_start_spacing_s": 0.1,
+          "responding_ids": 4,
+          "response_slot_s": 0.05,
+          "reference_count": 4,
+          "unknown_samples": 2,
+          "pair_attempt_bound_s": 0.5,
+          "attempts_per_pair": 2,
+          "computation_bound_s": 0.1,
+          "move_lengths_m": [
+            0.0,
+            10.0
+          ],
+          "cruise_speed_m_per_s": 2.0,
+          "acceleration_m_per_s2": 1.0,
+          "data_attempt_bound_s": 0.2,
+          "data_attempts": 2,
+          "control_and_mode_overhead_bound_s": 0.2,
+          "reference_contact_state": "already_contacted_valid_lease_and_immediate_reserved_rx_window_extra_recontact_not_included"
+        },
+        "timing_provenance": "radio_formula_plus_explicit_unmeasured_preparation_timeout_listening_and_motion_assumptions",
+        "grid_diagnostic": {
+          "domain_half_width_m": 30.0,
+          "pitches_m": [
+            2.0,
+            1.0
+          ],
+          "uav_cardinal_radius_m": 20.0,
+          "relative_flight_height_m": 18.0,
+          "independent_nav_radial_std_m": 1.0,
+          "common_nav_translation_std_m": 1.0,
+          "common_terminal_height_std_m": 2.0,
+          "cost_increment": 5.0,
+          "fixed_range_vectors_m": [
+            [
+              26.90724809414742,
+              26.90724809414742,
+              26.90724809414742,
+              26.90724809414742,
+              26.90724809414742,
+              26.90724809414742,
+              26.90724809414742,
+              26.90724809414742
+            ],
+            [
+              29.90724809414742,
+              29.90724809414742,
+              29.90724809414742,
+              29.90724809414742,
+              29.90724809414742,
+              29.90724809414742,
+              29.90724809414742,
+              29.90724809414742
+            ]
+          ],
+          "provenance": "two_constructed_eight_row_algebra_inputs_not_measurements_same_external_uniform_prior_each_resolution",
+          "scope": "fixed_four_group_likelihood_resolution_diagnostic_not_unknown_terminal_or_navigation_validation"
+        }
+      },
+      "precision_ranging_candidate": {
+        "sf": 10,
+        "bandwidth_hz": 1625000,
+        "preamble_symbols": 12,
+        "ranging_symbols": 15,
+        "source": "D3_Semtech_official_FAQ_highest_accuracy_mode",
+        "status": "candidate_only_same_symbol_time_not_a_precision_or_link_guarantee",
+        "ordinary_control_phy_unchanged": true,
+        "calibrated_error_model_available": false
       }
     },
     "analytical_profile_id": "protocol_geometry_analytical_v1",
-    "workflow_math_revision": "initialization_discovery_grid_predictive_waypoint_v2_review_guards",
+    "workflow_math_revision": "coplanar_feasibility_and_correlated_full_vector_holdout_v3",
     "position_backend_design": "finite_grid_map_with_multimodal_nominal_cost_region",
-    "validation_backend_design": "correlated_grid_mixture_cdf_with_active_component_consistency",
+    "validation_backend_design": "conditional_mixture_cdf_and_same_active_component_projection_full_vector_guard",
     "navigation_history_design": "bounded_selected_antenna_clones_known_reference_updates_only",
     "workflow_math_status": "derived_with_fixed_input_checks_not_mission_implemented_or_approved",
     "grid_validation_status": "resolution_sensitivity_and_failure_rules_pending_implementation",
-    "strategy_completeness": "execution_gaps_specified_physical_parameters_and_implementation_pending"
+    "strategy_completeness": "execution_gaps_specified_physical_parameters_and_implementation_pending",
+    "terminal_plane_model": "provisional_common_nominal_horizontal_plane_with_registered_height_errors",
+    "feasibility_status": "coplanar_structure_supported_joint_calibrated_navigation_timing_and_3d_return_unverified"
   }
 }

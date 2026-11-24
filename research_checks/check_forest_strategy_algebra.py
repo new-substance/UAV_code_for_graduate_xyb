@@ -521,7 +521,7 @@ def strategy_review_checks() -> dict:
     gap, left_mode, tail = acceptance(0.0), acceptance(-5.0), acceptance(30.0)
     assert gap == (0.5, True, False)
     assert left_mode[2] and not tail[2]
-    # Even the revised scalar rule loses within-block contrasts; still pending.
+    # A scalar rule loses contrasts; V02-c adds a full-vector guard below.
     contrast, projection = np.array([5.0, -5.0]), np.array([0.5, 0.5])
     assert float(projection @ contrast) == 0.0 and float(contrast @ contrast) == 50.0
 
@@ -565,7 +565,7 @@ def strategy_review_checks() -> dict:
     return {"mixture_gap_old_cdf_accepts": gap[1],
             "mixture_gap_component_guard_rejects": not gap[2],
             "valid_component_passes_and_extreme_tail_fails": True,
-            "scalar_projection_can_hide_within_block_contrast_pending_guard": True,
+            "scalar_projection_can_hide_within_block_contrast": True,
             "complete_train_can_exceed_soft_period": True,
             "consumed_cell_ticket_leaves_next_cell_available": True,
             "partial_group_dedup_and_same_site_boundary_checked": True,
@@ -577,13 +577,226 @@ def strategy_review_checks() -> dict:
             "scope": "fixed_design_counterexamples_not_state_machine_or_mission_validation"}
 
 
+def fixed_grid_resolution_checks(profile: dict) -> list[dict]:
+    """L02/Q01, two registered eight-row inputs; no truth or flight history."""
+    fixture = profile["feasibility_fixture"]
+    grid_fixture = fixture["grid_diagnostic"]
+    radius, height = grid_fixture["uav_cardinal_radius_m"], grid_fixture["relative_flight_height_m"]
+    samples = fixture["samples_per_reference"]
+    positions = np.repeat(np.array([[radius, 0, height], [0, radius, height],
+        [-radius, 0, height], [0, -radius, height]]), samples, axis=0)
+    dimension = len(positions)
+    same_group = np.kron(np.eye(4), np.ones((samples, samples)))
+    domain = grid_fixture["domain_half_width_m"]
+    rows = []
+    for input_index, observed in enumerate(grid_fixture["fixed_range_vectors_m"]):
+        observed = np.asarray(observed)
+        assert observed.shape == (dimension,)
+        for pitch in grid_fixture["pitches_m"]:
+            axis = np.arange(-domain, domain + pitch / 2, pitch)
+            assert len(axis)**2 <= 4096
+            xx, yy = np.meshgrid(axis, axis, indexing="ij")
+            points = np.column_stack([xx.ravel(), yy.ravel()])
+            widths = np.full(len(axis), pitch)
+            widths[[0, -1]] = pitch / 2
+            prior = np.outer(widths, widths).ravel() / (2 * domain)**2
+            assert abs(prior.sum() - 1) < 1e-12
+            vectors = positions[None, :, :] - np.column_stack([points, np.zeros(len(points))])[:, None, :]
+            distances = np.linalg.norm(vectors, axis=2)
+            unit = vectors / distances[:, :, None]
+            covariance = np.broadcast_to(fixture["white_range_std_m"]**2 * np.eye(dimension)
+                + grid_fixture["independent_nav_radial_std_m"]**2 * same_group
+                + fixture["common_range_bias_std_m"]**2 * np.ones((dimension, dimension)),
+                (len(points), dimension, dimension)).copy()
+            covariance += grid_fixture["common_nav_translation_std_m"]**2 * (unit @ unit.transpose(0, 2, 1))
+            uz = unit[:, :, 2]
+            covariance += grid_fixture["common_terminal_height_std_m"]**2 * uz[:, :, None] * uz[:, None, :]
+            chol = np.linalg.cholesky(covariance)
+            whitened = np.linalg.solve(chol, (observed[None, :] - distances)[:, :, None])[:, :, 0]
+            costs = np.sum(whitened**2, axis=1) + 2 * np.log(np.diagonal(chol, axis1=1, axis2=2)).sum(axis=1)
+            costs -= 2 * np.log(prior)
+            index = int(np.argmin(costs))
+            active = costs - costs[index] <= grid_fixture["cost_increment"]
+            estimate = points[index]
+            nominal_radius = np.max(np.linalg.norm(points[active] - estimate, axis=1)) + pitch / math.sqrt(2)
+            rows.append({"fixed_input_index": input_index, "pitch_m": pitch,
+                "grid_points": len(points), "map_xy_m": estimate.tolist(),
+                "nominal_cost_region_radius_m": float(nominal_radius),
+                "active_cells": int(active.sum()),
+                "active_touches_domain_boundary": bool(np.any(np.abs(points[active]) >= domain)),
+                "resolution_or_quality_approved": False})
+    return rows
+
+
+def coplanar_feasibility_checks() -> dict:
+    """Section 11 static geometry, analytic gap and packet-ledger diagnostics."""
+    config = json.loads((Path(__file__).resolve().parents[1]
+                         / "research_configs/baseline.json").read_text(encoding="utf-8"))
+    profile = config["project_context"]["analytical_profile"]
+    fixture = profile["feasibility_fixture"]
+    assert fixture["usage"].startswith("fixed_input_capability_diagnostics")
+    half_span = fixture["reference_square_half_span_m"]
+    white_std = fixture["white_range_std_m"]
+    samples = fixture["samples_per_reference"]
+    common_std = fixture["common_range_bias_std_m"]
+    anchors = np.array([[-half_span, -half_span, 0], [half_span, -half_span, 0],
+                        [half_span, half_span, 0], [-half_span, half_span, 0]])
+    layouts = []
+    for height in fixture["relative_antenna_heights_m"]:
+        differences = np.array([0.0, 0.0, height]) - anchors
+        geometry = differences / np.linalg.norm(differences, axis=1)[:, None]
+        covariance = white_std**2 / samples * np.eye(4) + common_std**2 * np.ones((4, 4))
+        position = np.linalg.inv(geometry.T @ np.linalg.solve(covariance, geometry))
+        distance2 = 2 * half_span**2 + height**2
+        expected_z = (white_std**2 / (4 * samples) + common_std**2) * distance2 / height**2
+        assert abs(position[2, 2] - expected_z) < 1e-8
+        assert np.linalg.matrix_rank(geometry) == 3
+        assert np.linalg.matrix_rank(np.column_stack([geometry, np.ones(4)])) == 3
+        white_position = np.linalg.inv(geometry.T @ geometry) * white_std**2 / samples
+        layouts.append({"relative_height_m": height,
+            "height_horizontal_std_ratio_white_only": half_span / height,
+            "white_only_local_rms3d_m": math.sqrt(np.trace(white_position)),
+            "common_bias_local_height_std_floor_m": common_std * math.sqrt(distance2) / height,
+            "position_rank": 3, "position_plus_free_common_bias_rank": 3})
+    ground_geometry = -anchors / np.linalg.norm(anchors, axis=1)[:, None]
+    assert np.linalg.matrix_rank(ground_geometry) == 2
+    heights = [fixture["relative_antenna_heights_m"][0],
+               fixture["relative_antenna_heights_m"][0] * 2 / 3]
+    ranges = [math.sqrt(2 * half_span**2 + h**2) for h in heights]
+    compensating_bias = ranges[0] - ranges[1]
+    assert abs(ranges[1] + compensating_bias - ranges[0]) < 1e-12
+
+    # One coplanar home reference helps only under favorable horizontal geometry.
+    home_anchors = np.vstack([anchors, np.zeros(3)])
+    alternative_anchors = np.vstack([anchors[:3], np.zeros(3)])
+    differences = np.array([0, 0, heights[0]]) - alternative_anchors
+    alternative_geometry = differences / np.linalg.norm(differences, axis=1)[:, None]
+    assert np.linalg.matrix_rank(np.column_stack([alternative_geometry, np.ones(4)])) == 4
+    home_rows = []
+    for offset in fixture["home_horizontal_offsets_m"]:
+        point = np.array([offset, 0, fixture["relative_antenna_heights_m"][-1]])
+        differences = point - home_anchors
+        geometry = differences / np.linalg.norm(differences, axis=1)[:, None]
+        covariance = (fixture["home_reference_capability_std_m"]**2 * np.eye(5)
+                      + fixture["home_common_bias_capability_std_m"]**2 * np.ones((5, 5)))
+        position = np.linalg.inv(geometry.T @ np.linalg.solve(covariance, geometry))
+        home_rows.append({"horizontal_offset_m": offset,
+                          "local_height_std_m": math.sqrt(position[2, 2]),
+                          "local_rms3d_m": math.sqrt(np.trace(position))})
+    assert home_rows[1]["local_height_std_m"] > 4 * home_rows[0]["local_height_std_m"]
+
+    # Exact closed polynomial of a frozen, level, single-horizontal-axis model.
+    imu = profile["imu_datasheet_fixture"]
+    gravity = 9.80665
+    qa = (imu["acc_xy_micro_g_per_sqrt_hz"] * 1e-6 * gravity)**2 / 2
+    qg = math.radians(imu["gyro_deg_per_s_per_sqrt_hz"])**2 / 2
+    prior = fixture["post_reference_std"]
+    prior_covariance = np.diag(np.array([prior["position_m"], prior["velocity_m_per_s"],
+        math.radians(prior["tilt_deg"]), prior["acc_bias_m_per_s2"],
+        math.radians(prior["gyro_bias_deg_per_s"])])**2)
+    gap_rows = []
+    for gap in fixture["imu_gap_seconds"]:
+        mapping = np.array([1, gap, gravity * gap**2 / 2, -gap**2 / 2, -gravity * gap**3 / 6])
+        noise = qa * gap**3 / 3 + gravity**2 * qg * gap**5 / 20
+        variance = float(mapping @ prior_covariance @ mapping + noise)
+        gap_rows.append({"gap_s": gap, "illustrative_one_axis_position_std_m": math.sqrt(variance)})
+    assert all(a["illustrative_one_axis_position_std_m"] < b["illustrative_one_axis_position_std_m"]
+               for a, b in zip(gap_rows, gap_rows[1:]))
+
+    timing = fixture["timing"]
+    phy, ranging = profile["ordinary_phy"], profile["ranging_phy"]
+    packet = lambda size: css_packet_time_s(size, phy)
+    ranging_s = (2**ranging["sf"] / ranging["bandwidth_hz"]
+                 * (ranging["preamble_symbols"] + 2 * ranging["ranging_symbols"] + 22.25))
+    precision = profile["precision_ranging_candidate"]
+    precision_s = (2**precision["sf"] / precision["bandwidth_hz"]
+                   * (precision["preamble_symbols"] + 2 * precision["ranging_symbols"] + 22.25))
+    assert abs(precision_s - ranging_s) < 1e-12
+    pair_radio = 2 * packet(28) + 2 * ranging_s + packet(28) + packet(18)
+    wake_packet = packet(29 + 5 * timing["responding_ids"])
+    assert timing["effective_receive_window_s"] >= timing["broadcast_start_spacing_s"] + wake_packet
+    train_packets = math.ceil((timing["listener_max_wait_s"] + timing["effective_receive_window_s"]
+        - wake_packet) / timing["broadcast_start_spacing_s"]) + 1
+    train_s = (train_packets - 1) * timing["broadcast_start_spacing_s"] + wake_packet
+    assert train_s >= timing["listener_max_wait_s"] + timing["effective_receive_window_s"]
+    pair_bound = timing["pair_attempt_bound_s"] * timing["attempts_per_pair"]
+    reference_lower = timing["reference_count"] * samples * pair_radio
+    reference_bound = timing["reference_count"] * samples * pair_bound
+    progress_lower = (train_s + timing["responding_ids"] * packet(26)
+                      + timing["unknown_samples"] * pair_radio + packet(28) + packet(18))
+    progress_bound = (train_s + timing["responding_ids"] * timing["response_slot_s"]
+        + timing["unknown_samples"] * pair_bound + timing["data_attempt_bound_s"] * timing["data_attempts"]
+        + timing["control_and_mode_overhead_bound_s"] + timing["computation_bound_s"])
+    assert pair_bound >= pair_radio and progress_bound >= progress_lower
+    time_rows = []
+    for length in timing["move_lengths_m"]:
+        speed, acceleration = timing["cruise_speed_m_per_s"], timing["acceleration_m_per_s2"]
+        move = (2 * math.sqrt(length / acceleration) if length <= speed**2 / acceleration
+                else length / speed + speed / acceleration)
+        time_rows.append({"move_length_m": length, "instruction_move_s": move,
+            "radio_plus_move_lower_s": move + progress_lower + reference_lower,
+            "assumed_bounded_progress_and_next_reference_s": move + progress_bound + reference_bound})
+
+    # V02-c: Cholesky whitening retains a contrast lost by the scalar average.
+    conditional = np.array([[1.0, 0.8], [0.8, 1.0]])
+    chol = np.linalg.cholesky(conditional)
+    contrast = np.array([5.0, -5.0])
+    whitened = np.linalg.solve(chol, contrast)
+    statistic = float(whitened @ whitened)
+    assert abs(statistic - contrast @ np.linalg.solve(conditional, contrast)) < 1e-10
+    fit_covariance = np.array([[2.0, 0.3], [0.3, 1.5]])
+    cross = np.array([[0.4, 0.2], [0.1, 0.35]])
+    raw_holdout_covariance = conditional + cross @ np.linalg.solve(fit_covariance, cross.T)
+    joint = np.block([[fit_covariance, cross.T], [cross, raw_holdout_covariance]])
+    fit_residual = np.array([0.2, -0.1])
+    raw_holdout_residual = contrast + cross @ np.linalg.solve(fit_covariance, fit_residual)
+    joint_residual = np.r_[fit_residual, raw_holdout_residual]
+    conditional_statistic = (joint_residual @ np.linalg.solve(joint, joint_residual)
+                             - fit_residual @ np.linalg.solve(fit_covariance, fit_residual))
+    conditioning_error = float(abs(conditional_statistic - statistic))
+    assert conditioning_error < 1e-9
+    alpha = 0.1  # independent algebra fixture; formal alpha_V is not frozen
+    quantile_df2 = -2 * math.log(alpha)
+    assert abs(np.array([0.5, 0.5]) @ contrast) == 0 and statistic > quantile_df2
+    assert np.array([0.1, -0.1]) @ np.linalg.solve(conditional, np.array([0.1, -0.1])) < quantile_df2
+    try:
+        np.linalg.cholesky(np.ones((2, 2)))
+    except np.linalg.LinAlgError:
+        pass
+    else:
+        raise AssertionError("A singular heldout model must fail rather than receive artificial jitter")
+    # Separate existential choices would combine different incompatible modes.
+    mode_residuals = np.array([[5.0, -5.0], [1.4, 1.4]])
+    projected_cdf = np.array([0.5 * (1 + math.erf(row.mean())) for row in mode_residuals])
+    projected_ok = (alpha / 2 <= projected_cdf) & (projected_cdf <= 1 - alpha / 2)
+    vector_ok = np.sum(mode_residuals**2, axis=1) <= quantile_df2
+    assert projected_ok.any() and vector_ok.any() and not np.any(projected_ok & vector_ok)
+    return {"scope": "static_geometry_closed_polynomial_and_radio_ledger_not_a_navigation_simulation",
+        "coplanar_layouts": layouts, "plane_height_position_rank": 2,
+        "exact_symmetric_height_bias_ambiguity_m": compensating_bias,
+        "different_horizontal_radii_position_plus_common_bias_rank": 4,
+        "home_reference_capability_examples": home_rows, "illustrative_inertial_gaps": gap_rows,
+        "full_train_packets": train_packets, "full_train_s": train_s,
+        "paired_transaction_radio_lower_s": pair_radio, "time_ledger_examples": time_rows,
+        "precision_candidate_ranging_exchange_s": precision_s,
+        "precision_candidate_same_ranging_airtime_not_an_accuracy_claim": True,
+        "fixed_four_group_grid_resolution": fixed_grid_resolution_checks(profile),
+        "heldout_contrast_mahalanobis": statistic, "heldout_df2_fixture_quantile": quantile_df2,
+        "conditional_block_quadratic_identity_difference": conditioning_error,
+        "same_active_component_required_by_both_tests": True,
+        "singular_heldout_covariance_rejected_without_jitter": True,
+        "heldout_full_vector_rejects_zero_average_contrast": True,
+        "new_missions": 0, "physical_feasibility_validated": False}
+
+
 def run_checks() -> dict:
     return {"all_passed": True, "new_missions": 0,
             "scope": "fixed_input_algebra_not_forest_navigation_or_protocol_validation",
             "reference": reference_checks(), "wakeup": wake_checks(),
             "decision": decision_checks(), "first_model": first_model_checks(),
             "protocol_parameters": protocol_parameter_checks(), "workflow": workflow_checks(),
-            "strategy_review": strategy_review_checks()}
+            "strategy_review": strategy_review_checks(),
+            "coplanar_feasibility": coplanar_feasibility_checks()}
 
 
 if __name__ == "__main__":
