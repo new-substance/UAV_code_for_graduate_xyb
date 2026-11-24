@@ -4,7 +4,7 @@
   "current_design": {
     "design_id": "forest_css_isac_20261123",
     "title": "基于啁啾扩频的通感一体化的协议相关技术",
-    "updated_on": "2026-11-23",
+    "updated_on": "2026-11-24",
     "application_domain": "civil_gnss_denied_forest_ecological_monitoring",
     "scene_name": "GNSS不可用林区生态监测：临时节点部署验收与位置登记",
     "visual_markers_used": false,
@@ -19,14 +19,25 @@
     "workflow_specification": "论文总纲.md",
     "business_phase_status": "proposed_deployment_acceptance_with_later_monitoring_wakeup",
     "strategy_revision": "coverage_periodic_feedback_v1",
-    "principles_and_literature": "文献与原理依据.md"
+    "principles_and_literature": "文献与原理依据.md",
+    "model_revision": "level_flight_imu_css_v1",
+    "target_installation": "ground_or_low_mount_with_uncertain_terrain_and_mount_height_prior",
+    "flight_constraint": "nominal_common_horizontal_cruise_plane_height_error_retained",
+    "navigation_sensors": [
+      "imu",
+      "css_known_reference_ranging"
+    ],
+    "independent_altimetry_used": false,
+    "initialization": "surveyed_home_and_calibrated_heading_with_uncertain_priors",
+    "css_hardware_status": "unselected_candidates_under_review",
+    "model_derivation_status": "first_symbolic_pass_and_fixed_algebra_not_full_model_approval"
   },
   "implementation_status": "legacy_visual_engine_pending_forest_wireless_reference_protocol_migration",
-  "reason": "Literature-reviewed initial coverage, periodic reference/wake interaction and bounded multi-terminal feedback are specified; forest navigation/protocol parameters and implementation remain unreviewed.",
+  "reason": "Confirmed low-mounted targets, uncertain terrain/height priors, nominal level flight with IMU/CSS only, and uncertain initial home/heading. First symbolic measurement/navigation/time-budget derivations are documented; hardware, numeric priors, full model and implementation remain unreviewed.",
   "specification": "论文总纲.md",
-  "specification_sha256": "c4069c98aec49df752f83a736846f9aae005d2b34dcce166470e1524159a4255",
+  "specification_sha256": "5bcd8960d50c1eb0194753da8a7228732029c290b54b770c601f525540fd7513",
   "configuration": "research_configs/baseline.json",
-  "configuration_sha256": "0fdbcb3bf6940b2df050f40acc7950b7cadf6267bfc4bda4acc98e4a803ad204",
+  "configuration_sha256": "4a281a6b391256961d030e06b9c07eeca51cce8a0a647db88087d481b590dbb5",
   "source_sha256": "130968e0c679d3a50dd89747993bc0c87629a2bf1aed1914584b7fc45daf000e",
   "development_scope": {
     "terminal_counts": [],
@@ -55,22 +66,12 @@
     "legacy_summary": "evidence/development_cases.json",
     "legacy_geometry": "evidence/geometry_hypotheses.json",
     "source_file_count": 160,
-    "forest_entry_check_status": "passed_current_literature_strategy_entry_only",
-    "forest_entry_checks": {
-      "checked_on": "2026-11-23",
-      "entry_checks_passed": true,
-      "run_refused_before_task": true,
-      "new_missions": 0,
-      "exact_fingerprints_match": true,
-      "output_directories_unchanged": true,
-      "design_id": "forest_css_isac_20261123",
-      "scope": "entry_only_not_forest_model_or_algorithm_validation"
-    },
+    "forest_entry_check_status": "passed_level_flight_model_entry_only",
     "literature_strategy_review": {
-      "checked_on": "2026-11-23",
+      "checked_on": "2026-11-24",
       "principles_file": "文献与原理依据.md",
-      "principles_sha256": "8afe17c4142757cf0f361075d2b28fc3c50d9a2d78519d3c1f4b0fe23e459047",
-      "paper_entries": 10,
+      "principles_sha256": "351d9b4865931dd1bd1e25008179fad6fa812cba2b042a1d1143f1d264675b0c",
+      "paper_entries": 11,
       "read_scope": "selected_body_sections_or_explicit_abstract_only",
       "workflow_steps": 11,
       "local_links_resolved": 21,
@@ -82,7 +83,7 @@
     },
     "forest_strategy_algebra": {
       "checker": "research_checks/check_forest_strategy_algebra.py",
-      "checker_sha256": "2a7f70b094d860df84825df982f840ee83680fc8e2464429c5f699154dee0629",
+      "checker_sha256": "b5d3bcb5e5fe38077d62886ce5291633a294468b358dcadabea9622540bad92e",
       "all_passed": true,
       "new_missions": 0,
       "scope": "fixed_input_algebra_not_forest_navigation_or_protocol_validation",
@@ -104,7 +105,64 @@
         "next_reference_reservation_rejects_counterexample": true,
         "multi_node_key_selects_candidate": 2,
         "scope": "finite_design_examples_not_route_performance"
+      },
+      "checked_on": "2026-11-24",
+      "first_model": {
+        "affine_clock_distance_error_m": 1.2812186866995035e-08,
+        "uncompensated_clock_error_exceeds_one_m": true,
+        "position_geometry_ranks": [
+          3,
+          2,
+          2
+        ],
+        "above_below_mirror_range_difference": 0.0,
+        "terrain_jacobian_max_abs_difference": 1.40181255492422e-09,
+        "correlated_gls_heldout_variance_difference": 4.440892098500626e-16,
+        "correlated_update_covariance_difference": 0.0,
+        "common_survey_translation_floor_retained": true,
+        "scope": "fixed_algebra_not_full_ins_observability_or_forest_validation"
       }
+    },
+    "previous_revision_entry_checks": {
+      "revision": "aa28cfd",
+      "scope": "previous_document_identity_only",
+      "result": {
+        "checked_on": "2026-11-23",
+        "entry_checks_passed": true,
+        "run_refused_before_task": true,
+        "new_missions": 0,
+        "exact_fingerprints_match": true,
+        "output_directories_unchanged": true,
+        "design_id": "forest_css_isac_20261123",
+        "scope": "entry_only_not_forest_model_or_algorithm_validation"
+      }
+    },
+    "first_model_derivation": {
+      "checked_on": "2026-11-24",
+      "model_revision": "level_flight_imu_css_v1",
+      "confirmed_inputs": [
+        "low_mount_with_uncertain_terrain_height",
+        "nominal_level_flight_imu_css_only",
+        "uncertain_initial_home_heading",
+        "no_prespecified_css_hardware"
+      ],
+      "equation_tags": 15,
+      "scope": "symbolic_first_pass_with_limited_deterministic_algebra",
+      "full_ins_observability_proven": false,
+      "hardware_timing_frozen": false,
+      "model_approved": false,
+      "new_missions": 0
+    },
+    "forest_entry_checks": {
+      "checked_on": "2026-11-24",
+      "entry_checks_passed": true,
+      "run_refused_before_task": true,
+      "new_missions": 0,
+      "exact_fingerprints_match": true,
+      "output_directories_unchanged": true,
+      "design_id": "forest_css_isac_20261123",
+      "model_revision": "level_flight_imu_css_v1",
+      "scope": "entry_only_not_full_ins_or_forest_model_validation"
     }
   },
   "legacy_release": {
@@ -115,7 +173,8 @@
     "scope": "historical_visual_model_only_not_current_design_approval"
   },
   "pending_decisions": [
-    "forest_terrain_node_installation_height_prior_and_initial_uav_state",
+    "terrain_low_mount_height_prior_values_and_correlations",
+    "nominal_cruise_height_departure_tolerance_and_initial_prior_covariances",
     "reference_target_counts_layout_coordinate_bias_and_link_models",
     "css_hardware_phy_ranging_transactions_and_payload_fields",
     "reference_wakeup_listening_periods_and_clock_guard_bounds",

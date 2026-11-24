@@ -616,7 +616,7 @@
   "project_context": {
     "design_id": "forest_css_isac_20261123",
     "title": "基于啁啾扩频的通感一体化的协议相关技术",
-    "updated_on": "2026-11-23",
+    "updated_on": "2026-11-24",
     "application_domain": "civil_gnss_denied_forest_ecological_monitoring",
     "scene_name": "GNSS不可用林区生态监测：临时节点部署验收与位置登记",
     "visual_markers_used": false,
@@ -634,6 +634,17 @@
     "known_reference_model_implemented": false,
     "new_protocol_model_implemented": false,
     "strategy_revision": "coverage_periodic_feedback_v1",
-    "principles_and_literature": "文献与原理依据.md"
+    "principles_and_literature": "文献与原理依据.md",
+    "model_revision": "level_flight_imu_css_v1",
+    "target_installation": "ground_or_low_mount_with_uncertain_terrain_and_mount_height_prior",
+    "flight_constraint": "nominal_common_horizontal_cruise_plane_height_error_retained",
+    "navigation_sensors": [
+      "imu",
+      "css_known_reference_ranging"
+    ],
+    "independent_altimetry_used": false,
+    "initialization": "surveyed_home_and_calibrated_heading_with_uncertain_priors",
+    "css_hardware_status": "unselected_candidates_under_review",
+    "model_derivation_status": "first_symbolic_pass_and_fixed_algebra_not_full_model_approval"
   }
 }
