@@ -49,12 +49,12 @@
     "joint_model_id": "coplanar_css_imu_joint_model_v1"
   },
   "implementation_status": "forest_math_state_frame_and_selection_interfaces_checked_task_adapter_forecast_and_runtime_integration_pending",
-  "reason": "Literature and all 49 equations are audited. Fixed-input MATLAB evidence covers core math, ranging-job scheduling, interval covariance and the actual received-pair-book to MAP/Q/one-shot heldout/spatial service eligibility bridge. Stable group selection, partial completion and published-node stop guards are checked. Waypoint-to-belief provider, complete selector/airtime execution, physical sleep, return and writer integration remain pending. No mission or nominal/actual trajectory rollout; 50ms timing unverified; no-simulation instruction remains binding.",
+  "reason": "Core fixed-input evidence now includes the waypoint graph/budget and a single M01 nominal actuator step matching N01 means. The waypoint-to-profile provider is authored but its complete profile loop has not been executed. Ground-to-cruise graph edges are subdivided using the existing 5m segment parameter; vertical timing respects its 1m/s command limit. Candidate/selector binding, full airtime, CSS landing/return and writer integration remain pending. No trajectory rollout or mission; 50ms runtime unverified; no-simulation instruction remains binding.",
   "specification": "论文总纲.md",
-  "specification_sha256": "9371421cea6535b4f57dca73bb1942e1a87a61d8147c51040f18af4c1b72ee06",
+  "specification_sha256": "cd8d0cce8e1b6c60ba436cab08030cc73b37f1f045af6bcbd282b53c45d19405",
   "configuration": "research_configs/baseline.json",
   "configuration_sha256": "1d230e1ab5e12bb12c52eb4ff2c29af7b7153eb3befe4fa532964b6d7f193537",
-  "source_sha256": "4a92a3598e6d29e6a60586f53e6b91339a64372321028387585ae6a4be6839b5",
+  "source_sha256": "b8c26b3b3e9d376077318efa19982bd372d02a4024ccef620b592957b4e27c74",
   "development_scope": {
     "terminal_counts": [],
     "max_cases_per_batch": 0,
@@ -71,7 +71,7 @@
     "joint_simulation_model_definition": {
       "status": "reviewed_with_explicit_conditions_for_implementation_only",
       "model_id": "coplanar_css_imu_joint_model_v1",
-      "specification_sha256": "9371421cea6535b4f57dca73bb1942e1a87a61d8147c51040f18af4c1b72ee06",
+      "specification_sha256": "cd8d0cce8e1b6c60ba436cab08030cc73b37f1f045af6bcbd282b53c45d19405",
       "configuration_sha256": "1d230e1ab5e12bb12c52eb4ff2c29af7b7153eb3befe4fa532964b6d7f193537",
       "evidence": "evidence.joint_simulation_model_review",
       "mission_execution_approved": false
@@ -80,8 +80,8 @@
       "status": "fixed_input_checked_not_task_released",
       "mission_execution_approved": false,
       "evidence": "evidence.forest_component_review",
-      "source_sha256": "4a92a3598e6d29e6a60586f53e6b91339a64372321028387585ae6a4be6839b5",
-      "specification_sha256": "9371421cea6535b4f57dca73bb1942e1a87a61d8147c51040f18af4c1b72ee06",
+      "source_sha256": "b8c26b3b3e9d376077318efa19982bd372d02a4024ccef620b592957b4e27c74",
+      "specification_sha256": "cd8d0cce8e1b6c60ba436cab08030cc73b37f1f045af6bcbd282b53c45d19405",
       "configuration_sha256": "1d230e1ab5e12bb12c52eb4ff2c29af7b7153eb3befe4fa532964b6d7f193537"
     }
   },
@@ -96,7 +96,7 @@
     "new_design_validated": false,
     "legacy_summary": "evidence/development_cases.json",
     "legacy_geometry": "evidence/geometry_hypotheses.json",
-    "source_file_count": 172,
+    "source_file_count": 173,
     "forest_entry_check_status": "not_rerun_user_requested_no_simulation_static_identity_verified",
     "literature_strategy_review": {
       "checked_on": "2026-11-25",
@@ -752,7 +752,7 @@
       "checked_on": "2026-11-25",
       "command": "addpath('matlab_mvp'); out=project('check');",
       "checker": "research_checks/check_forest_components.m",
-      "checker_sha256": "8905c17b389e9c6977e3b70d4a50ae218cde89b9d74c63809e14002aefd871d8",
+      "checker_sha256": "d15c131383f9093fcba770f547a61e40eda6acc0a2d3d437726b2bfcb793b3a1",
       "all_passed": true,
       "matlab_version": "R2023a",
       "code_analyzer_messages": 0,
@@ -787,9 +787,9 @@
       },
       "runtime_wall_clock_budget_validated": false,
       "no_new_result_batch_or_full_trajectory_files": true,
-      "specification_sha256": "9371421cea6535b4f57dca73bb1942e1a87a61d8147c51040f18af4c1b72ee06",
+      "specification_sha256": "cd8d0cce8e1b6c60ba436cab08030cc73b37f1f045af6bcbd282b53c45d19405",
       "configuration_sha256": "1d230e1ab5e12bb12c52eb4ff2c29af7b7153eb3befe4fa532964b6d7f193537",
-      "source_sha256": "4a92a3598e6d29e6a60586f53e6b91339a64372321028387585ae6a4be6839b5"
+      "source_sha256": "b8c26b3b3e9d376077318efa19982bd372d02a4024ccef620b592957b4e27c74"
     },
     "measured_event_adapter": {
       "checker": "research_checks/check_forest_components.m:event_adapter_checks",
@@ -834,6 +834,23 @@
       "partial_refresh_adds_new_received_pair": true,
       "published_node_cannot_request_fifth_or_reselect": true,
       "unknown_observations_leave_navigation_unchanged": true
+    },
+    "waypoint_provider_review": {
+      "source_sha256": "b8c26b3b3e9d376077318efa19982bd372d02a4024ccef620b592957b4e27c74",
+      "checker": "research_checks/check_forest_components.m:route_checks",
+      "all_fixed_checks_passed": true,
+      "code_analyzer_messages": 0,
+      "mission_count": 0,
+      "trajectory_rollouts": 0,
+      "profile_loop_executed": false,
+      "scope": "finite_graph_directional_budgets_and_one_saved_input_step_not_full_profile_tracking",
+      "graph_vertices": 173,
+      "physical_reference_terminals": 5,
+      "horizontal_five_m_reservation_s": 5.5,
+      "vertical_five_m_reservation_s": 7.0,
+      "nominal_step_matches_N01_mean": true,
+      "body_attitude_lag_not_ideal_world_acceleration": true,
+      "expired_reference_and_ordinary_ground_descent_rejected": true
     }
   },
   "legacy_release": {

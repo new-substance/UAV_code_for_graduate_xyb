@@ -10,7 +10,8 @@ switch action
         if isfield(in,'execution_kind')
             assert(strcmp(in.execution_kind,'fixed_input_review'));enforce=false;
         end
-        assert(~isempty(in.profile) && numel(in.profile)<=ceil(c.service.reference_max_age_s/c.initialization.imu_sample_interval_s));
+        intervalLimit=ceil(c.service.reference_max_age_s/c.initialization.imu_sample_interval_s)+c.algorithm.max_candidate_actions+1;
+        assert(~isempty(in.profile) && numel(in.profile)<=intervalLimit);
         upper=zeros(1,4);duration=0;
         for k=1:numel(in.profile)
             if enforce && toc(clock)>c.service.computation_bound_s

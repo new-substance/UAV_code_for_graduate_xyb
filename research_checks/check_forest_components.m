@@ -133,7 +133,8 @@ must_fail(@()uavmvp.forest_protocol('ticket',struct('state',s,'key',"cell1/round
 for k=1:8,s=event(s,struct('type','decision_result','coverage_advanced',false,'edge_advanced',false,'insertion_executed',false,'reference_recovery',false),c);end
 assert(s.no_progress==7); % First decision accounts for genuine prior service progress.
 
-graphInput=uavmvp.forest_policy('initial',[],c);assert(~isempty(graphInput.route_vertices) && size(graphInput.points_m,1)==170);
+graphInput=uavmvp.forest_policy('initial',[],c);assert(~isempty(graphInput.route_vertices) && size(graphInput.points_m,1)==173);
+route=route_checks(n,c,graphInput);
 state=uavmvp.forest_protocol('init',struct('unknown_ids',"X"),c);
 state.nodes(1).contact=true;state.nodes(1).discovered=true;
 op=struct('id',"X",'phase','DATA','eligible',true,'payload_bytes',4);
@@ -171,7 +172,7 @@ offline=uavmvp.forest_motion('evaluate',ev,c);assert(~offline.success && ~offlin
 ev.physically_landed=true;ev.estimated_terminal_xy_m=[0 0;19 0];offline=uavmvp.forest_motion('evaluate',ev,c);assert(offline.success);
 service=service_checks(c,samples,fnav,input,rf,rv);
 adapter=event_adapter_checks(c,samples,raw);
-out=struct('service',service,'event_adapter',adapter,'forecast',forecast,'all_passed',true,'kind','forest_fixed_input_component_regression', ...
+out=struct('route',route,'service',service,'event_adapter',adapter,'forecast',forecast,'all_passed',true,'kind','forest_fixed_input_component_regression', ...
     'mission_count',0,'task_integrations',0,'radio_budget',timing,'grid_points',size(f.grid,1), ...
     'nominal_radius_m',f.nominal_radius_m,'nominal_fifth_passed',ok.passed, ...
     'opposite_residual_rejected',~badResult.passed,'reference_sigma_m',c.radio.reference_pair_white_std_m, ...
@@ -322,4 +323,32 @@ partial.protocol=event(partial.protocol,struct('type','range','id',"7",'raw_id',
 assert(r.accepted && r.complete_groups==1 && numel(partial.fits{1}.fit_raw_ids)==2);
 out=struct('all_passed',true,'world_steps',0,'fit_and_verification_bound_to_received_pair_book',true, ...
     'old_fit_point_not_new_fifth',true,'partial_group_requests_missing_pair_only',true,'navigation_unchanged',true);
+end
+
+function out=route_checks(n,c,map)
+% No make_profile call: geometry and one saved-input nominal step only.
+n.p=[0;0;17.7];n.v=zeros(3,1);n.R=eye(3);original=n;
+a=struct('navigation',n,'setpoint_m',[5;0;17.7],'landing',false,'duration_s',.01,'body_rate_radps',zeros(3,1));
+r=uavmvp.forest_motion('nominal_step',a,c);
+command=r.command;expected=command.body_rate_rad_per_s*(1-exp(-.01/c.motion_model.body_rate_time_constant_s));
+assert(norm(r.body_rate_radps-expected)<1e-12 && norm(r.navigation.R-eye(3),'fro')>0 && isequal(n,original));
+assert(norm(r.profile.specific_force_body_mps2(1:2))==0);
+assert(r.navigation.v(1)<.001); % Body attitude lag, no ideal world-acceleration injection.
+imu=struct('acc',r.profile.specific_force_body_mps2+n.ba,'gyro',r.profile.body_rate_radps+n.bg);
+[next,~,~]=uavmvp.nominal_step(n,imu,.01,[0;0;-9.80665]);
+assert(norm(next.p-r.navigation.p)+norm(next.v-r.navigation.v)+norm(next.R-r.navigation.R,'fro')<1e-12);
+[~,target]=min(vecnorm(map.points_m-[5 0 17.7],2,2));
+p=uavmvp.forest_route('plan',struct('navigation',n,'map',map,'target_vertex',target),c);
+assert(abs(p.move_and_settle_s-5.5)<1e-12);
+n.p=[0;0;0];[distance,target]=min(vecnorm(map.points_m-[0 0 5],2,2));assert(distance<1e-12);
+p=uavmvp.forest_route('plan',struct('navigation',n,'map',map,'target_vertex',target),c);
+assert(abs(p.move_and_settle_s-7)<1e-12 && max(map.graph.Edges.Weight)<=5+1e-10);
+expired=struct('navigation',n,'plan',p,'hold_s',.1,'body_rate_radps',zeros(3,1));expired.navigation.last_reference_s=-Inf;
+must_fail(@()uavmvp.forest_route('profile',expired,c),'forest:ForecastBudget'); % Reject before any rollout.
+n.p=[0;0;5];must_fail(@()uavmvp.forest_route('plan',struct('navigation',n,'map',map,'target_vertex',map.home_vertex),c),'forest:LandingRequired');
+n.p=[0;0;0];
+n.v=[.2;0;0];must_fail(@()uavmvp.forest_route('plan',struct('navigation',n,'map',map,'target_vertex',target),c),'forest:InitialMotion');
+out=struct('all_passed',true,'world_steps',0,'trajectory_rollouts',0, ...
+    'nominal_one_step_matches_N01_mean',true,'horizontal_five_m_budget_s',5.5, ...
+    'vertical_five_m_budget_s',7,'ascent_split_into_reference_service_segments',true);
 end

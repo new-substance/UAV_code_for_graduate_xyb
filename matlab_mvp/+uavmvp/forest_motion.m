@@ -1,8 +1,22 @@
 function out=forest_motion(action,in,c)
 %FOREST_MOTION M01: estimate-only command, separate plant derivative/contact.
-% No integration or task execution occurs here.
+% No world/task is advanced; nominal_step is an estimate-only local quadrature.
 g=[0;0;-9.80665];m=c.motion_model;
 switch action
+    case 'nominal_step'
+        n=in.navigation;dt=in.duration_s;w0=in.body_rate_radps(:);
+        assert(dt>0 && dt<=c.initialization.imu_sample_interval_s*(1+1e-6));
+        assert(numel(w0)==3 && all(isfinite(w0)) && norm(w0)<=m.body_rate_limit_rad_per_s*(1+1e-8));
+        command=uavmvp.forest_motion('command',in,c);u=command.body_rate_rad_per_s;
+        decay=exp(-dt/m.body_rate_time_constant_s);
+        w1=u+(w0-u)*decay;
+        meanRate=u+(w0-u)*(m.body_rate_time_constant_s/dt)*(1-decay);
+        Rmid=n.R*uavmvp.SO3.exp(meanRate*dt/2);force=[0;0;command.normalized_thrust_mps2];
+        acceleration=Rmid*force+g;
+        next=n;next.p=n.p+n.v*dt+.5*acceleration*dt^2;next.v=n.v+acceleration*dt;
+        next.R=n.R*uavmvp.SO3.exp(meanRate*dt);next.t=n.t+dt;
+        out=struct('navigation',next,'body_rate_radps',w1,'command',command, ...
+            'profile',struct('R',Rmid,'specific_force_body_mps2',force,'body_rate_radps',meanRate,'duration_s',dt));
     case 'command'
         n=in.navigation;q=in.setpoint_m(:);delta=q-n.p;
         vh=delta(1:2);d=norm(vh);v=vh/max(d,1e-12)*min(c.service.cruise_speed_m_per_s,sqrt(2*c.service.acceleration_m_per_s2*d));

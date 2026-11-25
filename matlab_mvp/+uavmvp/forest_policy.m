@@ -5,10 +5,18 @@ switch action
         step=c.finite_policy_limits.service_candidate_grid_step_m;h=c.scene.allowed_corridor_half_width_m;
         axis=-h:step:h;[x,y]=ndgrid(axis,axis);xy=[x(:),y(:)];
         q=[xy,repmat(c.scene.nominal_imu_cruise_z_m,size(xy,1),1)];
-        q(end+1,:)=c.scene.home_imu_xyz_m(:)';home=size(q,1);
         D=square_distances(q);[i,j]=find(triu(abs(D-step)<1e-8,1));
-        [~,above]=min(vecnorm(q(1:end-1,1:2)-q(home,1:2),2,2));
-        i=[i;above];j=[j;home];w=[D(sub2ind(size(D),i(1:end-1),j(1:end-1)));norm(q(above,:)-q(home,:))];
+        w=D(sub2ind(size(D),i,j));
+        q(end+1,:)=c.scene.home_imu_xyz_m(:)';home=size(q,1);
+        [~,above]=min(vecnorm(q(1:home-1,1:2)-q(home,1:2),2,2));
+        rise=q(above,:)-q(home,:);L=norm(rise);chain=home;
+        for d=c.service.reference_motion_segment_candidate_m:c.service.reference_motion_segment_candidate_m:L-1e-10
+            q(end+1,:)=q(home,:)+rise*d/L;chain(end+1)=size(q,1); %#ok<AGROW>
+        end
+        chain(end+1)=above;
+        for k=1:numel(chain)-1
+            i(end+1)=chain(k);j(end+1)=chain(k+1);w(end+1)=norm(q(chain(k),:)-q(chain(k+1),:)); %#ok<AGROW>
+        end
         G=graph(i,j,w,size(q,1));
         half=c.scene.unknown_deployment_half_width_m;d=c.finite_policy_limits.coverage_grid_step_m;
         cells=[];yy=-half:d:half;
