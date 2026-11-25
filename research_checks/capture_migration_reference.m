@@ -7,7 +7,7 @@ if isfile(fullfile(main,'setup_project.m'))
 else
     addpath(main,fullfile(repo,'single_terminal_stage'),fullfile(repo,'priority_stage'));
 end
-c=load_project_config();
+c=load_project_config('legacy');
 a=[10,10,15;50,10,15;10,50,15;50,50,15;30,10,15]';
 x=[30;30];r=vecnorm(a-[x;0])'+[.1;-.1;.05;-.05;.02];
 b=struct('anchors',a,'ranges',r,'Pnav',.04*eye(15), ...

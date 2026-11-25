@@ -1,7 +1,7 @@
 function out=check_localization_state()
 %CHECK_LOCALIZATION_STATE Fixed measurements through the 4+1 state interface.
 repo=fileparts(fileparts(mfilename('fullpath')));addpath(fullfile(repo,'matlab_mvp'));
-setup_project();c=load_project_config();
+setup_project();c=load_project_config('legacy');
 a=[10,10,15;50,10,15;10,50,15;50,50,15;30,10,15]';x=[30;30];
 b=struct('anchors',a,'ranges',vecnorm(a-[x;0])'+[.1;-.1;.05;-.05;.02], ...
     'Pnav',.04*eye(15),'Cradio',eye(5)+9*ones(5),'record_ids',1:5, ...

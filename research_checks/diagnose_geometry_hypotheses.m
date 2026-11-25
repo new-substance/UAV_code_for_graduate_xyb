@@ -1,7 +1,7 @@
 function out=diagnose_geometry_hypotheses()
 %DIAGNOSE_GEOMETRY_HYPOTHESES Fixed inputs, no world/seed/task or config edit.
 repo=fileparts(fileparts(mfilename('fullpath')));addpath(fullfile(repo,'matlab_mvp'));setup_project;
-c=load_project_config();rows={};[~,id]=min(vecnorm(c.scene.reference_centers_xy_m-[70,10],2,2));
+c=load_project_config('legacy');rows={};[~,id]=min(vecnorm(c.scene.reference_centers_xy_m-[70,10],2,2));
 for height=[15,18,20]
     test=c;test.scene.flight_height_m=height;
     n=uavmvp.nav_init(test);n.p=[70;10;height];n.last_reference_id=id;

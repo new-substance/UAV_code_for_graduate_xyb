@@ -2,7 +2,7 @@ function report=review_saved_regions(output)
 %REVIEW_SAVED_REGIONS Read-only counterfactual on saved four-point inputs.
 % New quality rules do NOT retroactively complete these old task outcomes.
 repo=fileparts(fileparts(mfilename('fullpath')));addpath(fullfile(repo,'matlab_mvp'));
-setup_project();c=load_project_config();c.localization.quality_method='grid_conditional';rows={};
+setup_project();c=load_project_config('legacy');c.localization.quality_method='grid_conditional';rows={};
 for seed=[2026112002,2026112003]
     p=fullfile(repo,'results','current',sprintf('dev_%d_n1_stage',seed),sprintf('events_%d.jsonl',seed));
     lines=splitlines(strtrim(fileread(p)));count=0;

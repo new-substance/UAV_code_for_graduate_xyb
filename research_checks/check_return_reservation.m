@@ -1,7 +1,7 @@
 function out=check_return_reservation()
 %CHECK_RETURN_RESERVATION No world/flight: reject before invoking any motion.
 repo=fileparts(fileparts(mfilename('fullpath')));addpath(fullfile(repo,'matlab_mvp'));
-setup_project();c=load_project_config();nav=uavmvp.nav_init(c);nav.p=[10;10;15];nav.v=zeros(3,1);
+setup_project();c=load_project_config('legacy');nav=uavmvp.nav_init(c);nav.p=[10;10;15];nav.v=zeros(3,1);
 nav.last_reference_id=1;
 room=uavmvp.departure_repair_plan(nav,1,c,1800);assert(room.accepted);
 assert(abs(room.observation_deadline_s+room.return_reserve_s-1800)<1e-9);

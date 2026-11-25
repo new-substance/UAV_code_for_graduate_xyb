@@ -1,7 +1,7 @@
 function out=check_position_feedback()
 %CHECK_POSITION_FEEDBACK Saved-state/proposal contracts, no flight.
 repo=fileparts(fileparts(mfilename('fullpath')));addpath(fullfile(repo,'matlab_mvp'));
-setup_project();c=load_project_config();nr=size(c.scene.reference_centers_xy_m,1);
+setup_project();c=load_project_config('legacy');nr=size(c.scene.reference_centers_xy_m,1);
 [points,refs]=uavpriority.service_candidates(c);
 assert(size(points,1)==3*nr && isequal(refs,repmat((1:nr)',3,1)));
 assert(all(points>=0,'all') && all(points<=[c.scene.width_m,c.scene.height_m],'all'));

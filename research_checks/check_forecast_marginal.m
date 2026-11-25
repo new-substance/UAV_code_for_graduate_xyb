@@ -1,7 +1,7 @@
 function out=check_forecast_marginal()
 %CHECK_FORECAST_MARGINAL Fixed coupled clones: keep exact UAV/map prediction.
 repo=fileparts(fileparts(mfilename('fullpath')));addpath(fullfile(repo,'matlab_mvp'));
-setup_project();c=load_project_config();c.scene.flight_height_m=15;
+setup_project();c=load_project_config('legacy');c.scene.flight_height_m=15;
 n=uavmvp.nav_init(c);n.p=[10;10;15];n.last_reference_id=1;
 for k=1:32,[n,~]=uavmvp.nav_clone(n,c);end
 original=n;m=uavmvp.nav_prune(n,[]);d=size(m.P,1);ix=1:d;

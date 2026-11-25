@@ -14,7 +14,7 @@ lock=fullfile(root,'.writer_lock');lock_file=java.io.File(lock);
 assert(lock_file.mkdir(),'uavproject:WriterBusy','One managed batch may write active results at a time.');
 cleanup=onCleanup(@()rmdir(lock)); %#ok<NASGU>
 listing=dir(fullfile(root,'**','*'));listing=listing(~[listing.isdir]);active=sum([listing.bytes]);
-c=load_project_config();c.scene.terminal_counts=options.count;c.sim.compact_recording=true;
+c=load_project_config('legacy');c.scene.terminal_counts=options.count;c.sim.compact_recording=true;
 identity=uavmvp.project_fingerprints();
 limits=struct('case_bytes',review.budgets_bytes.default_case, ...
     'batch_bytes',review.budgets_bytes.development_batch,'active_bytes',review.budgets_bytes.active_new_results);

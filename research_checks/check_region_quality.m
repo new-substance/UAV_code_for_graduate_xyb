@@ -1,7 +1,7 @@
 function out=check_region_quality()
 %CHECK_REGION_QUALITY Q01/V01 counterexamples, never a flight or Monte Carlo.
 repo=fileparts(fileparts(mfilename('fullpath')));addpath(fullfile(repo,'matlab_mvp'));
-setup_project();c=load_project_config();c.localization.quality_method='grid_conditional';
+setup_project();c=load_project_config('legacy');c.localization.quality_method='grid_conditional';
 a=[10,10,15;50,10,15;10,50,15;50,50,15;30,10,15]';x=[30;30];
 b=make_bundle(a,x);v=sin((1:15)');b.Pnav=b.Pnav+.005*(v*v');
 b.Pnavigation=b.Pnav;four=uavpriority.subbundle(b,1:4);

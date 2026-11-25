@@ -1,7 +1,7 @@
 function out=check_noise_horizon()
 %CHECK_NOISE_HORIZON Larger time allowance cannot suppress/change old noise.
 repo=fileparts(fileparts(mfilename('fullpath')));addpath(fullfile(repo,'matlab_mvp'));setup_project;
-c=load_project_config();seed=mod(2026112302+314159,2^32-1);
+c=load_project_config('legacy');seed=mod(2026112302+314159,2^32-1);
 short=uavmvp.NoisePath(2400,c.sim.dt,12,seed);
 long=uavmvp.NoisePath(3000,c.sim.dt,12,seed);difference=0;
 for time=[0,31.234,999.5,1799.99,2399.9]

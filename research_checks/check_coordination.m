@@ -1,7 +1,7 @@
 function out=check_coordination()
 %CHECK_COORDINATION P02 complete-block budget and cross-node dispatch checks.
 repo=fileparts(fileparts(mfilename('fullpath')));addpath(fullfile(repo,'matlab_mvp'));
-setup_project();c=load_project_config();
+setup_project();c=load_project_config('legacy');
 full=uavpriority.transaction_reservation(c,'VERIFY',4,1000,100);
 assert(full.available && full.block_cap==4 && full.min_blocks==2);
 near=uavpriority.transaction_reservation(c,'VERIFY',4,100+full.minimum_total_s+.001,100);

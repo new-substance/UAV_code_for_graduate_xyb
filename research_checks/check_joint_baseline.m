@@ -1,7 +1,7 @@
 function out=check_joint_baseline()
 %CHECK_JOINT_BASELINE Fixed camera/range/quality input, never a task flight.
 repo=fileparts(fileparts(mfilename('fullpath')));addpath(fullfile(repo,'matlab_mvp'));
-setup_project();c=load_project_config();
+setup_project();c=load_project_config('legacy');
 assert(c.ranging.range_white_std_m==5 && c.sim.radio_truth_range_white_std_m==5);
 [points,~]=uavpriority.service_candidates(c);
 xy=[60,70;70,75;60,62.5;70,62.5;80,70];
