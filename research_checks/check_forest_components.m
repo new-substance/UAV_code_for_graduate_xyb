@@ -203,8 +203,12 @@ must_fail(@()apply(s,bad,c),'forest:Session');
 s=apply(s,struct('type','capture','time_s',0,'clone_id',"a"),c);
 s=apply(s,struct('type','capture','time_s',0,'clone_id',"b"),c);
 p=struct('type','pair_request','time_s',0,'pair_id',"P1",'peer',7,'role','unknown', ...
-    'transaction',9,'group',1,'calibration_ids',[7 8],'offsets_m',[.3 .3]);
+    'transaction',9,'group',1,'job_index',1,'calibration_ids',[7 8],'offsets_m',[.3 .3]);
+s=apply(s,struct('type','unknown_group','time_s',0,'peer',7,'block_id',"G1",'group',1),c);
 s=apply(s,p,c);must_fail(@()apply(s,p,c),'forest:RadioBusy');before=s.navigation;
+profile=struct('peer',7,'calibration_ids',[7 8],'offsets_m',[.3 .3]);
+next=uavmvp.forest_events('next_pair',struct('state',s,'calibration_profiles',profile),c);
+assert(strcmp(next.kind,'WAIT_FOR_RESULT_OR_TIMEOUT'));
 d=struct('type','direction_result','time_s',0,'pair_id',"P1",'peer',7,'transaction',9, ...
     'direction',1,'clone_id',"a",'raw',raw,'calibration_id',7,'mission',3,'session',4);
 s=apply(s,d,c);assert(~s.protocol.nodes.discovered);
@@ -218,8 +222,34 @@ e.bytes=uavmvp.forest_frame('encode',struct('header',h,'message',m));s=apply(s,e
 assert(s.protocol.nodes.data_delivered && s.protocol.nodes.delivered_bytes==4);
 [s,receipt]=uavmvp.forest_events('apply',struct('state',s,'event',e),c);
 assert(receipt.duplicate && s.protocol.nodes.delivered_bytes==4);
+retry=p;retry.pair_id="not_a_new_job";retry.transaction=10;
+must_fail(@()apply(s,retry,c),'forest:Retry');
+next=uavmvp.forest_events('next_pair',struct('state',s,'calibration_profiles',profile),c);
+assert(strcmp(next.kind,'REQUEST') && next.event.peer==7 && next.event.job_index==2);
+[ended,r]=uavmvp.forest_events('apply',struct('state',s,'event',struct('type','unknown_group_end','time_s',0)),c);
+assert(~r.accepted && isempty(ended.unknown_block));
+resumed=apply(ended,struct('type','unknown_group','time_s',0,'peer',7,'block_id',"G1_again",'group',1),c);
+assert(resumed.unknown_block.ledger.complete(1) && resumed.unknown_block.ledger.attempts(1)==1);
+must_fail(@()apply(resumed,retry,c),'forest:Retry');
+% Fixed saved counter boundary: radio budget must not cap the 100 Hz IMU at 40.96 s.
+boundary=ended;boundary.events=c.algorithm.max_protocol_records;
+imu=struct('type','imu','time_s',.01,'measurement',struct('acc',[0;0;9.80665],'gyro',zeros(3,1)));
+boundary=apply(boundary,imu,c);assert(boundary.imu_events==1 && boundary.events==c.algorithm.max_protocol_records);
+bad=e;bad.crc_valid=false;
+[rejected,r]=uavmvp.forest_events('ingest',struct('state',ended,'event',bad),c);
+assert(~r.accepted && ~r.fatal && rejected.events==ended.events+1 && rejected.rejected_events==1 && isequal(rejected.navigation,ended.navigation));
+[~,r]=uavmvp.forest_events('ingest',struct('state',boundary,'event',bad),c);assert(r.fatal);
+ref=uavmvp.forest_events('init',i,c);
+ref=apply(ref,struct('type','reference_block','time_s',0,'block_id',"R1"),c);
+rp=struct('peer',100,'calibration_ids',[7 8],'offsets_m',[.3 .3]);
+request=uavmvp.forest_events('next_pair',struct('state',ref,'calibration_profiles',rp),c);
+assert(request.event.peer==100 && request.event.job_index==1);
+ref=apply(ref,request.event,c);assert(ref.reference_block.ledger.attempts(1)==1);
+[ref,r]=uavmvp.forest_events('apply',struct('state',ref,'event',struct('type','reference_block_end','time_s',0)),c);
+assert(~r.accepted && isinf(ref.navigation.last_reference_s) && ref.pairs{1}.finished);
 out=struct('all_passed',true,'world_steps',0,'unknown_range_does_not_change_navigation',true, ...
-    'wire_fragment_zero_maps_to_business_fragment_one',true,'stale_session_and_future_receipt_rejected',true);
+    'wire_fragment_zero_maps_to_business_fragment_one',true,'stale_session_and_future_receipt_rejected',true, ...
+    'completed_job_not_reused',true,'partial_group_not_complete',true,'separate_imu_budget',true,'rejected_event_consumes_budget',true);
 end
 function s=apply(s,e,c)
 s=uavmvp.forest_events('apply',struct('state',s,'event',e),c);
