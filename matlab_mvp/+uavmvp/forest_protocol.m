@@ -5,7 +5,8 @@ switch action
         ids=string(in.unknown_ids(:));assert(numel(unique(ids))==numel(ids) && ~isempty(ids));
         node=struct('id',"",'contact',false,'discovered',false,'data_delivered',false, ...
             'verified',false,'stop_ack',false,'lease_until_s',-Inf,'raw_ids',strings(0,1), ...
-            'fragments',zeros(0,1),'fragment_count',0,'data_sequence',-1,'delivered_bytes',0,'expected_data_bytes',-1, ...
+            'fragments',zeros(0,1),'fragment_count',0,'data_sequence',-1,'advertised_data_sequence',-1, ...
+            'fragment_payloads',{{}},'data_attempts',[],'delivered_bytes',0,'expected_data_bytes',-1, ...
             'quality',false,'quality_version',-1,'planning_region_available',false,'complete_groups',0, ...
             'notice_attempts',0,'verification_rounds',0,'recontact_attempts',0, ...
             'fit_reselections',0,'pending_round',[],'fifth_job',[],'used_fifth_ids',strings(0,1), ...
@@ -46,6 +47,15 @@ switch action
         end
     case 'event'
         out=reduce_event(in.state,in.event,c);
+    case 'data_capacity'
+        E=c.service.schedule_error_base_bound_s+c.service.relative_clock_rate_bound_ppm*1e-6*c.service.data_attempt_bound_s;
+        guard=2*E+c.service.rx_gap_s;capacity=0;
+        for B=1:231
+            lower=uavmvp.forest_radio('packet',34,c)+guard+uavmvp.forest_radio('packet',24+B,c)+uavmvp.forest_radio('packet',18,c);
+            if lower<=c.service.data_attempt_bound_s,capacity=B;end
+        end
+        assert(capacity>0,'forest:DataDeadline','DATA grant/payload/ACK cannot fit.');
+        out=struct('payload_bytes',capacity,'response_guard_s',guard);
     case 'cost'
         budget=uavmvp.forest_radio('budget',[],c);s=c.service;phase=in.phase;
         switch phase
@@ -59,13 +69,8 @@ switch action
                 seconds=(jobs+extra)*budget.pair_attempt_s;
             case 'DATA'
                 assert(in.payload_bytes>=0 && in.payload_bytes==fix(in.payload_bytes));
-                capacity=0;
-                for B=1:231
-                    lower=uavmvp.forest_radio('packet',24+B,c)+uavmvp.forest_radio('packet',18,c);
-                    if lower<=s.data_attempt_bound_s,capacity=B;end
-                end
-                assert(capacity>0,'forest:DataDeadline','DATA/ACK lower bound exceeds deadline.');
-                fragments=max(1,ceil(in.payload_bytes/capacity));jobs=fragments;extra=0;
+                cap=uavmvp.forest_protocol('data_capacity',[],c);
+                fragments=max(1,ceil(in.payload_bytes/cap.payload_bytes));jobs=fragments;extra=0;
                 seconds=fragments*s.data_attempts*s.data_attempt_bound_s;
             case 'NOTICE'
                 jobs=1;extra=0;seconds=s.data_attempts*s.data_attempt_bound_s;
@@ -117,6 +122,10 @@ end
 k=find([s.nodes.id]==string(e.id));assert(isscalar(k),'forest:NodeID','Unregistered unknown ID.');n=s.nodes(k);
 switch e.type
     case 'identity'
+        if isfield(e,'data_seq')
+            assert(n.advertised_data_sequence<0 || n.advertised_data_sequence==e.data_seq,'forest:DataSequence','Advertised sample changed within mission.');
+            n.advertised_data_sequence=e.data_seq;
+        end
         assert(e.data_bytes>=1 && e.data_bytes<=65535 && e.data_bytes==fix(e.data_bytes));
         if n.expected_data_bytes<0,n.expected_data_bytes=e.data_bytes;
         else,assert(n.expected_data_bytes==e.data_bytes,'forest:DataSequence','Changed advertised sample size.');end
@@ -128,14 +137,24 @@ switch e.type
         if ~ismember(id,n.raw_ids),n.raw_ids(end+1,1)=id;n.discovered=true;end
     case 'data'
         assert(n.contact && e.valid && ~n.verified);
+        assert(n.advertised_data_sequence<0 || e.sequence==n.advertised_data_sequence,'forest:DataSequence','Unexpected sample sequence.');
         assert(e.fragment_count>=1 && e.fragment_index>=1 && e.fragment_index<=e.fragment_count && e.bytes>=0);
         if n.data_sequence<0,n.data_sequence=e.sequence;n.fragment_count=e.fragment_count;end
         assert(n.data_sequence==e.sequence && n.fragment_count==e.fragment_count,'forest:DataSequence','Mixed sample or fragment count.');
         if ~ismember(e.fragment_index,n.fragments)
             n.fragments(end+1)=e.fragment_index;n.delivered_bytes=n.delivered_bytes+e.bytes;
+            if isfield(e,'payload'),assert(numel(e.payload)==e.bytes);n.fragment_payloads{e.fragment_index}=e.payload;end
+        elseif isfield(e,'payload') && numel(n.fragment_payloads)>=e.fragment_index && ~isempty(n.fragment_payloads{e.fragment_index})
+            assert(isequal(n.fragment_payloads{e.fragment_index},e.payload),'forest:DataSequence','Changed retransmitted fragment.');
         end
         assert(n.delivered_bytes<=n.expected_data_bytes,'forest:DataSequence','More bytes than advertised.');
         n.data_delivered=numel(n.fragments)==n.fragment_count && n.delivered_bytes==n.expected_data_bytes;
+    case 'data_attempt'
+        assert(n.contact && ~n.verified && e.sequence==n.advertised_data_sequence,'forest:DataSequence','No frozen advertised sample.');
+        assert(e.fragment_count>=1 && e.fragment_count<=255 && e.fragment_index>=1 && e.fragment_index<=e.fragment_count);
+        if isempty(n.data_attempts),n.data_attempts=zeros(e.fragment_count,1);end
+        assert(numel(n.data_attempts)==e.fragment_count && n.data_attempts(e.fragment_index)<c.service.data_attempts,'forest:DataRetry','DATA retry limit/profile mismatch.');
+        n.data_attempts(e.fragment_index)=n.data_attempts(e.fragment_index)+1;
     case 'fit'
         assert(e.version==s.version && ~n.verified && e.complete_groups>=0 && e.complete_groups<=4);
         n.complete_groups=e.complete_groups;n.planning_region_available=e.region_available;

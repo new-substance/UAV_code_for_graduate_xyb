@@ -49,12 +49,12 @@
     "joint_model_id": "coplanar_css_imu_joint_model_v1"
   },
   "implementation_status": "forest_math_state_frame_and_selection_interfaces_checked_task_adapter_forecast_and_runtime_integration_pending",
-  "reason": "Fixed-input evidence now includes an IRQ-driven six-stage pair transaction and COMPLETE/ACK, actual completion versus processing time, preserved observations when final ACK cannot fit, shared sequence replay checks and no peer transaction-number reuse. No radio world, nominal trajectory rollout or mission was run. WAKE/DATA airtime, selector/provider binding, physical terminal sleep, CSS return/landing and writer integration remain pending; 50ms runtime unverified; no-simulation instruction remains binding.",
+  "reason": "Fixed packet/IRQ replay now covers WAKE trains and identity windows, DATA grant/fragment/ACK, six-stage pair ranging and COMPLETE/ACK. DATA capacity includes grant and clock guard, samples/fragments are immutable and retries bounded. Broadcast or empty slots do not imply discovery. No random radio world, nominal trajectory rollout or mission. Physical terminal lifecycle, selector/provider binding, CSS return/landing and writer integration remain pending; 50ms runtime unverified; no-simulation instruction remains binding.",
   "specification": "论文总纲.md",
-  "specification_sha256": "372ccfac86cbd4b0349166438876f88535e18874e34688b817b43d30953f6415",
+  "specification_sha256": "e5f8bb8f39beca4cae9c08957234266639749d917921144e5c79ef1256c4f5f4",
   "configuration": "research_configs/baseline.json",
   "configuration_sha256": "1d230e1ab5e12bb12c52eb4ff2c29af7b7153eb3befe4fa532964b6d7f193537",
-  "source_sha256": "63223491252c4a21f3087a82663ba829d0e74ed75e2906ac1b5c93ca5f226761",
+  "source_sha256": "1f88c52c5ddd36586ce9cdcd86b5c99386cfe1536bab30389739640b22a35ccf",
   "development_scope": {
     "terminal_counts": [],
     "max_cases_per_batch": 0,
@@ -71,7 +71,7 @@
     "joint_simulation_model_definition": {
       "status": "reviewed_with_explicit_conditions_for_implementation_only",
       "model_id": "coplanar_css_imu_joint_model_v1",
-      "specification_sha256": "372ccfac86cbd4b0349166438876f88535e18874e34688b817b43d30953f6415",
+      "specification_sha256": "e5f8bb8f39beca4cae9c08957234266639749d917921144e5c79ef1256c4f5f4",
       "configuration_sha256": "1d230e1ab5e12bb12c52eb4ff2c29af7b7153eb3befe4fa532964b6d7f193537",
       "evidence": "evidence.joint_simulation_model_review",
       "mission_execution_approved": false
@@ -80,8 +80,8 @@
       "status": "fixed_input_checked_not_task_released",
       "mission_execution_approved": false,
       "evidence": "evidence.forest_component_review",
-      "source_sha256": "63223491252c4a21f3087a82663ba829d0e74ed75e2906ac1b5c93ca5f226761",
-      "specification_sha256": "372ccfac86cbd4b0349166438876f88535e18874e34688b817b43d30953f6415",
+      "source_sha256": "1f88c52c5ddd36586ce9cdcd86b5c99386cfe1536bab30389739640b22a35ccf",
+      "specification_sha256": "e5f8bb8f39beca4cae9c08957234266639749d917921144e5c79ef1256c4f5f4",
       "configuration_sha256": "1d230e1ab5e12bb12c52eb4ff2c29af7b7153eb3befe4fa532964b6d7f193537"
     }
   },
@@ -752,7 +752,7 @@
       "checked_on": "2026-11-25",
       "command": "addpath('matlab_mvp'); out=project('check');",
       "checker": "research_checks/check_forest_components.m",
-      "checker_sha256": "298cd87cb18c15b9a0dd1f2cbfdef3223f77c04b1a106bda09b46615b4d1b849",
+      "checker_sha256": "0c12e16eebd9c3586e0c50dd1ad6c408c1a6d4c4cfe861b6535fc21f925bea12",
       "all_passed": true,
       "matlab_version": "R2023a",
       "code_analyzer_messages": 0,
@@ -787,9 +787,9 @@
       },
       "runtime_wall_clock_budget_validated": false,
       "no_new_result_batch_or_full_trajectory_files": true,
-      "specification_sha256": "372ccfac86cbd4b0349166438876f88535e18874e34688b817b43d30953f6415",
+      "specification_sha256": "e5f8bb8f39beca4cae9c08957234266639749d917921144e5c79ef1256c4f5f4",
       "configuration_sha256": "1d230e1ab5e12bb12c52eb4ff2c29af7b7153eb3befe4fa532964b6d7f193537",
-      "source_sha256": "63223491252c4a21f3087a82663ba829d0e74ed75e2906ac1b5c93ca5f226761"
+      "source_sha256": "1f88c52c5ddd36586ce9cdcd86b5c99386cfe1536bab30389739640b22a35ccf"
     },
     "measured_event_adapter": {
       "checker": "research_checks/check_forest_components.m:event_adapter_checks",
@@ -868,6 +868,22 @@
       "missing_final_ack_preserves_pair": true,
       "late_processing_preserves_on_time_result": true,
       "cross_type_frame_sequence_collision_and_peer_transaction_reuse_rejected": true
+    },
+    "wake_data_transaction_review": {
+      "source_sha256": "1f88c52c5ddd36586ce9cdcd86b5c99386cfe1536bab30389739640b22a35ccf",
+      "checker": "research_checks/check_forest_components.m:wake_data_checks",
+      "all_passed": true,
+      "code_analyzer_messages": 0,
+      "mission_count": 0,
+      "world_steps": 0,
+      "scope": "fixed_wire_and_IRQ_record_replay_not_random_link_or_physical_terminal_world",
+      "broadcast_not_identity_or_discovery": true,
+      "empty_slot_not_counted": true,
+      "dynamic_countdown_same_response_start": true,
+      "data_grant_fragment_ACK_binding": true,
+      "changed_payload_and_retry_exhaustion_rejected": true,
+      "complete_ack_window_excludes_packet_airtime": true,
+      "hardware_or_runtime_timing_validated": false
     }
   },
   "legacy_release": {

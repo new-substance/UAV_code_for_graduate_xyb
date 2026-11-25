@@ -171,9 +171,10 @@ ev=struct('estimated_terminal_xy_m',[0 0;25 0],'true_terminal_xy_m',[0 0;0 0], .
 offline=uavmvp.forest_motion('evaluate',ev,c);assert(~offline.success && ~offline.actual_return && ~offline.all_terminal_accuracy);
 ev.physically_landed=true;ev.estimated_terminal_xy_m=[0 0;19 0];offline=uavmvp.forest_motion('evaluate',ev,c);assert(offline.success);
 service=service_checks(c,samples,fnav,input,rf,rv);
+wakedata=wake_data_checks(c,samples);
 air=air_checks(c,samples,raw);
 adapter=event_adapter_checks(c,samples,raw);
-out=struct('air',air,'route',route,'service',service,'event_adapter',adapter,'forecast',forecast,'all_passed',true,'kind','forest_fixed_input_component_regression', ...
+out=struct('wake_data',wakedata,'air',air,'route',route,'service',service,'event_adapter',adapter,'forecast',forecast,'all_passed',true,'kind','forest_fixed_input_component_regression', ...
     'mission_count',0,'task_integrations',0,'radio_budget',timing,'grid_points',size(f.grid,1), ...
     'nominal_radius_m',f.nominal_radius_m,'nominal_fifth_passed',ok.passed, ...
     'opposite_residual_rejected',~badResult.passed,'reference_sigma_m',c.radio.reference_pair_white_std_m, ...
@@ -409,6 +410,8 @@ ctx=uavmvp.forest_events('init',i,c);ctx.protocol.nodes.verified=true;ctx.protoc
 notice=uavmvp.forest_air('init',struct('events',ctx),c);
 notice=uavmvp.forest_air('start_notice',struct('state',notice,'peer',7),c);
 [notice,cmd]=uavmvp.forest_air('next',struct('state',notice),c);
+complete=uavmvp.forest_frame('decode',cmd.bytes);
+assert(complete.message.ack_window_us==floor((notice.current.deadline_s-cmd.minimum_completion_s)*1e6));
 notice.events.navigation.t=cmd.minimum_completion_s;
 notice=uavmvp.forest_air('observe',struct('state',notice,'event',struct('command_id',cmd.command_id,'completed_at_s',cmd.minimum_completion_s,'type','tx_done')),c);
 assert(~notice.events.protocol.nodes.stop_ack);
@@ -424,4 +427,58 @@ assert(r.closed && r.complete_ack_received && ~r.physical_sleep_confirmed && not
 out=struct('all_passed',true,'world_steps',0,'pair_six_stage_IRQ_sequence',true, ...
  'missing_final_ack_preserves_pair',true,'duplicate_callback_no_new_pair',true,'complete_requires_matching_ACK',true, ...
  'received_before_deadline_but_processed_late_preserves_pair',true);
+end
+
+function out=wake_data_checks(c,samples)
+% Fixed packet/IRQ record replay, not a radio/terminal world or motion rollout.
+i=struct('samples',samples,'unknown_ids',[7;8],'reference_ids',(100:104)','uav_id',1,'mission',3,'session',4);
+s=uavmvp.forest_air('init',struct('events',uavmvp.forest_events('init',i,c)),c);
+wake=struct('state',s,'members',[7 8],'ticket',"A/round1",'lease_s',2);
+s=uavmvp.forest_air('start_wake',wake,c);N=s.current.request.packet_count;
+previous=Inf;
+for j=1:N
+ s.events.navigation.t=s.current.request.starts_s(j);
+ [s,cmd]=uavmvp.forest_air('next',struct('state',s),c);assert(strcmp(cmd.operation,'TX_WAKE'));
+ f=uavmvp.forest_frame('decode',cmd.bytes);assert(f.header.type==1 && f.header.flags==0 && f.message.remaining_us<previous);
+ previous=f.message.remaining_us;s.events.navigation.t=cmd.minimum_completion_s;
+ s=uavmvp.forest_air('observe',struct('state',s,'event',struct('type','tx_done','command_id',cmd.command_id,'completed_at_s',cmd.minimum_completion_s)),c);
+ assert(~any([s.events.protocol.nodes.contact]));
+end
+s.events.navigation.t=s.current.request.starts_s(N+1);[s,cmd]=uavmvp.forest_air('next',struct('state',s),c);
+s.events.navigation.t=cmd.minimum_completion_s;
+h=struct('version',1,'type',2,'mission',3,'session',4,'seq',30,'source',7,'target',1,'flags',0);
+m=struct('capability',1,'battery_mV',3000,'data_seq',2,'data_bytes',4,'sample_epoch_local',0);
+e=struct('type','rx_done','command_id',cmd.command_id,'completed_at_s',cmd.minimum_completion_s,'crc_valid',true, ...
+ 'bytes',uavmvp.forest_frame('encode',struct('header',h,'message',m)));
+s=uavmvp.forest_air('observe',struct('state',s,'event',e),c);
+assert(s.events.protocol.nodes(1).contact && ~s.events.protocol.nodes(1).discovered && ~s.events.protocol.nodes(2).contact);
+s.events.navigation.t=s.current.request.starts_s(N+2);[s,cmd]=uavmvp.forest_air('next',struct('state',s),c);
+s.events.navigation.t=cmd.deadline_s;
+[s,r]=uavmvp.forest_air('observe',struct('state',s,'event',struct('type','timeout','command_id',cmd.command_id,'completed_at_s',cmd.deadline_s)),c);
+assert(r.closed && r.wake_tx_count==N && r.wake_contacts==1 && ~s.events.protocol.nodes(2).contact);
+wake.state=s;must_fail(@()uavmvp.forest_air('start_wake',wake,c),'forest:WakeTicket');
+s=uavmvp.forest_air('start_data',struct('state',s,'peer',7,'fragment_index',0),c);
+for j=1:3
+ [s,cmd]=uavmvp.forest_air('next',struct('state',s),c);s.events.navigation.t=cmd.minimum_completion_s;
+ if j==2
+  h.type=3;h.seq=31;m=struct('data_seq',2,'fragment_index',0,'fragment_count',1,'sample_epoch_local',0,'sensor_flags',1,'samples',uint8([1 2 3 4]));
+  e=struct('type','rx_done','command_id',cmd.command_id,'completed_at_s',cmd.minimum_completion_s,'crc_valid',true, ...
+   'bytes',uavmvp.forest_frame('encode',struct('header',h,'message',m)));
+ else
+  f=uavmvp.forest_frame('decode',cmd.bytes);
+  if j==1,assert(f.header.flags==1 && f.message.train_index==2 && f.message.members.slot_index==0);
+  else,assert(f.header.type==6 && f.message.acked_type==3 && f.message.acked_seq==31);end
+  e=struct('type','tx_done','command_id',cmd.command_id,'completed_at_s',cmd.minimum_completion_s);
+ end
+ [s,r]=uavmvp.forest_air('observe',struct('state',s,'event',e),c);
+end
+assert(r.closed && r.ack_sent && s.events.protocol.nodes(1).data_delivered && s.events.protocol.nodes(1).delivered_bytes==4);
+h.seq=32;m.samples=uint8([9 2 3 4]);bad=struct('type','frame','time_s',s.events.navigation.t,'crc_valid',true, ...
+ 'bytes',uavmvp.forest_frame('encode',struct('header',h,'message',m)));
+must_fail(@()apply(s.events,bad,c),'forest:DataSequence');
+s=uavmvp.forest_air('start_data',struct('state',s,'peer',7,'fragment_index',0),c);
+s.events.navigation.t=s.current.deadline_s+.001;[s,~]=uavmvp.forest_air('next',struct('state',s),c);
+must_fail(@()uavmvp.forest_air('start_data',struct('state',s,'peer',7,'fragment_index',0),c),'forest:DataRetry');
+out=struct('all_passed',true,'world_steps',0,'broadcast_does_not_imply_identity_or_discovery',true, ...
+ 'missing_identity_slot_not_counted',true,'data_grant_fragment_and_ACK_bound',true,'changed_payload_and_exhausted_retry_rejected',true);
 end

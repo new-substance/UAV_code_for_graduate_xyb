@@ -205,10 +205,10 @@ switch e.type
         end
         switch h.type
             case 2
-                v=struct('type','identity','id',string(h.source),'data_bytes',m.data_bytes,'lease_until_s',e.lease_until_s);
+                v=struct('type','identity','id',string(h.source),'data_bytes',m.data_bytes,'data_seq',m.data_seq,'lease_until_s',e.lease_until_s);
             case 3
                 v=struct('type','data','id',string(h.source),'valid',true,'sequence',m.data_seq, ...
-                    'fragment_count',m.fragment_count,'fragment_index',m.fragment_index+1,'bytes',numel(m.samples));
+                    'fragment_count',m.fragment_count,'fragment_index',m.fragment_index+1,'bytes',numel(m.samples),'payload',m.samples);
             case 6
                 matches=cellfun(@(x)x.peer==h.source && x.seq==m.acked_seq,s.notices);
                 j=find(matches,1,'last');assert(m.acked_type==7 && m.status==0 && ~isempty(j),'forest:ACK','ACK lacks issued COMPLETE.');
