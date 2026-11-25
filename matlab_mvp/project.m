@@ -33,7 +33,7 @@ end
 
 function out=deterministic_checks()
 % These are algebra/config/path checks, never MotionWorld or task replay.
-c=load_project_config();x=[30;30];
+c=load_project_config('legacy');x=[30;30];
 a=[10,10,15;50,10,15;10,50,15;50,50,15]';
 [d,H,C]=uavmvp.range_model(x,a,.04*eye(12),eye(4)+9*ones(4),0);
 assert(all(isfinite(d)) && rank(H)==2 && all(eig(C)>0));
