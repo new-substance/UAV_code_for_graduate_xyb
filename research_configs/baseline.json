@@ -616,7 +616,7 @@
   "project_context": {
     "design_id": "forest_css_isac_20261123",
     "title": "基于啁啾扩频的通感一体化的协议相关技术",
-    "updated_on": "2026-11-24",
+    "updated_on": "2026-11-25",
     "application_domain": "civil_gnss_denied_forest_ecological_monitoring",
     "scene_name": "GNSS不可用林区生态监测：临时节点部署验收与位置登记",
     "visual_markers_used": false,
@@ -624,10 +624,10 @@
       "known_position_reference",
       "unknown_position_target"
     ],
-    "navigation_status": "confirmed_css_known_reference_ranging_aids_imu_not_implemented",
+    "navigation_status": "css_reference_ins_math_interfaces_fixed_input_checked_task_adapter_pending",
     "gnss_policy": "not_used_during_mission",
     "known_reference_role": "css_ranging_constraint_for_uav_inertial_navigation",
-    "workflow_strategy_status": "literature_reviewed_coverage_periodic_feedback_design_not_implemented",
+    "workflow_strategy_status": "bounded_protocol_and_feedback_selector_interfaces_implemented_task_adapter_pending",
     "workflow_specification": "论文总纲.md",
     "business_phase_status": "proposed_deployment_acceptance_with_later_monitoring_wakeup",
     "numeric_inputs_scope": "retained_legacy_visual_model_not_current_forest_wireless_model",
@@ -645,9 +645,9 @@
     "independent_altimetry_used": false,
     "initialization": "surveyed_home_and_calibrated_heading_with_uncertain_priors",
     "css_hardware_status": "unselected_candidates_under_review",
-    "model_derivation_status": "simulation_model_v1_sources_assumptions_and_joint_fixed_conditions_reviewed_implementation_pending",
+    "model_derivation_status": "all_49_equations_classified_sources_units_interfaces_and_failures_audited",
     "unknown_terminal_role": "interaction_and_position_service_state_drives_next_waypoint_not_uav_pose_update",
-    "execution_scope": "documents_parameters_and_fixed_input_algebra_only",
+    "execution_scope": "model_implementation_and_fixed_input_regressions_no_missions",
     "parameter_registry": "论文总纲.md",
     "protocol_draft_version": "application_fields_v1",
     "analytical_profile": {
@@ -799,15 +799,15 @@
     "position_backend_design": "finite_grid_map_with_multimodal_nominal_cost_region",
     "validation_backend_design": "conditional_mixture_cdf_and_same_active_component_projection_full_vector_guard",
     "navigation_history_design": "bounded_selected_antenna_clones_known_reference_updates_only",
-    "workflow_math_status": "derived_with_fixed_input_checks_not_mission_implemented_or_approved",
-    "grid_validation_status": "same_joint_input_two_resolution_check_passed_production_guards_pending",
-    "strategy_completeness": "model_v1_specified_production_migration_and_mission_validation_pending",
+    "workflow_math_status": "core_equation_interfaces_fixed_input_checked_full_execution_pending",
+    "grid_validation_status": "same_input_python_resolution_checked_matlab_finite_grid_guarded_runtime_not_released",
+    "strategy_completeness": "math_and_state_interfaces_checked_candidate_forecast_and_task_integration_pending",
     "terminal_plane_model": "provisional_common_nominal_horizontal_plane_with_registered_height_errors",
     "feasibility_status": "conditional_joint_simulation_model_nominal_margins_found_not_closed_loop_verified",
     "feasibility_evidence_scope": "simulation_model_consistency_with_cited_capabilities_and_explicit_assumptions_no_hardware_test_required",
     "joint_model_candidate": {
       "id": "coplanar_css_imu_joint_model_v1",
-      "status": "reviewed_model_v1_for_implementation_only_not_mission_approved",
+      "status": "math_and_state_interfaces_implemented_fixed_input_checked_not_mission_approved",
       "usage": "single_joint_simulation_model_candidate_no_task_execution",
       "scene": {
         "home_imu_xyz_m": [
@@ -1129,7 +1129,9 @@
         ],
         "max_position_clones": 128,
         "group_motion_radius_m": 0.5,
-        "source": "thresholds_copied_from_registered_candidate_explicit_finite_clone_and_group_motion_engineering_caps_not_performance_evidence"
+        "source": "thresholds_copied_from_registered_candidate_explicit_finite_clone_and_group_motion_engineering_caps_not_performance_evidence",
+        "max_protocol_records": 4096,
+        "max_candidate_actions": 256
       }
     },
     "joint_model_id": "coplanar_css_imu_joint_model_v1"

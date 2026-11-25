@@ -20,11 +20,18 @@ switch lower(char(action))
     case 'config'
         out=load_project_config();
     case 'check'
-        out=deterministic_checks();
+        if nargin>1 && isfield(options,'legacy') && options.legacy
+            out=deterministic_checks();
+        else
+            original_path=path;restore_path=onCleanup(@()path(original_path)); %#ok<NASGU>
+            addpath(fullfile(repo,'research_checks'));
+            out=check_forest_components();
+        end
     case 'run'
         uavmvp.review_gate();
         assert(nargin==2,'uavproject:RunOptions','Declare seeds, count, rule and a new output label.');
-        out=uavpriority.run_managed(options);
+        error('forest:TaskIntegrationPending', ...
+            'Forest math interfaces require a separate task adapter/release; no legacy fallback.');
     otherwise
         error('uavproject:UnknownAction','Use status, config, check or run.');
 end
