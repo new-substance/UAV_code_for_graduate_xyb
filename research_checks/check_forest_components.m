@@ -171,8 +171,9 @@ ev=struct('estimated_terminal_xy_m',[0 0;25 0],'true_terminal_xy_m',[0 0;0 0], .
 offline=uavmvp.forest_motion('evaluate',ev,c);assert(~offline.success && ~offline.actual_return && ~offline.all_terminal_accuracy);
 ev.physically_landed=true;ev.estimated_terminal_xy_m=[0 0;19 0];offline=uavmvp.forest_motion('evaluate',ev,c);assert(offline.success);
 service=service_checks(c,samples,fnav,input,rf,rv);
+air=air_checks(c,samples,raw);
 adapter=event_adapter_checks(c,samples,raw);
-out=struct('route',route,'service',service,'event_adapter',adapter,'forecast',forecast,'all_passed',true,'kind','forest_fixed_input_component_regression', ...
+out=struct('air',air,'route',route,'service',service,'event_adapter',adapter,'forecast',forecast,'all_passed',true,'kind','forest_fixed_input_component_regression', ...
     'mission_count',0,'task_integrations',0,'radio_budget',timing,'grid_points',size(f.grid,1), ...
     'nominal_radius_m',f.nominal_radius_m,'nominal_fifth_passed',ok.passed, ...
     'opposite_residual_rejected',~badResult.passed,'reference_sigma_m',c.radio.reference_pair_white_std_m, ...
@@ -351,4 +352,76 @@ n.v=[.2;0;0];must_fail(@()uavmvp.forest_route('plan',struct('navigation',n,'map'
 out=struct('all_passed',true,'world_steps',0,'trajectory_rollouts',0, ...
     'nominal_one_step_matches_N01_mean',true,'horizontal_five_m_budget_s',5.5, ...
     'vertical_five_m_budget_s',7,'ascent_split_into_reference_service_segments',true);
+end
+
+function out=air_checks(c,samples,raw)
+% Recorded IRQ times and static pose inputs only; no radio world/IMU trajectory.
+i=struct('samples',samples,'unknown_ids',7,'reference_ids',(100:104)','uav_id',1,'mission',3,'session',4);
+events=uavmvp.forest_events('init',i,c);
+events.protocol=event(events.protocol,struct('type','identity','id',"7",'lease_until_s',2,'data_bytes',4),c);
+events=apply(events,struct('type','unknown_group','time_s',0,'peer',7,'block_id',"G1",'group',1),c);
+profile=struct('peer',7,'calibration_ids',[7 8],'offsets_m',[.3 .3]);
+proposal=uavmvp.forest_events('next_pair',struct('state',events,'calibration_profiles',profile),c);
+s=uavmvp.forest_air('init',struct('events',events),c);
+s=uavmvp.forest_air('start_pair',struct('state',s,'request',proposal.event),c);initial=s;
+for j=1:6
+ [s,command]=uavmvp.forest_air('next',struct('state',s),c);assert(strcmp(command.kind,'COMMAND'));
+ t=command.minimum_completion_s;s.events.navigation.t=t; % A saved processing-time snapshot, not a propagated flight.
+ e=struct('command_id',command.command_id,'completed_at_s',t,'type','tx_done');
+ if ismember(j,[2 4])
+  e.type='range_done';e.clone_id="irq"+string(j);
+  s.events=apply(s.events,struct('type','capture','time_s',t,'clone_id',e.clone_id),c);
+  if j==2,e.raw=raw;end
+ elseif j==5
+  h=struct('version',1,'type',5,'mission',3,'session',4,'seq',19,'source',7,'target',1,'flags',0);
+  m=struct('transaction',proposal.event.transaction,'raw_result',raw.value,'quality_flags',1,'calibration_id',8,'epoch_local',0);
+  e.type='rx_done';e.crc_valid=true;e.bytes=uavmvp.forest_frame('encode',struct('header',h,'message',m));
+ end
+ if j==6,available=s;end
+ if j==5,late=s;report=e;end
+ [s,result]=uavmvp.forest_air('observe',struct('state',s,'event',e),c);
+end
+assert(result.closed && result.pair_observation_available && result.ack_sent && numel(s.events.protocol.nodes.raw_ids)==1);
+h.type=2;m=struct('capability',1,'battery_mV',3000,'data_seq',2,'data_bytes',4,'sample_epoch_local',0);
+collision=struct('type','frame','time_s',s.events.navigation.t,'crc_valid',true,'lease_until_s',2, ...
+ 'bytes',uavmvp.forest_frame('encode',struct('header',h,'message',m)));
+must_fail(@()apply(s.events,collision,c),'forest:ReplayConflict');
+reuse=proposal.event;reuse.time_s=s.events.navigation.t;reuse.pair_id="new_id_old_transaction";reuse.job_index=2;
+must_fail(@()apply(s.events,reuse,c),'forest:Transaction');
+[~,replay]=uavmvp.forest_air('observe',struct('state',s,'event',e),c);assert(strcmp(replay.kind,'DUPLICATE'));
+% Missing final ACK transmission must preserve the already accepted pair.
+available.events.navigation.t=available.current.deadline_s+.001;
+[~,result]=uavmvp.forest_air('next',struct('state',available),c);
+assert(result.closed && result.pair_observation_available && ~result.ack_sent);
+late.events.navigation.t=late.current.deadline_s+.001;
+[late,r]=uavmvp.forest_air('observe',struct('state',late,'event',report),c);assert(r.pair_observation_available);
+[~,r]=uavmvp.forest_air('next',struct('state',late),c);assert(r.closed && r.pair_observation_available && ~r.ack_sent);
+[s,command]=uavmvp.forest_air('next',struct('state',initial),c);
+bad=struct('command_id',command.command_id,'completed_at_s',0,'type','tx_done');
+[rejected,r]=uavmvp.forest_air('ingest',struct('state',s,'event',bad),c);
+assert(strcmp(r.kind,'REJECTED') && rejected.input_count==1 && isequaln(rejected.events,s.events));
+wrong=s;wrong.events.navigation.t=command.minimum_completion_s;
+bad.command_id=command.command_id+1;bad.completed_at_s=command.minimum_completion_s;
+[wrong,r]=uavmvp.forest_air('ingest',struct('state',wrong,'event',bad),c);
+assert(strcmp(r.kind,'REJECTED') && ~wrong.current.closed);
+% COMPLETE does not sleep the online node until its matching ACK is received.
+ctx=uavmvp.forest_events('init',i,c);ctx.protocol.nodes.verified=true;ctx.protocol.nodes.notice_result_sequence=1;ctx.protocol.nodes.lease_until_s=2;
+notice=uavmvp.forest_air('init',struct('events',ctx),c);
+notice=uavmvp.forest_air('start_notice',struct('state',notice,'peer',7),c);
+[notice,cmd]=uavmvp.forest_air('next',struct('state',notice),c);
+notice.events.navigation.t=cmd.minimum_completion_s;
+notice=uavmvp.forest_air('observe',struct('state',notice,'event',struct('command_id',cmd.command_id,'completed_at_s',cmd.minimum_completion_s,'type','tx_done')),c);
+assert(~notice.events.protocol.nodes.stop_ack);
+[notice,cmd]=uavmvp.forest_air('next',struct('state',notice),c);notice.events.navigation.t=cmd.minimum_completion_s;
+h.type=6;h.seq=20;m=struct('acked_type',7,'acked_seq',notice.current.complete_sequence,'status',0);
+reply=struct('type','rx_done','command_id',cmd.command_id,'completed_at_s',cmd.minimum_completion_s,'crc_valid',true, ...
+ 'bytes',uavmvp.forest_frame('encode',struct('header',h,'message',m)));
+badReply=reply;m.acked_seq=m.acked_seq+1;badReply.bytes=uavmvp.forest_frame('encode',struct('header',h,'message',m));
+[unchanged,r]=uavmvp.forest_air('ingest',struct('state',notice,'event',badReply),c);
+assert(strcmp(r.kind,'REJECTED') && ~unchanged.events.protocol.nodes.stop_ack);
+[notice,r]=uavmvp.forest_air('observe',struct('state',notice,'event',reply),c);
+assert(r.closed && r.complete_ack_received && ~r.physical_sleep_confirmed && notice.events.protocol.nodes.stop_ack);
+out=struct('all_passed',true,'world_steps',0,'pair_six_stage_IRQ_sequence',true, ...
+ 'missing_final_ack_preserves_pair',true,'duplicate_callback_no_new_pair',true,'complete_requires_matching_ACK',true, ...
+ 'received_before_deadline_but_processed_late_preserves_pair',true);
 end

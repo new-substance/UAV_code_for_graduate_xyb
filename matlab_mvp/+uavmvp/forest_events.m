@@ -84,8 +84,8 @@ switch e.type
         assert(~any(cellfun(@(x)~x.finished,s.pairs)),'forest:RadioBusy','One CSS radio cannot overlap pair transactions.');
         assert(~any(cellfun(@(x)strcmp(x.id,string(e.pair_id)),s.pairs)),'forest:Duplicate','Pair ID already used.');
         assert(e.transaction>=0 && e.transaction<65536 && e.transaction==fix(e.transaction));
-        assert(~any(cellfun(@(x)~x.finished && x.peer==e.peer && x.transaction==e.transaction,s.pairs)), ...
-            'forest:Transaction','Unclosed peer transaction.');
+        assert(~any(cellfun(@(x)x.peer==e.peer && x.transaction==e.transaction,s.pairs)), ...
+            'forest:Transaction','Peer transaction number already used in this mission.');
         if strcmp(e.role,'reference')
             assert(ismember(e.peer,s.reference_ids) && ~isempty(s.reference_block));
             assert(e.time_s+c.radio.pair_whole_attempt_bound_s<=s.reference_block.deadline,'forest:ReferenceBlock','No complete pair budget.');
@@ -119,9 +119,11 @@ switch e.type
             assert(isequal(p.raw{d},e.raw) && p.clone_ids(d)==string(e.clone_id),'forest:ReplayConflict','Changed direction result.');
             receipt.duplicate=true;return
         end
-        assert(~p.finished && e.time_s<=p.deadline,'forest:PairDeadline','Pair expired or closed.');
+        completed=e.time_s;if isfield(e,'result_completed_at_s'),completed=e.result_completed_at_s;end
+        assert(isfinite(completed) && completed<=e.time_s,'forest:Epoch','Result cannot arrive from the future.');
+        assert(~p.finished && completed<=p.deadline,'forest:PairDeadline','Pair expired or closed.');
         ci=find(s.navigation.clone_ids==string(e.clone_id));assert(isscalar(ci),'forest:CloneID','Actual epoch was not captured.');
-        assert(s.navigation.clone_times(ci)<=e.time_s && s.navigation.clone_times(ci)>=p.deadline-c.radio.pair_whole_attempt_bound_s, ...
+        assert(s.navigation.clone_times(ci)<=completed && s.navigation.clone_times(ci)>=p.deadline-c.radio.pair_whole_attempt_bound_s, ...
             'forest:Epoch','Pose outside reserved transaction.');
         raw=e.raw;assert(raw.calibration_offset_m==p.offsets_m(d) && raw.bandwidth_hz==c.radio.ranging_phy.bandwidth_hz,'forest:Profile','Wrong calibration/profile.');
         uavmvp.forest_radio('raw',raw,c);

@@ -19,6 +19,7 @@ load_project_config('legacy')仅用于历史组件兼容；旧工厂/视觉代�
 | 同一+uavmvp包中的模块 | 职责 |
 | --- | --- |
 | forest_frame / forest_radio | 7类网络序应用帧、有符号RAW与两方向配对、PHY费用、监听保护和分角色链路模型 |
+| forest_air | IRQ驱动的六步成对测距与COMPLETE/ACK，绝对时限和序号去重；WAKE/DATA执行仍待接通 |
 | forest_events | IMU/RAW/帧关联、测距作业共享额度和下一请求；部分组续接不清零重试，完整空口事务仍待接通 |
 | forest_navigation / forest_covariance | 静置联合初始化、IMU传播、已知参考更新、有限相关天线副本、名义导航门槛 |
 | forest_localization | 有限网格MAP/规划区域、完整4组质量、新第五点相关条件混合及完整块核验 |
