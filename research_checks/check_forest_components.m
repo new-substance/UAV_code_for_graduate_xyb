@@ -38,6 +38,7 @@ decoded=uavmvp.forest_frame('decode',bytes);assert(numel(bytes)==49 && numel(dec
 samples=struct('acc',repmat([0;0;9.80665],1,300),'gyro',zeros(3,300), ...
     'yaw_rad',0,'stationary_confirmed',true,'acc_bias_prior_mean_mps2',zeros(3,1));
 n=uavmvp.forest_navigation('init',samples,c);
+forecast=forecast_checks(n,c);
 assert(norm(n.R-eye(3),'fro')<1e-12 && n.P(8,10)>0 && n.P(7,11)<0 && n.P(35,24)>0);
 imu=struct('acc',[0;0;9.80665],'gyro',zeros(3,1));
 p=uavmvp.forest_navigation('predict',n,imu,.01,c);
@@ -169,7 +170,7 @@ ev=struct('estimated_terminal_xy_m',[0 0;25 0],'true_terminal_xy_m',[0 0;0 0], .
 offline=uavmvp.forest_motion('evaluate',ev,c);assert(~offline.success && ~offline.actual_return && ~offline.all_terminal_accuracy);
 ev.physically_landed=true;ev.estimated_terminal_xy_m=[0 0;19 0];offline=uavmvp.forest_motion('evaluate',ev,c);assert(offline.success);
 adapter=event_adapter_checks(c,samples,raw);
-out=struct('event_adapter',adapter,'all_passed',true,'kind','forest_fixed_input_component_regression', ...
+out=struct('event_adapter',adapter,'forecast',forecast,'all_passed',true,'kind','forest_fixed_input_component_regression', ...
     'mission_count',0,'task_integrations',0,'radio_budget',timing,'grid_points',size(f.grid,1), ...
     'nominal_radius_m',f.nominal_radius_m,'nominal_fifth_passed',ok.passed, ...
     'opposite_residual_rejected',~badResult.passed,'reference_sigma_m',c.radio.reference_pair_white_std_m, ...
@@ -253,4 +254,27 @@ out=struct('all_passed',true,'world_steps',0,'unknown_range_does_not_change_navi
 end
 function s=apply(s,e,c)
 s=uavmvp.forest_events('apply',struct('state',s,'event',e),c);
+end
+
+function out=forecast_checks(n,c)
+% Pure matrix examples, not a nominal or actual trajectory rollout.
+F=zeros(15);W=zeros(15);P=eye(15);P(3,6)=.9;P(6,3)=.9;F(3,6)=1;F(6,3)=-1;
+b=uavmvp.forest_forecast('linear_window',struct('P',P,'F',F,'W',W,'duration_s',pi/2),c);
+mid=expm(F*pi/4)*P*expm(F'*pi/4);
+assert(abs(b.P_end(3,3)-1)<1e-12 && abs(mid(3,3)-1.9)<1e-12 && b.std_upper(2)>=sqrt(1.9));
+zero=uavmvp.forest_forecast('linear_window',struct('P',P,'F',F,'W',W,'duration_s',0),c);
+assert(norm(zero.P_end-P,'fro')<1e-12 && abs(zero.std_upper(2)-1)<1e-12);
+a=struct('R',eye(3),'specific_force_body_mps2',[0;0;9.80665],'body_rate_radps',zeros(3,1),'duration_s',.01);
+i=struct('navigation',n,'profile',a,'execution_kind','fixed_input_review');
+old=n;f=uavmvp.forest_forecast('profile',i,c);
+imu=struct('acc',[0;0;9.80665]+n.ba,'gyro',n.bg);
+next=uavmvp.forest_navigation('predict',n,imu,.01,c);
+assert(norm(f.predicted_covariance-next.P,'fro')<1e-11 && isequal(n,old) && f.future_reference_updates==0);
+assert(f.horizon_s==.01 && isfinite(f.navigation_ratio_upper));
+bad=i;bad.profile.body_rate_radps=[2;0;0];must_fail(@()uavmvp.forest_forecast('profile',bad,c),'forest:ForecastDomain');
+expired=rmfield(i,'execution_kind');timed=c;timed.service.computation_bound_s=0;
+must_fail(@()uavmvp.forest_forecast('profile',expired,timed),'forest:ComputationTimeout');
+out=struct('all_passed',true,'world_steps',0,'trajectory_rollouts',0, ...
+    'intersample_peak_variance',mid(3,3),'endpoint_variance',b.P_end(3,3), ...
+    'interval_upper_std',b.std_upper(2),'one_step_matches_N01',true,'future_reference_updates',0);
 end
