@@ -49,12 +49,12 @@
     "joint_model_id": "coplanar_css_imu_joint_model_v1"
   },
   "implementation_status": "forest_math_state_frame_and_selection_interfaces_checked_task_adapter_forecast_and_runtime_integration_pending",
-  "reason": "Recent direct neighbors and all 49 equation IDs are mapped to sources, assumptions and code. Whitelisted configuration and forest_* mathematical/state interfaces pass saved-input MATLAB checks with zero Code Analyzer messages. Actual candidate qualification/full-window forecasts, radio/IMU event timing, motion/sleep/return task integration and bounded writer remain pending. No mission, random batch or trajectory integration was run; 50ms runtime and real landing are not established. User no-simulation instruction remains binding.",
+  "reason": "Recent direct neighbors and all 49 equation IDs are mapped to sources, assumptions and code. Whitelisted configuration and forest_* mathematical/state interfaces pass saved-input MATLAB checks with zero Code Analyzer messages. Actual candidate qualification/full-window forecasts, radio/IMU event timing, motion/sleep/return task integration and bounded writer remain pending. No mission, random batch or trajectory integration was run; 50ms runtime and real landing are not established. User no-simulation instruction remains binding. Measured-event adapter now passes saved-input session/time/transaction/RAW deduplication checks; full transaction scheduling, forecasts and task integration remain pending.",
   "specification": "论文总纲.md",
-  "specification_sha256": "b244915633124712bd7917a124580a7af18be3e9bafa8f7caf8b9f7f2f25a8d6",
+  "specification_sha256": "11cdc8cfe0b4d9735339f7869b1ba76266e1740c94cd89ce22ba1434c4f1f645",
   "configuration": "research_configs/baseline.json",
   "configuration_sha256": "1d230e1ab5e12bb12c52eb4ff2c29af7b7153eb3befe4fa532964b6d7f193537",
-  "source_sha256": "904531c4d909500f2ca053d1951dc56c24a3a15ef2ce165e3ef92488f90b65be",
+  "source_sha256": "5936931d6b2d38662d03cb1f8289a0f13e68ec7c3fb9167697a163691644ac84",
   "development_scope": {
     "terminal_counts": [],
     "max_cases_per_batch": 0,
@@ -71,7 +71,7 @@
     "joint_simulation_model_definition": {
       "status": "reviewed_with_explicit_conditions_for_implementation_only",
       "model_id": "coplanar_css_imu_joint_model_v1",
-      "specification_sha256": "b244915633124712bd7917a124580a7af18be3e9bafa8f7caf8b9f7f2f25a8d6",
+      "specification_sha256": "11cdc8cfe0b4d9735339f7869b1ba76266e1740c94cd89ce22ba1434c4f1f645",
       "configuration_sha256": "1d230e1ab5e12bb12c52eb4ff2c29af7b7153eb3befe4fa532964b6d7f193537",
       "evidence": "evidence.joint_simulation_model_review",
       "mission_execution_approved": false
@@ -80,13 +80,13 @@
       "status": "fixed_input_checked_not_task_released",
       "mission_execution_approved": false,
       "evidence": "evidence.forest_component_review",
-      "source_sha256": "904531c4d909500f2ca053d1951dc56c24a3a15ef2ce165e3ef92488f90b65be",
-      "specification_sha256": "b244915633124712bd7917a124580a7af18be3e9bafa8f7caf8b9f7f2f25a8d6",
+      "source_sha256": "5936931d6b2d38662d03cb1f8289a0f13e68ec7c3fb9167697a163691644ac84",
+      "specification_sha256": "11cdc8cfe0b4d9735339f7869b1ba76266e1740c94cd89ce22ba1434c4f1f645",
       "configuration_sha256": "1d230e1ab5e12bb12c52eb4ff2c29af7b7153eb3befe4fa532964b6d7f193537"
     }
   },
   "unreviewed_interfaces": [
-    "actual_pair_endpoint_IMU_radio_and_terminal_sleep_event_task_adapter",
+    "full_transaction_retry_wake_and_terminal_sleep_scheduler_integration",
     "candidate_eligibility_full_window_navigation_forecast_and_conditional_return_provider",
     "body_thrust_contact_actual_return_and_bounded_writer_task_integration",
     "runtime_compute_budget_and_final_evaluation_freeze"
@@ -96,7 +96,7 @@
     "new_design_validated": false,
     "legacy_summary": "evidence/development_cases.json",
     "legacy_geometry": "evidence/geometry_hypotheses.json",
-    "source_file_count": 169,
+    "source_file_count": 170,
     "forest_entry_check_status": "not_rerun_user_requested_no_simulation_static_identity_verified",
     "literature_strategy_review": {
       "checked_on": "2026-11-25",
@@ -752,7 +752,7 @@
       "checked_on": "2026-11-25",
       "command": "addpath('matlab_mvp'); out=project('check');",
       "checker": "research_checks/check_forest_components.m",
-      "checker_sha256": "056c7f56b1ef62ad62fb0dc696bc952758d85f8bbe665e44f93971f2bc090743",
+      "checker_sha256": "efb38926e070e8fb5439e8b0b6755f77f93be61a96e81c96d56af41fa63aa668",
       "all_passed": true,
       "matlab_version": "R2023a",
       "code_analyzer_messages": 0,
@@ -772,7 +772,8 @@
         "data_dedup_advertised_bytes_fifth_request_then_new_pair_once_and_stop_ACK",
         "shared_extra_pool_tickets_and_no_progress_limits",
         "complete_action_reference_return_reservation_empty_set_and_B0_B1_choice",
-        "true_thrust_depends_on_true_attitude_and_offline_landing_requirement"
+        "true_thrust_depends_on_true_attitude_and_offline_landing_requirement",
+        "measured_event_session_time_calibration_direction_dedup_wire_fragment_index_and_retained_history"
       ],
       "result": {
         "pair_radio_lower_s": 0.11909907692307692,
@@ -786,9 +787,19 @@
       },
       "runtime_wall_clock_budget_validated": false,
       "no_new_result_batch_or_full_trajectory_files": true,
-      "specification_sha256": "b244915633124712bd7917a124580a7af18be3e9bafa8f7caf8b9f7f2f25a8d6",
+      "specification_sha256": "11cdc8cfe0b4d9735339f7869b1ba76266e1740c94cd89ce22ba1434c4f1f645",
       "configuration_sha256": "1d230e1ab5e12bb12c52eb4ff2c29af7b7153eb3befe4fa532964b6d7f193537",
-      "source_sha256": "904531c4d909500f2ca053d1951dc56c24a3a15ef2ce165e3ef92488f90b65be"
+      "source_sha256": "5936931d6b2d38662d03cb1f8289a0f13e68ec7c3fb9167697a163691644ac84"
+    },
+    "measured_event_adapter": {
+      "checker": "research_checks/check_forest_components.m:event_adapter_checks",
+      "all_passed": true,
+      "world_steps": 0,
+      "mission_count": 0,
+      "source_sha256": "5936931d6b2d38662d03cb1f8289a0f13e68ec7c3fb9167697a163691644ac84",
+      "scope": "received_event_interface_only_not_full_transaction_scheduler",
+      "unknown_ranges_leave_navigation_unchanged": true,
+      "stale_session_future_receipt_and_history_release_rejected": true
     }
   },
   "legacy_release": {

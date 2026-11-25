@@ -168,7 +168,8 @@ ev=struct('estimated_terminal_xy_m',[0 0;25 0],'true_terminal_xy_m',[0 0;0 0], .
     'service_closed',true,'all_physically_asleep',true);
 offline=uavmvp.forest_motion('evaluate',ev,c);assert(~offline.success && ~offline.actual_return && ~offline.all_terminal_accuracy);
 ev.physically_landed=true;ev.estimated_terminal_xy_m=[0 0;19 0];offline=uavmvp.forest_motion('evaluate',ev,c);assert(offline.success);
-out=struct('all_passed',true,'kind','forest_fixed_input_component_regression', ...
+adapter=event_adapter_checks(c,samples,raw);
+out=struct('event_adapter',adapter,'all_passed',true,'kind','forest_fixed_input_component_regression', ...
     'mission_count',0,'task_integrations',0,'radio_budget',timing,'grid_points',size(f.grid,1), ...
     'nominal_radius_m',f.nominal_radius_m,'nominal_fifth_passed',ok.passed, ...
     'opposite_residual_rejected',~badResult.passed,'reference_sigma_m',c.radio.reference_pair_white_std_m, ...
@@ -186,4 +187,40 @@ catch problem
     return
 end
 error('forest:ExpectedFailure','Expected %s',id);
+end
+
+function out=event_adapter_checks(c,samples,raw)
+i=struct('samples',samples,'unknown_ids',7,'reference_ids',(100:104)','uav_id',1,'mission',3,'session',4);
+s=uavmvp.forest_events('init',i,c);
+h=struct('version',1,'type',2,'mission',3,'session',4,'seq',1,'source',7,'target',1,'flags',0);
+m=struct('capability',1,'battery_mV',3000,'data_seq',2,'data_bytes',4,'sample_epoch_local',0);
+e=struct('type','frame','time_s',0,'crc_valid',true,'lease_until_s',1, ...
+    'bytes',uavmvp.forest_frame('encode',struct('header',h,'message',m)));
+s=apply(s,e,c);assert(s.protocol.nodes.contact && ~s.protocol.nodes.discovered);
+bad=e;bad.time_s=.01;must_fail(@()apply(s,bad,c),'forest:EventTime');
+h.session=9;bad=e;bad.bytes=uavmvp.forest_frame('encode',struct('header',h,'message',m));
+must_fail(@()apply(s,bad,c),'forest:Session');
+s=apply(s,struct('type','capture','time_s',0,'clone_id',"a"),c);
+s=apply(s,struct('type','capture','time_s',0,'clone_id',"b"),c);
+p=struct('type','pair_request','time_s',0,'pair_id',"P1",'peer',7,'role','unknown', ...
+    'transaction',9,'group',1,'calibration_ids',[7 8],'offsets_m',[.3 .3]);
+s=apply(s,p,c);must_fail(@()apply(s,p,c),'forest:RadioBusy');before=s.navigation;
+d=struct('type','direction_result','time_s',0,'pair_id',"P1",'peer',7,'transaction',9, ...
+    'direction',1,'clone_id',"a",'raw',raw,'calibration_id',7,'mission',3,'session',4);
+s=apply(s,d,c);assert(~s.protocol.nodes.discovered);
+d.direction=2;d.clone_id="b";d.calibration_id=8;s=apply(s,d,c);
+assert(s.protocol.nodes.discovered && numel(s.protocol.nodes.raw_ids)==1 && isequal(s.navigation,before));
+must_fail(@()apply(s,struct('type','release','time_s',0,'keep_ids',strings(0,1)),c),'forest:HistoryRetention');
+[s,receipt]=uavmvp.forest_events('apply',struct('state',s,'event',d),c);assert(receipt.duplicate);
+h.session=4;h.seq=2;h.type=3;
+m=struct('data_seq',2,'fragment_index',0,'fragment_count',1,'sample_epoch_local',0,'sensor_flags',1,'samples',uint8([1 2 3 4]));
+e.bytes=uavmvp.forest_frame('encode',struct('header',h,'message',m));s=apply(s,e,c);
+assert(s.protocol.nodes.data_delivered && s.protocol.nodes.delivered_bytes==4);
+[s,receipt]=uavmvp.forest_events('apply',struct('state',s,'event',e),c);
+assert(receipt.duplicate && s.protocol.nodes.delivered_bytes==4);
+out=struct('all_passed',true,'world_steps',0,'unknown_range_does_not_change_navigation',true, ...
+    'wire_fragment_zero_maps_to_business_fragment_one',true,'stale_session_and_future_receipt_rejected',true);
+end
+function s=apply(s,e,c)
+s=uavmvp.forest_events('apply',struct('state',s,'event',e),c);
 end
