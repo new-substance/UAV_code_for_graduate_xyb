@@ -151,6 +151,7 @@ switch e.type
         n.pending_round=struct('fifth_ids',ids,'version',s.version,'snapshot',e.snapshot);
         n.fifth_job=[];
     case 'request_fifth'
+        assert(~n.verified,'forest:Stopped','Verified node cannot request a new heldout block.');
         assert(n.data_delivered && n.quality && n.quality_version==s.version && isempty(n.pending_round) && isempty(n.fifth_job));
         assert(n.verification_rounds<c.finite_policy_limits.verification_rounds_per_node,'forest:VerificationLimit','Verification rounds exhausted.');
         fitIds=string(e.fit_ids(:));assert(numel(fitIds)==4*c.service.pairs_per_unknown_group && ...
@@ -183,6 +184,8 @@ switch e.type
     case 'recontact_attempt'
         assert(n.recontact_attempts<c.finite_policy_limits.recontact_attempts_per_node);n.recontact_attempts=n.recontact_attempts+1;
     case 'fit_reselection'
+        assert(~n.verified,'forest:Stopped','Published node cannot change its fitting selection.');
+        assert(isempty(n.pending_round),'forest:VerificationOnce','Finish or timeout the immutable pending round first.');
         assert(n.fit_reselections<c.finite_policy_limits.fit_reselection_attempts_per_node);n.fit_reselections=n.fit_reselections+1;
         if ~isempty(n.fifth_job)
             n.used_fifth_ids=[n.used_fifth_ids;setdiff(n.raw_ids,n.fifth_job.raw_ids_before,'stable')];n.fifth_job=[];

@@ -22,6 +22,7 @@ load_project_config('legacy')仅用于历史组件兼容；旧工厂/视觉代�
 | forest_events | IMU/RAW/帧关联、测距作业共享额度和下一请求；部分组续接不清零重试，完整空口事务仍待接通 |
 | forest_navigation / forest_covariance | 静置联合初始化、IMU传播、已知参考更新、有限相关天线副本、名义导航门槛 |
 | forest_localization | 有限网格MAP/规划区域、完整4组质量、新第五点相关条件混合及完整块核验 |
+| forest_service | 实际配对表到MAP/Q/一次第五核验与空间资格；部分组补齐、有限显式重选，未知观测不更新导航 |
 | forest_protocol | 身份/发现、数据分片、数据与Q满足后申请第五点、一次判决、停测/通知ACK、有限票据与共享重试 |
 | forest_forecast | 分段冻结N01的有限剖面协方差及区间内上界，不注入未来参考；航点剖面提供器仍待接通 |
 | forest_policy | 有限覆盖图、完整服务账本准入、同能力B0/B1动作选择和路径首点；全窗口预测/资格由调用方提供 |

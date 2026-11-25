@@ -169,8 +169,9 @@ ev=struct('estimated_terminal_xy_m',[0 0;25 0],'true_terminal_xy_m',[0 0;0 0], .
     'service_closed',true,'all_physically_asleep',true);
 offline=uavmvp.forest_motion('evaluate',ev,c);assert(~offline.success && ~offline.actual_return && ~offline.all_terminal_accuracy);
 ev.physically_landed=true;ev.estimated_terminal_xy_m=[0 0;19 0];offline=uavmvp.forest_motion('evaluate',ev,c);assert(offline.success);
+service=service_checks(c,samples,fnav,input,rf,rv);
 adapter=event_adapter_checks(c,samples,raw);
-out=struct('event_adapter',adapter,'forecast',forecast,'all_passed',true,'kind','forest_fixed_input_component_regression', ...
+out=struct('service',service,'event_adapter',adapter,'forecast',forecast,'all_passed',true,'kind','forest_fixed_input_component_regression', ...
     'mission_count',0,'task_integrations',0,'radio_budget',timing,'grid_points',size(f.grid,1), ...
     'nominal_radius_m',f.nominal_radius_m,'nominal_fifth_passed',ok.passed, ...
     'opposite_residual_rejected',~badResult.passed,'reference_sigma_m',c.radio.reference_pair_white_std_m, ...
@@ -277,4 +278,48 @@ must_fail(@()uavmvp.forest_forecast('profile',expired,timed),'forest:Computation
 out=struct('all_passed',true,'world_steps',0,'trajectory_rollouts',0, ...
     'intersample_peak_variance',mid(3,3),'endpoint_variance',b.P_end(3,3), ...
     'interval_upper_std',b.std_upper(2),'one_step_matches_N01',true,'future_reference_updates',0);
+end
+
+function out=service_checks(c,samples,fnav,input,rf,rv)
+i=struct('samples',samples,'unknown_ids',7,'reference_ids',(100:104)','uav_id',1,'mission',3,'session',4);
+s=uavmvp.forest_events('init',i,c);s.navigation=fnav;
+s.protocol=event(s.protocol,struct('type','reference_version','version',2),c);
+s.protocol=event(s.protocol,struct('type','identity','id',"7",'lease_until_s',20,'data_bytes',4),c);
+for j=1:8
+ p=struct('id',input.fit_raw_ids(j),'peer',7,'role','unknown','status','received','group',ceil(j/2), ...
+     'range_m',rf(j),'clone_ids',[input.fit_clone_ids(j) input.fit_clone_ids(j)]);
+ s.pairs{end+1}=p;s.protocol=event(s.protocol,struct('type','range','id',"7",'raw_id',p.id,'valid',true,'range_m',p.range_m),c);
+end
+nav=s.navigation;request=struct('state',s,'peer',7,'execution_kind','fixed_input_review');
+[s,r]=uavmvp.forest_service('refresh',request,c);assert(r.accepted && r.quality && isequal(nav,s.navigation));
+s.protocol=event(s.protocol,struct('type','data','id',"7",'valid',true,'sequence',1,'fragment_index',1,'fragment_count',1,'bytes',4),c);
+b=fnav;b.p=[20;0;17.7];q=struct('state',s,'peer',7,'belief',b);
+[~,o]=uavmvp.forest_service('opportunity',q,c);assert(strcmp(o.phase,'VERIFY') && ~o.eligible);
+b.p=[20;20;17.7];q.belief=b;[~,o]=uavmvp.forest_service('opportunity',q,c);assert(o.eligible);
+[s,~]=uavmvp.forest_service('request_fifth',struct('state',s,'peer',7),c);
+for j=1:2
+ p=struct('id',input.fifth_raw_ids(j),'peer',7,'role','unknown','status','received','group',5, ...
+     'range_m',rv(j),'clone_ids',["V" "V"]);
+ s.pairs{end+1}=p;s.protocol=event(s.protocol,struct('type','range','id',"7",'raw_id',p.id,'valid',true,'range_m',p.range_m),c);
+end
+[s,r]=uavmvp.forest_service('verify_group',struct('state',s,'peer',7,'group',5,'execution_kind','fixed_input_review'),c);
+assert(r.accepted && s.protocol.nodes.verified && isequal(nav,s.navigation));
+must_fail(@()uavmvp.forest_service('request_fifth',struct('state',s,'peer',7),c),'forest:Stopped');
+must_fail(@()uavmvp.forest_service('reselect',struct('state',s,'peer',7),c),'forest:Stopped');
+% Rebuild a one-pair saved book: same-site service must request only its missing pair.
+p=s.pairs{1};partial=uavmvp.forest_events('init',i,c);partial.navigation=fnav;partial.pairs={p};
+partial.protocol=event(partial.protocol,struct('type','reference_version','version',2),c);
+partial.protocol=event(partial.protocol,struct('type','identity','id',"7",'lease_until_s',20,'data_bytes',4),c);
+partial.protocol=event(partial.protocol,struct('type','range','id',"7",'raw_id',p.id,'valid',true,'range_m',p.range_m),c);
+partial.protocol=event(partial.protocol,struct('type','data','id',"7",'valid',true,'sequence',1,'fragment_index',1,'fragment_count',1,'bytes',4),c);
+[partial,r]=uavmvp.forest_service('refresh',struct('state',partial,'peer',7,'execution_kind','fixed_input_review'),c);
+assert(r.accepted && ~r.quality);
+b.p=[20;0;17.7];[~,o]=uavmvp.forest_service('opportunity',struct('state',partial,'peer',7,'belief',b),c);
+assert(o.eligible && o.missing_pairs==1 && o.partial_group==1);
+p.id=input.fit_raw_ids(2);p.range_m=rf(2);partial.pairs{end+1}=p;
+partial.protocol=event(partial.protocol,struct('type','range','id',"7",'raw_id',p.id,'valid',true,'range_m',p.range_m),c);
+[partial,r]=uavmvp.forest_service('refresh',struct('state',partial,'peer',7,'execution_kind','fixed_input_review'),c);
+assert(r.accepted && r.complete_groups==1 && numel(partial.fits{1}.fit_raw_ids)==2);
+out=struct('all_passed',true,'world_steps',0,'fit_and_verification_bound_to_received_pair_book',true, ...
+    'old_fit_point_not_new_fifth',true,'partial_group_requests_missing_pair_only',true,'navigation_unchanged',true);
 end
